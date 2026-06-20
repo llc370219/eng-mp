@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 const config = require('./config');
 const connectDB = require('./config/db');
 const errorHandler = require('./middlewares/errorHandler');
@@ -21,58 +22,55 @@ const dictRoutes = require('./routes/dictionary');
 const grammarRoutes = require('./routes/grammar');
 const aiRoutes = require('./routes/ai');
 const docsRoutes = require('./routes/docs');
+const demoRoutes = require('./routes/demo');
 
 const app = express();
 
+// ===== 模板引擎 =====
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '../views'));
+
 // ===== 安全中间件 =====
-app.use(helmet());                     // 安全 HTTP 头
+app.use(helmet({
+  contentSecurityPolicy: false,  // 允许内联样式
+}));
 app.use(cors({
   origin: config.nodeEnv === 'production'
     ? (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean)
-    : '*',                             // 开发环境允许所有
+    : '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400,                       // preflight 缓存 24h
+  maxAge: 86400,
 }));
 
 // ===== 基础中间件 =====
-app.use(compression());                // gzip 响应
+app.use(compression());
 app.use(express.json({ limit: '500kb' }));
 app.use(express.urlencoded({ extended: true, limit: '500kb' }));
-app.use(sanitize);                     // 输入净化（防 NoSQL 注入）
+app.use(cookieParser());
+app.use(sanitize);
 
-// 请求日志
 if (config.nodeEnv !== 'test') {
   app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
 }
 
-// 全局速率限制
 app.use(rateLimiter({ windowMs: 60 * 1000, max: 100 }));
 
-// 请求 ID（便于追踪）
 app.use((req, res, next) => {
   req.requestId = req.headers['x-request-id'] || generateRequestId();
   res.setHeader('X-Request-Id', req.requestId);
   next();
 });
 
-// ===== 静态文件（Demo 页面）=====
+// ===== 静态文件 =====
 app.use(express.static(path.join(__dirname, '../public')));
-app.use('/demo', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
 
 // ===== 健康检查 =====
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    time: new Date().toISOString(),
-    uptime: Math.floor(process.uptime()),
-    env: config.nodeEnv,
-  });
+  res.json({ status: 'ok', time: new Date().toISOString(), uptime: Math.floor(process.uptime()), env: config.nodeEnv });
 });
 
-// ===== 挂载路由 =====
+// ===== API 路由 =====
 app.use('/api/auth', authRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/vocab', vocabRoutes);
@@ -82,6 +80,12 @@ app.use('/api/dict', dictRoutes);
 app.use('/api/grammar', grammarRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/docs', docsRoutes);
+
+// ===== 服务端渲染 Demo =====
+app.use('/demo', demoRoutes);
+
+// 首页跳转 Demo
+app.get('/', (req, res) => res.redirect('/demo/'));
 
 // ===== 404 =====
 app.use((req, res) => {
@@ -99,7 +103,6 @@ async function start() {
   });
 }
 
-// 只在直接运行时启动（测试时不会自动启动）
 if (require.main === module) {
   start().catch((err) => {
     logger.error('Failed to start server:', err.message);
@@ -107,7 +110,6 @@ if (require.main === module) {
   });
 }
 
-// 生成请求 ID
 function generateRequestId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }

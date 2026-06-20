@@ -1,0 +1,26 @@
+<div style="max-width:360px;margin:40px auto">
+  <div class="card">
+    <h2>注册</h2>
+    <% if (msg) { %>
+      <div class="msg msg-err"><%= msg %></div>
+    <% } %>
+    <form method="POST" action="/demo/register">
+      <div class="form-row">
+        <label>邮箱</label>
+        <input type="email" name="email" required>
+      </div>
+      <div class="form-row">
+        <label>密码</label>
+        <input type="password" name="password" required>
+      </div>
+      <div class="form-row">
+        <label>昵称</label>
+        <input type="text" name="nickname">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%">注册</button>
+    </form>
+    <div style="text-align:center;margin-top:12px;font-size:13px;color:#6B7280">
+      已有账号？<a href="/demo/login">登录</a>
+    </div>
+  </div>
+</div>

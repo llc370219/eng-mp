@@ -1,0 +1,39 @@
+<h2>🔍 词典查询</h2>
+<div class="card">
+  <form method="GET" action="/demo/dict" style="display:flex;gap:8px">
+    <input type="text" name="word" value="<%= word || '' %>" placeholder="输入英文单词..." style="flex:1;padding:10px;border:1px solid #E5E7EB;border-radius:8px">
+    <button type="submit" class="btn btn-primary">查询</button>
+  </form>
+</div>
+
+<% if (word && result) { %>
+  <div class="card">
+    <div><span class="dict-word"><%= result.word %></span><span class="dict-phonetic"><%= result.phonetic || '' %></span></div>
+    <div class="dict-trans"><%= result.translation || result.definitionEn || '无释义' %></div>
+    <% if (result.definitionEn) { %>
+      <div style="font-size:13px;color:#6B7280;margin-top:4px"><%= result.definitionEn %></div>
+    <% } %>
+    <% if (result.tag) { %><div style="margin-top:6px"><span class="badge badge-diff"><%= result.tag %></span></div><% } %>
+    <% if (result.examples && result.examples.length) { %>
+      <div style="margin-top:12px;font-weight:500;font-size:13px">例句:</div>
+      <% result.examples.forEach(e => { %><div class="dict-ex"><%= e %></div><% }) %>
+    <% } %>
+    <form method="POST" action="/demo/vocab/add" style="margin-top:12px">
+      <input type="hidden" name="word" value="<%= result.word %>">
+      <input type="hidden" name="definition" value="<%= result.translation || result.definitionEn || '' %>">
+      <input type="hidden" name="phonetic" value="<%= result.phonetic || '' %>">
+      <button type="submit" class="btn btn-primary btn-sm">+ 添加到生词本</button>
+    </form>
+  </div>
+<% } else if (word) { %>
+  <div class="card" style="color:#EF4444">未找到: <%= word %></div>
+<% } %>
+
+<div class="card">
+  <h2>快捷查词</h2>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+    <% ['ubiquitous','eloquent','resilient','paradigm','meticulous','pragmatic'].forEach(w => { %>
+      <a href="/demo/dict?word=<%= w %>" class="btn btn-sm" style="background:white;border:1px solid #E5E7EB;text-decoration:none;color:#111827"><%= w %></a>
+    <% }) %>
+  </div>
+</div>

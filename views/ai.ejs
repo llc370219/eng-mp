@@ -1,0 +1,39 @@
+<h2>🤖 AI 辅助工具</h2>
+<div class="card">
+  <h2>文章摘要</h2>
+  <form method="POST" action="/demo/ai/summarize">
+    <textarea name="text" rows="4" style="width:100%;padding:10px;border:1px solid #E5E7EB;border-radius:8px;font-size:14px" placeholder="粘贴英文文章..."><%= task === 'summarize' ? inputText : '' %></textarea>
+    <button type="submit" class="btn btn-primary" style="margin-top:8px">生成摘要</button>
+  </form>
+  <% if (task === 'summarize' && result) { %>
+    <div style="margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px">
+      <% if (result.error) { %>
+        <div style="color:#EF4444"><%= result.error %></div>
+      <% } else { %>
+        <div><strong>中文摘要:</strong> <%= result.summaryZh %></div>
+        <div style="margin-top:8px"><strong>English Summary:</strong> <%= result.summaryEn %></div>
+      <% } %>
+    </div>
+  <% } %>
+</div>
+
+<div class="card">
+  <h2>单词解析</h2>
+  <form method="POST" action="/demo/ai/analyze" style="display:flex;gap:8px">
+    <input type="text" name="word" value="<%= task === 'analyze' ? inputWord : '' %>" placeholder="输入单词..." style="flex:1;padding:10px;border:1px solid #E5E7EB;border-radius:8px">
+    <button type="submit" class="btn btn-primary">解析</button>
+  </form>
+  <% if (task === 'analyze' && result) { %>
+    <div style="margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;font-size:14px">
+      <% if (result.error) { %>
+        <div style="color:#EF4444"><%= result.error %></div>
+      <% } else { %>
+        <% if (result.root) { %><div><strong>词根:</strong> <%= result.root %></div><% } %>
+        <% if (result.synonyms) { %><div><strong>同义词:</strong> <%= result.synonyms.join(', ') %></div><% } %>
+        <% if (result.antonyms) { %><div><strong>反义词:</strong> <%= result.antonyms.join(', ') %></div><% } %>
+        <% if (result.collocations) { %><div><strong>搭配:</strong> <%= result.collocations.join(', ') %></div><% } %>
+        <% if (result.memoryTip) { %><div style="margin-top:8px;padding:8px;background:#FFFBEB;border-radius:6px"><strong>💡 记忆技巧:</strong> <%= result.memoryTip %></div><% } %>
+      <% } %>
+    </div>
+  <% } %>
+</div>

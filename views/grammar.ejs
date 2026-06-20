@@ -1,0 +1,27 @@
+<h2>📐 语法学习</h2>
+<form method="GET" action="/demo/grammar" style="display:flex;gap:8px;margin-bottom:16px">
+  <select name="level" style="padding:8px;border:1px solid #E5E7EB;border-radius:8px">
+    <option value="">全部等级</option>
+    <% ['A1','A2','B1','B2','C1','C2'].forEach(l => { %>
+      <option value="<%= l %>" <%= level === l ? 'selected' : '' %>><%= l %></option>
+    <% }) %>
+  </select>
+  <select name="category" style="padding:8px;border:1px solid #E5E7EB;border-radius:8px">
+    <option value="">全部分类</option>
+    <% ['tense','clause','voice','mood','agreement','punctuation','other'].forEach(c => { %>
+      <option value="<%= c %>" <%= category === c ? 'selected' : '' %>><%= c %></option>
+    <% }) %>
+  </select>
+  <button type="submit" class="btn btn-primary btn-sm">筛选</button>
+</form>
+<% grammars.forEach(g => { %>
+  <a href="/demo/grammar/<%= g._id %>" class="article-link">
+    <div class="card">
+      <div style="font-size:16px;font-weight:600"><%= g.title %></div>
+      <div class="meta">
+        <span class="badge badge-diff"><%= g.level %></span>
+        <span class="badge badge-cat"><%= g.category %></span>
+      </div>
+    </div>
+  </a>
+<% }) %>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>登录</title></head>
+<body style="font-family:sans-serif;max-width:400px;margin:40px auto;padding:20px">
+<h2>登录（纯表单版）</h2>
+<p>这个页面不使用JavaScript，直接提交表单</p>
+<form action="/api/auth/login" method="POST" style="margin-top:20px">
+  <div style="margin:10px 0">
+    <label>邮箱:</label><br>
+    <input type="email" name="email" value="admin@test.com" style="width:100%;padding:8px;margin-top:5px">
+  </div>
+  <div style="margin:10px 0">
+    <label>密码:</label><br>
+    <input type="password" name="password" value="123456" style="width:100%;padding:8px;margin-top:5px">
+  </div>
+  <button type="submit" style="width:100%;padding:12px;font-size:16px;margin-top:10px">登录</button>
+</form>
+</body>
+</html>

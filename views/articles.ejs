@@ -1,0 +1,32 @@
+<h2>📚 文章列表</h2>
+<form method="GET" action="/demo/" style="display:flex;gap:8px;margin-bottom:16px">
+  <select name="difficulty" style="padding:8px;border:1px solid #E5E7EB;border-radius:8px">
+    <option value="">全部难度</option>
+    <% ['A1','A2','B1','B2','C1','C2'].forEach(d => { %>
+      <option value="<%= d %>" <%= difficulty === d ? 'selected' : '' %>><%= d %></option>
+    <% }) %>
+  </select>
+  <select name="category" style="padding:8px;border:1px solid #E5E7EB;border-radius:8px">
+    <option value="">全部分类</option>
+    <% ['tech','life','news','literature','science','business'].forEach(c => { %>
+      <option value="<%= c %>" <%= category === c ? 'selected' : '' %>><%= c %></option>
+    <% }) %>
+  </select>
+  <button type="submit" class="btn btn-primary btn-sm">筛选</button>
+</form>
+<% if (!articles.length) { %>
+  <div class="card" style="text-align:center;color:#6B7280">暂无文章</div>
+<% } %>
+<% articles.forEach(a => { %>
+  <a href="/demo/article/<%= a._id %>" class="article-link">
+    <div class="card">
+      <div style="font-size:16px;font-weight:600"><%= a.title %></div>
+      <div class="meta">
+        <span class="badge badge-diff"><%= a.difficulty %></span>
+        <span class="badge badge-cat"><%= a.category %></span>
+        <span>⏱ <%= a.readingTimeMin %> min · <%= a.wordCount %> 词</span>
+        <% a.tags.forEach(t => { %><span class="badge" style="background:#FEF3C7;color:#D97706;font-size:10px"><%= t %></span><% }) %>
+      </div>
+    </div>
+  </a>
+<% }) %>

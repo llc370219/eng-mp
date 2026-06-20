@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>登录测试</title></head>
+<body style="font-family:sans-serif;max-width:400px;margin:40px auto;padding:20px">
+<h2>登录测试</h2>
+<div id="status" style="padding:10px;background:#f0f0f0;margin:10px 0;min-height:60px;font-size:13px">等待操作...</div>
+<input type="email" id="email" value="admin@test.com" style="width:100%;padding:8px;margin:5px 0" placeholder="邮箱">
+<input type="password" id="password" value="123456" style="width:100%;padding:8px;margin:5px 0" placeholder="密码">
+<button onclick="doLogin()" style="width:100%;padding:10px;font-size:16px;margin-top:10px">点击登录</button>
+<script>
+function log(msg) {
+  var el = document.getElementById('status');
+  var time = new Date().toLocaleTimeString();
+  el.innerHTML = time + ' - ' + msg + '<br>' + el.innerHTML;
+}
+function doLogin() {
+  var email = document.getElementById('email').value;
+  var password = document.getElementById('password').value;
+  log('开始登录: ' + email);
+  fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email: email, password: password})
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.accessToken) {
+      log('✅ 登录成功! 用户: ' + data.user.nickname);
+      log('Token: ' + data.accessToken.substring(0, 30) + '...');
+    } else {
+      log('❌ 失败: ' + (data.error || JSON.stringify(data)));
+    }
+  })
+  .catch(function(err) {
+    log('❌ 请求错误: ' + err.message);
+  });
+}
+log('页面已加载，点击按钮测试登录');
+</script>
+</body>
+</html>

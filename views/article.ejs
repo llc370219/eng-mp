@@ -1,0 +1,37 @@
+<a href="/demo/" style="color:#4F46E5;text-decoration:none;font-size:14px">← 返回列表</a>
+<div class="card" style="margin-top:12px">
+  <div style="font-size:18px;font-weight:600;margin-bottom:8px"><%= article.title %></div>
+  <div class="meta" style="margin-bottom:16px">
+    <span class="badge badge-diff"><%= article.difficulty %></span>
+    <span class="badge badge-cat"><%= article.category %></span>
+    <span>⏱ <%= article.readingTimeMin %> min · <%= article.wordCount %> 词</span>
+  </div>
+  <div class="content"><%= article.content %></div>
+</div>
+
+<% if (exercise && exercise.questions.length) { %>
+<div class="card">
+  <h2>📝 阅读理解</h2>
+  <form method="POST" action="/demo/article/<%= article._id %>/submit">
+    <% exercise.questions.forEach((q, i) => { %>
+      <div class="q-title"><%= i + 1 %>. <%= q.text %></div>
+      <% q.options.forEach(o => { %>
+        <div class="option <%= results ? (o === results[i].correctAnswer ? 'correct' : (o === results[i].userAnswer && !results[i].isCorrect ? 'wrong' : '')) : '' %>">
+          <label style="display:block;cursor:pointer;padding:4px 0">
+            <input type="radio" name="q<%= i %>" value="<%= o %>" <%= results ? 'disabled' : '' %>> <%= o %>
+          </label>
+        </div>
+      <% }) %>
+      <% if (results) { %>
+        <div class="exp"><%= results[i].explanation || '' %></div>
+      <% } %>
+    <% }) %>
+    <% if (!results) { %>
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:12px">提交答案</button>
+    <% } %>
+  </form>
+  <% if (results) { %>
+    <div class="score" style="color: <%= score >= 80 ? '#10B981' : score >= 60 ? '#F59E0B' : '#EF4444' %>"><%= score %>%</div>
+  <% } %>
+</div>
+<% } %>

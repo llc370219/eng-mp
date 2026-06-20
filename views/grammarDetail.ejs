@@ -1,0 +1,49 @@
+<a href="/demo/grammar" style="color:#4F46E5;text-decoration:none;font-size:14px">← 返回列表</a>
+<div class="card" style="margin-top:12px">
+  <div style="font-size:18px;font-weight:600;margin-bottom:8px"><%= grammar.title %></div>
+  <div class="meta" style="margin-bottom:16px">
+    <span class="badge badge-diff"><%= grammar.level %></span>
+    <span class="badge badge-cat"><%= grammar.category %></span>
+  </div>
+  <div style="line-height:1.8"><%- grammar.explanation.replace(/\n/g, '<br>') %></div>
+  <% if (grammar.examples.length) { %>
+    <div style="margin-top:16px;font-weight:500">例句:</div>
+    <% grammar.examples.forEach(e => { %>
+      <div class="grammar-example">
+        <div style="font-weight:500"><%= e.sentence %></div>
+        <div style="color:#6B7280;font-size:13px"><%= e.translation %></div>
+      </div>
+    <% }) %>
+  <% } %>
+</div>
+
+<% if (grammar.exercises.length) { %>
+<div class="card">
+  <h2>练习</h2>
+  <form method="POST" action="/demo/grammar/<%= grammar._id %>/submit">
+    <% grammar.exercises.forEach((q, i) => { %>
+      <div class="q-title"><%= i + 1 %>. <%= q.text %></div>
+      <% if (q.options && q.options.length) { %>
+        <% q.options.forEach(o => { %>
+          <div class="option <%= results ? (o === results[i].correctAnswer ? 'correct' : (o === results[i].userAnswer && !results[i].isCorrect ? 'wrong' : '')) : '' %>">
+            <label style="display:block;cursor:pointer;padding:4px 0">
+              <input type="radio" name="q<%= i %>" value="<%= o %>" <%= results ? 'disabled' : '' %>> <%= o %>
+            </label>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <input type="text" name="q<%= i %>" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;margin:4px 0" <%= results ? 'disabled' : '' %>>
+      <% } %>
+      <% if (results) { %>
+        <div class="exp"><%= results[i].explanation || '' %></div>
+      <% } %>
+    <% }) %>
+    <% if (!results) { %>
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:12px">提交答案</button>
+    <% } %>
+  </form>
+  <% if (results) { %>
+    <div class="score" style="color: <%= score >= 80 ? '#10B981' : score >= 60 ? '#F59E0B' : '#EF4444' %>"><%= score %>%</div>
+  <% } %>
+</div>
+<% } %>

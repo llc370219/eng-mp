@@ -1,0 +1,22 @@
+<div style="max-width:360px;margin:40px auto">
+  <div class="card">
+    <h2>登录</h2>
+    <% if (msg) { %>
+      <div class="msg msg-<%= type %>"><%= msg %></div>
+    <% } %>
+    <form method="POST" action="/demo/login">
+      <div class="form-row">
+        <label>邮箱</label>
+        <input type="email" name="email" value="admin@test.com" required>
+      </div>
+      <div class="form-row">
+        <label>密码</label>
+        <input type="password" name="password" value="123456" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%">登录</button>
+    </form>
+    <div style="text-align:center;margin-top:12px;font-size:13px;color:#6B7280">
+      没有账号？<a href="/demo/register">注册</a>
+    </div>
+  </div>
+</div>
