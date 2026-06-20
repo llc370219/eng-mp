@@ -166,8 +166,9 @@ input[type="text"] { flex: 1; }
 
 <div class="header">
   <h1>📖 英语阅读学习</h1>
-  <div class="subtitle">分级阅读 · 词汇记忆 · AI 辅助</div>
+  <div class="subtitle" id="headerStatus">分级阅读 · 词汇记忆 · AI 辅助</div>
 </div>
+<div id="debugLog" style="position:fixed;bottom:0;left:0;right:0;background:#1F2937;color:#10B981;font-family:monospace;font-size:11px;padding:8px;z-index:999;max-height:120px;overflow-y:auto;display:none"></div>
 
 <div class="tabs" id="mainTabs">
   <div class="tab active" data-tab="articles">📚 阅读</div>
@@ -335,12 +336,26 @@ let reviewVocabs = [];
 let reviewIndex = 0;
 let currentProvider = 'deepseek';
 
+// ===== Debug =====
+function debug(msg) {
+  const el = document.getElementById('debugLog');
+  el.style.display = 'block';
+  const time = new Date().toLocaleTimeString();
+  el.innerHTML += `<div>[${time}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+  console.log('[DEBUG]', msg);
+}
+
 // ===== Init =====
 document.addEventListener('DOMContentLoaded', () => {
+  debug('页面加载完成');
+  debug('Token: ' + (token ? token.substring(0, 20) + '...' : '无'));
   initTabs();
   if (token) {
+    debug('尝试自动登录...');
     loadUserProfile();
   } else {
+    debug('无 Token，显示登录面板');
     showAuth();
   }
 });
@@ -369,9 +384,12 @@ function showAuth() {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
 }
 function hideAuth() {
+  debug('切换到主界面...');
   document.getElementById('authPanel').style.display = 'none';
   document.getElementById('mainTabs').style.display = 'flex';
+  document.getElementById('headerStatus').textContent = '已登录: ' + (currentUser?.nickname || currentUser?.email || '');
   document.querySelector('.tab').click();
+  debug('主界面已显示');
 }
 function toggleAuthMode() {
   isLogin = !isLogin;
@@ -393,28 +411,33 @@ function showAuthMsg(msg, type) {
 async function handleAuth() {
   const email = document.getElementById('authEmail').value;
   const password = document.getElementById('authPassword').value;
+  debug('点击登录: ' + email);
   if (!email || !password) {
     showAuthMsg('请输入邮箱和密码', 'error');
+    debug('错误: 邮箱或密码为空');
     return;
   }
   const btn = document.getElementById('authBtn');
   btn.disabled = true;
   btn.textContent = '登录中...';
   showAuthMsg('正在连接服务器...', 'info');
+  debug('请求: POST /auth/login');
   const endpoint = isLogin ? '/auth/login' : '/auth/register';
   const body = { email, password };
   if (!isLogin) body.nickname = document.getElementById('authNickname').value || '';
   try {
     const res = await api('POST', endpoint, body);
+    debug('响应: ' + JSON.stringify(res).substring(0, 100));
     if (!res.accessToken) throw new Error('未获取到 Token');
     token = res.accessToken;
     localStorage.setItem('token', token);
     currentUser = res.user;
     showAuthMsg('登录成功！正在跳转...', 'success');
+    debug('登录成功，准备跳转...');
     setTimeout(() => hideAuth(), 500);
   } catch (e) {
     showAuthMsg('登录失败: ' + e.message, 'error');
-    console.error('Auth error:', e);
+    debug('错误: ' + e.message);
   } finally {
     btn.disabled = false;
     btn.textContent = isLogin ? '登录' : '注册';
