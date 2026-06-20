@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 
 const exerciseResultSchema = new mongoose.Schema({
-  questionIndex: Number,
+  question: String,
+  options: [String],
   userAnswer: String,
   correctAnswer: String,
   isCorrect: Boolean,
+  explanation: String,
 }, { _id: false });
 
 const readingProgressSchema = new mongoose.Schema({

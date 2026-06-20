@@ -80,7 +80,7 @@ router.get('/', adminAuth, async (req, res) => {
     Dictionary.countDocuments(),
     StudySession.distinct('userId', { createdAt: { $gte: today } }).then(ids => ids.length),
     ReadingProgress.countDocuments({ createdAt: { $gte: today } }),
-    WrongAnswer.countDocuments({ createdAt: { $gte: today } }),
+    ReadingProgress.countDocuments({ exerciseScore: { $ne: null }, updatedAt: { $gte: today } }),
     AILog.countDocuments({ createdAt: { $gte: today } }),
   ]);
 
@@ -170,7 +170,7 @@ router.post('/invite/create', adminAuth, async (req, res) => {
   for (let i = 0; i < Math.min(count, 50); i++) {
     let code;
     do { code = InviteCode.generateCode(); } while (await InviteCode.findOne({ code }));
-    codes.push({ code, createdBy: req.user._id, maxUses, note });
+    codes.push({ code, createdBy: res.locals.user._id, maxUses, note });
   }
   await InviteCode.insertMany(codes);
   res.redirect('/admin/invite');

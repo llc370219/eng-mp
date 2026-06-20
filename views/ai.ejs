@@ -85,7 +85,7 @@
   <% if (task === 'history' && result) { %>
     <div style="margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;line-height:1.8">
       <% if (result.data.error) { %><div style="color:#EF4444"><%= result.data.error %></div>
-      <% } else { %><div><%- result.data.analysis.replace(/\n/g, '<br>') %></div><% } %>
+      <% } else { %><div style="white-space:pre-line"><%= result.data.analysis %></div><% } %>
     </div>
   <% } %>
 </div>

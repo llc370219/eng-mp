@@ -184,7 +184,7 @@ router.post('/article/:id/submit', requireAuth, async (req, res) => {
   // 更新阅读进度
   await ReadingProgress.findOneAndUpdate(
     { userId: res.locals.user._id, articleId: article._id },
-    { exerciseScore: score, exerciseResults: results, status: 'completed', endTime: new Date() }
+    { exerciseScore: score, exerciseResults: results, status: 'completed', endTime: new Date(), progress: 100 }
   );
 
   // 自动打卡
