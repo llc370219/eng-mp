@@ -1,4 +1,10 @@
 <%- include("header") %>
+<% if (typeof checkedIn !== 'undefined' && checkedIn) { %>
+  <div style="background:#D1FAE5;border:1px solid #10B981;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:14px;color:#059669;display:flex;align-items:center;gap:8px">
+    <span style="font-size:20px">🎉</span> 恭喜！完成文章阅读，今日已自动打卡！
+    <a href="/demo/checkin" style="margin-left:auto;color:#059669;font-weight:500">查看详情 →</a>
+  </div>
+<% } %>
 <a href="/demo/" style="color:#4F46E5;text-decoration:none;font-size:14px">← 返回列表</a>
 <div class="card" style="margin-top:12px">
   <div style="font-size:18px;font-weight:600;margin-bottom:8px"><%= article.title %></div>

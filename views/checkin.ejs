@@ -1,0 +1,91 @@
+<%- include("header") %>
+<h2>✅ 每日打卡</h2>
+
+<div class="card" style="text-align:center;padding:24px">
+  <% if (todayChecked) { %>
+    <div style="font-size:48px;margin-bottom:8px">🎉</div>
+    <div style="font-size:20px;font-weight:600;color:#10B981">今日已打卡</div>
+    <div style="color:#6B7280;font-size:13px;margin-top:4px">坚持学习，保持连续！</div>
+  <% } else { %>
+    <div style="font-size:48px;margin-bottom:8px">📝</div>
+    <div style="font-size:18px;font-weight:600;color:#374151">今日还未打卡</div>
+    <div style="color:#6B7280;font-size:13px;margin:8px 0">完成以下任一任务即可打卡：</div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:16px 0">
+      <div style="padding:12px 16px;background:#EEF2FF;border-radius:8px;font-size:13px">📖 完成 1 篇文章</div>
+      <div style="padding:12px 16px;background:#F0FDF4;border-radius:8px;font-size:13px">📝 复习 5 个单词</div>
+      <div style="padding:12px 16px;background:#FEF3C7;border-radius:8px;font-size:13px">⏱ 学习 5 分钟</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+      <a href="/demo/" class="btn btn-primary" style="text-decoration:none;color:white">📚 去阅读</a>
+      <a href="/demo/vocab/review" class="btn btn-primary" style="text-decoration:none;color:white;background:#10B981">📝 去复习</a>
+    </div>
+  <% } %>
+</div>
+
+<div class="card">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center">
+    <div style="padding:12px;background:#FEF3C7;border-radius:8px">
+      <div style="font-size:24px;font-weight:700;color:#D97706"><%= streak.current %></div>
+      <div style="font-size:11px;color:#6B7280">🔥 当前连续</div>
+    </div>
+    <div style="padding:12px;background:#ECFDF5;border-radius:8px">
+      <div style="font-size:24px;font-weight:700;color:#059669"><%= streak.max %></div>
+      <div style="font-size:11px;color:#6B7280">🏆 最长连续</div>
+    </div>
+    <div style="padding:12px;background:#EEF2FF;border-radius:8px">
+      <div style="font-size:24px;font-weight:700;color:#4F46E5"><%= history.length %></div>
+      <div style="font-size:11px;color:#6B7280">📅 总打卡天数</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📅 打卡日历</h2>
+  <%
+    // 生成最近35天的日期网格
+    const days = [];
+    const now = new Date();
+    for (let i = 34; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().slice(0, 10));
+    }
+    const checkedDates = new Set(history.map(h => h.date));
+  %>
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px">
+    <% ['一','二','三','四','五','六','日'].forEach(d => { %>
+      <div style="text-align:center;font-size:11px;color:#6B7280;padding:4px"><%= d %></div>
+    <% }) %>
+    <% days.forEach(d => { %>
+      <div style="text-align:center;padding:6px;border-radius:6px;font-size:11px;
+        <%= checkedDates.has(d) ? 'background:#10B981;color:white;font-weight:600' : (d === today ? 'background:#EEF2FF;color:#4F46E5' : 'background:#F9FAFB;color:#9CA3AF') %>"
+        title="<%= d %>">
+        <%= d.slice(8) %>
+      </div>
+    <% }) %>
+  </div>
+  <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:#6B7280">
+    <span>🟢 已打卡</span>
+    <span>⬜ 未打卡</span>
+    <span style="color:#4F46E5">🔵 今天</span>
+  </div>
+</div>
+
+<% if (history.length > 0) { %>
+<div class="card">
+  <h2>📋 打卡记录</h2>
+  <table style="font-size:13px">
+    <tr><th>日期</th><th>阅读</th><th>复习</th><th>学习分钟</th><th>活动</th></tr>
+    <% history.forEach(h => { %>
+    <tr>
+      <td><%= h.date %></td>
+      <td><%= h.articlesRead %> 篇</td>
+      <td><%= h.wordsReviewed %> 个</td>
+      <td><%= h.studyMin %> 分</td>
+      <td><%= h.activities.join(', ') || '-' %></td>
+    </tr>
+    <% }) %>
+  </table>
+</div>
+<% } %>
+<%- include("footer") %>

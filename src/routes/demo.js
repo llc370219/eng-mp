@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const config = require('../config');
 const User = require('../models/User');
 const Article = require('../models/Article');
+const { tryCheckIn, hasCheckedIn, getCheckInHistory, getStreak } = require('../services/checkin');
 const Exercise = require('../models/Exercise');
 const Vocab = require('../models/Vocab');
 const VocabProgress = require('../models/VocabProgress');
@@ -186,7 +187,11 @@ router.post('/article/:id/submit', requireAuth, async (req, res) => {
     { exerciseScore: score, exerciseResults: results, status: 'completed', endTime: new Date() }
   );
 
-  render(res, 'article', { article, exercise, results, score, aiResult: null });
+  // 自动打卡
+  const checkinResult = await tryCheckIn(res.locals.user._id, { type: 'reading' });
+  const checkedIn = checkinResult.qualified;
+
+  render(res, 'article', { article, exercise, results, score, aiResult: null, checkedIn });
 });
 
 // ===== 文章内 AI 分析 =====
@@ -283,11 +288,13 @@ router.post('/vocab/review/:id', requireAuth, async (req, res) => {
     Object.assign(vocab, r, { lastReview: new Date(), totalReviews: vocab.totalReviews + 1 });
     if (quality >= 3) vocab.correctReviews += 1;
     vocab.lastScore = quality;
-    // 更新掌握等级
     if (vocab.repetition >= 5 && vocab.easeFactor >= 2.3) vocab.masteryLevel = 'mastered';
     else if (vocab.repetition >= 2) vocab.masteryLevel = 'review';
     else if (vocab.repetition >= 1) vocab.masteryLevel = 'learning';
     await vocab.save();
+
+    // 自动打卡（每次复习计1个单词）
+    await tryCheckIn(res.locals.user._id, { type: 'vocab', count: 1 });
   }
   res.redirect('/demo/vocab/review');
 });
@@ -326,6 +333,23 @@ router.post('/grammar/:id/submit', requireAuth, async (req, res) => {
   });
   const score = grammar.exercises.length > 0 ? Math.round((correct / grammar.exercises.length) * 100) : 0;
   render(res, 'grammarDetail', { grammar, results, score });
+});
+
+// ===== 打卡 =====
+router.get('/checkin', requireAuth, async (req, res) => {
+  const userId = res.locals.user._id;
+  const todayChecked = await hasCheckedIn(userId);
+  const history = await getCheckInHistory(userId, 60);
+  const streak = await getStreak(userId);
+  const today = new Date().toISOString().slice(0, 10);
+  render(res, 'checkin', { todayChecked, history, streak, today });
+});
+
+router.post('/checkin', requireAuth, async (req, res) => {
+  const userId = res.locals.user._id;
+  const { type } = req.body; // 'reading' | 'vocab' | 'study'
+  const result = await tryCheckIn(userId, { type, count: 1, minutes: 5 });
+  res.redirect('/demo/checkin');
 });
 
 // ===== 统计 =====
