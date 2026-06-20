@@ -1,0 +1,18 @@
+<%- include("header") %>
+<h1>📐 语法管理</h1>
+<div class="card">
+  <table>
+    <tr><th>标题</th><th>等级</th><th>分类</th><th>例句</th><th>练习</th><th>操作</th></tr>
+    <% grammars.forEach(g => { %>
+    <tr>
+      <td><%= g.title %></td>
+      <td><span class="badge badge-diff"><%= g.level %></span></td>
+      <td><span class="badge badge-cat"><%= g.category %></span></td>
+      <td><%= g.examples.length %></td>
+      <td><%= g.exercises.length %></td>
+      <td><form method="POST" action="/admin/grammar/<%= g._id %>/delete" style="display:inline"><button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定删除？')">删除</button></form></td>
+    </tr>
+    <% }) %>
+  </table>
+</div>
+<%- include("footer") %>

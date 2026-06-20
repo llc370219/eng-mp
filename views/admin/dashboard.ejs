@@ -1,0 +1,38 @@
+<%- include("header") %>
+<h1>📊 Dashboard</h1>
+<div class="stat-grid">
+  <div class="stat-item"><div class="stat-val"><%= totalUsers %></div><div class="stat-lbl">总用户</div></div>
+  <div class="stat-item"><div class="stat-val"><%= todayUsers %></div><div class="stat-lbl">今日注册</div></div>
+  <div class="stat-item"><div class="stat-val"><%= todayActive %></div><div class="stat-lbl">今日活跃</div></div>
+  <div class="stat-item"><div class="stat-val"><%= totalArticles %></div><div class="stat-lbl">文章数</div></div>
+  <div class="stat-item"><div class="stat-val"><%= totalGrammar %></div><div class="stat-lbl">语法数</div></div>
+  <div class="stat-item"><div class="stat-val"><%= totalDict %></div><div class="stat-lbl">词典词条</div></div>
+  <div class="stat-item"><div class="stat-val"><%= todayReads %></div><div class="stat-lbl">今日阅读</div></div>
+  <div class="stat-item"><div class="stat-val"><%= todayAI %></div><div class="stat-lbl">今日AI调用</div></div>
+</div>
+<div class="card" style="margin-top:16px">
+  <h2>用户等级分布</h2>
+  <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
+    <% const colors = {A1:'#4F46E5',A2:'#7C3AED',B1:'#2563EB',B2:'#0891B2',C1:'#059669',C2:'#D97706'}; %>
+    <% levelDist.forEach(l => { %>
+      <div style="text-align:center;padding:12px;background:#F9FAFB;border-radius:8px;min-width:80px">
+        <div style="font-size:20px;font-weight:700;color:<%= colors[l._id] || '#6B7280' %>"><%= l.count %></div>
+        <div style="font-size:11px;color:#6B7280"><%= l._id %></div>
+      </div>
+    <% }) %>
+  </div>
+</div>
+<div class="card">
+  <h2>近7天注册趋势</h2>
+  <% if (registerTrend.length > 0) { %>
+    <% const maxR = Math.max(...registerTrend.map(d => d.count), 1); %>
+    <svg width="100%" height="120" viewBox="0 0 <%= registerTrend.length * 60 %> 120" style="margin-top:8px">
+      <% registerTrend.forEach((d, i) => { %>
+        <rect x="<%= i*60+15 %>" y="<%= 100-(d.count/maxR*80) %>" width="40" height="<%= d.count/maxR*80 %>" fill="#4F46E5" rx="4"/>
+        <text x="<%= i*60+35 %>" y="115" text-anchor="middle" font-size="10" fill="#6B7280"><%= d._id %></text>
+        <text x="<%= i*60+35 %>" y="<%= 95-(d.count/maxR*80) %>" text-anchor="middle" font-size="11" fill="#4F46E5" font-weight="600"><%= d.count %></text>
+      <% }) %>
+    </svg>
+  <% } else { %><div style="text-align:center;color:#6B7280;padding:20px">暂无数据</div><% } %>
+</div>
+<%- include("footer") %>

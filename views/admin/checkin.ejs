@@ -1,0 +1,23 @@
+<%- include("header") %>
+<h1>✅ 打卡记录</h1>
+<div class="stat-grid" style="margin-bottom:16px">
+  <div class="stat-item"><div class="stat-val"><%= todayCount %></div><div class="stat-lbl">今日打卡</div></div>
+  <div class="stat-item"><div class="stat-val"><%= total %></div><div class="stat-lbl">总记录数</div></div>
+</div>
+<div class="card">
+  <table>
+    <tr><th>用户</th><th>日期</th><th>学习分钟</th><th>阅读文章</th><th>复习单词</th><th>活动</th></tr>
+    <% checkIns.forEach(c => { %>
+    <tr>
+      <td><%= c.userId ? (c.userId.nickname || c.userId.email) : '-' %></td>
+      <td><%= c.date %></td>
+      <td><%= c.studyMin %></td>
+      <td><%= c.articlesRead %></td>
+      <td><%= c.wordsReviewed %></td>
+      <td><%= c.activities.join(', ') || '-' %></td>
+    </tr>
+    <% }) %>
+    <% if (!checkIns.length) { %><tr><td colspan="6" style="text-align:center;color:#6B7280">暂无打卡记录</td></tr><% } %>
+  </table>
+</div>
+<%- include("footer") %>

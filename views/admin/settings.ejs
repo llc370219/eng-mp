@@ -1,0 +1,39 @@
+<%- include("header") %>
+<h1>⚙️ 系统设置</h1>
+<form method="POST" action="/admin/settings">
+<div class="card">
+  <h2>基本设置</h2>
+  <div class="form-row"><label>站点名称</label><input type="text" name="siteName" value="<%= settings.siteName || '' %>"></div>
+  <div class="form-row"><label>默认用户等级</label>
+    <select name="defaultUserLevel">
+      <% ['A1','A2','B1','B2','C1','C2'].forEach(l => { %><option value="<%= l %>" <%= settings.defaultUserLevel===l?'selected':'' %>><%= l %></option><% }) %>
+    </select>
+  </div>
+  <div class="form-row"><label>打卡最低学习分钟</label><input type="number" name="dailyCheckInMin" value="<%= settings.dailyCheckInMin || 5 %>"></div>
+</div>
+<div class="card">
+  <h2>注册设置</h2>
+  <div class="form-row"><label>开放注册</label>
+    <select name="allowRegistration"><option value="true" <%= settings.allowRegistration!==false?'selected':'' %>>是</option><option value="false" <%= settings.allowRegistration===false?'selected':'' %>>否</option></select>
+  </div>
+  <div class="form-row"><label>需要邀请码</label>
+    <select name="requireInviteCode"><option value="true" <%= settings.requireInviteCode!==false?'selected':'' %>>是</option><option value="false" <%= settings.requireInviteCode===false?'selected':'' %>>否</option></select>
+  </div>
+</div>
+<div class="card">
+  <h2>AI 设置</h2>
+  <div class="form-row"><label>默认AI提供商</label>
+    <select name="aiProvider">
+      <% ['deepseek','mimo','openai','claude','moonshot','zhipu','qwen'].forEach(p => { %><option value="<%= p %>" <%= settings.aiProvider===p?'selected':'' %>><%= p %></option><% }) %>
+    </select>
+  </div>
+</div>
+<div class="card">
+  <h2>系统</h2>
+  <div class="form-row"><label>维护模式</label>
+    <select name="maintenanceMode"><option value="false" <%= !settings.maintenanceMode?'selected':'' %>>关闭</option><option value="true" <%= settings.maintenanceMode?'selected':'' %>>开启</option></select>
+  </div>
+</div>
+<button type="submit" class="btn btn-primary" style="padding:12px 32px;font-size:14px">保存设置</button>
+</form>
+<%- include("footer") %>

@@ -1,0 +1,28 @@
+<%- include("header") %>
+<h1>📚 文章管理</h1>
+<form method="GET" action="/admin/articles" style="display:flex;gap:8px;margin-bottom:16px">
+  <select name="difficulty" style="padding:8px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px">
+    <option value="">全部难度</option>
+    <% ['A1','A2','B1','B2','C1','C2'].forEach(d => { %><option value="<%= d %>" <%= difficulty===d?'selected':'' %>><%= d %></option><% }) %>
+  </select>
+  <button type="submit" class="btn btn-primary">筛选</button>
+</form>
+<div class="card">
+  <table>
+    <tr><th>标题</th><th>难度</th><th>分类</th><th>字数</th><th>状态</th><th>操作</th></tr>
+    <% articles.forEach(a => { %>
+    <tr>
+      <td><%= a.title %></td>
+      <td><span class="badge badge-diff"><%= a.difficulty %></span></td>
+      <td><span class="badge badge-cat"><%= a.category %></span></td>
+      <td><%= a.wordCount %></td>
+      <td><%= a.isPublished ? '✅ 已发布' : '⏸ 未发布' %></td>
+      <td>
+        <form method="POST" action="/admin/articles/<%= a._id %>/toggle" style="display:inline"><button type="submit" class="btn btn-warning btn-sm"><%= a.isPublished ? '下架' : '发布' %></button></form>
+        <form method="POST" action="/admin/articles/<%= a._id %>/delete" style="display:inline"><button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定删除？')">删除</button></form>
+      </td>
+    </tr>
+    <% }) %>
+  </table>
+</div>
+<%- include("footer") %>

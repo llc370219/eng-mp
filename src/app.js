@@ -22,6 +22,7 @@ const dictRoutes = require('./routes/dictionary');
 const grammarRoutes = require('./routes/grammar');
 const aiRoutes = require('./routes/ai');
 const studyRoutes = require('./routes/study');
+const adminRoutes = require('./routes/admin');
 const docsRoutes = require('./routes/docs');
 const demoRoutes = require('./routes/demo');
 
@@ -86,6 +87,9 @@ app.use('/api/docs', docsRoutes);
 // ===== 服务端渲染 Demo =====
 app.use('/demo', demoRoutes);
 
+// ===== 后台管理 =====
+app.use('/admin', adminRoutes);
+
 // 首页跳转 Demo
 app.get('/', (req, res) => res.redirect('/demo/'));
 
@@ -100,6 +104,9 @@ app.use(errorHandler);
 // ===== 启动 =====
 async function start() {
   await connectDB();
+  // 初始化系统设置
+  const SystemSetting = require('./models/SystemSetting');
+  await SystemSetting.initDefaults();
   app.listen(config.port, () => {
     logger.info(`Server running on port ${config.port} [${config.nodeEnv}]`);
   });

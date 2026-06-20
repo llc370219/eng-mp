@@ -1,0 +1,31 @@
+<%- include("header") %>
+<h1>🎫 邀请码管理</h1>
+<div class="card">
+  <h2>生成邀请码</h2>
+  <form method="POST" action="/admin/invite/create" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+    <div><label style="font-size:12px;display:block">数量</label><input type="number" name="count" value="1" min="1" max="50" style="width:80px;padding:8px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px"></div>
+    <div><label style="font-size:12px;display:block">使用次数</label><input type="number" name="maxUses" value="1" min="1" style="width:80px;padding:8px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px"></div>
+    <div><label style="font-size:12px;display:block">备注</label><input type="text" name="note" placeholder="可选" style="padding:8px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px"></div>
+    <button type="submit" class="btn btn-primary">生成</button>
+  </form>
+</div>
+<div class="card">
+  <table>
+    <tr><th>邀请码</th><th>使用次数</th><th>状态</th><th>使用者</th><th>备注</th><th>创建时间</th><th>操作</th></tr>
+    <% codes.forEach(c => { %>
+    <tr>
+      <td style="font-family:monospace;font-weight:600;font-size:14px"><%= c.code %></td>
+      <td><%= c.usedCount %> / <%= c.maxUses %></td>
+      <td><span class="badge <%= c.isActive ? 'badge-cat' : 'badge-diff' %>"><%= c.isActive ? '启用' : '禁用' %></span></td>
+      <td><% c.usedBy.forEach(u => { %><div style="font-size:11px"><%= u.email %></div><% }) %></td>
+      <td><%= c.note || '-' %></td>
+      <td><%= new Date(c.createdAt).toLocaleDateString() %></td>
+      <td>
+        <form method="POST" action="/admin/invite/<%= c._id %>/toggle" style="display:inline"><button type="submit" class="btn btn-warning btn-sm"><%= c.isActive ? '禁用' : '启用' %></button></form>
+        <form method="POST" action="/admin/invite/<%= c._id %>/delete" style="display:inline"><button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定删除？')">删除</button></form>
+      </td>
+    </tr>
+    <% }) %>
+  </table>
+</div>
+<%- include("footer") %>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>管理员登录</title>
+<style>body{font-family:-apple-system,sans-serif;background:#F3F4F6;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.card{background:white;border-radius:12px;padding:32px;width:360px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+h2{text-align:center;margin-bottom:24px}
+.form-row{margin-bottom:16px}
+.form-row label{display:block;font-size:13px;font-weight:500;margin-bottom:4px}
+.form-row input{width:100%;padding:10px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px}
+.btn{width:100%;padding:10px;background:#4F46E5;color:white;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:500}
+.msg{padding:10px;border-radius:8px;margin-bottom:16px;font-size:13px;background:#FEE2E2;color:#DC2626;text-align:center}</style>
+</head><body>
+<div class="card">
+  <h2>🔒 后台管理登录</h2>
+  <% if (msg) { %><div class="msg"><%= msg %></div><% } %>
+  <form method="POST" action="/admin/login">
+    <div class="form-row"><label>邮箱</label><input type="email" name="email" required></div>
+    <div class="form-row"><label>密码</label><input type="password" name="password" required></div>
+    <button type="submit" class="btn">登录</button>
+  </form>
+</div>
+</body></html>

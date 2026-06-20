@@ -1,0 +1,90 @@
+<%- include("header") %>
+<a href="/admin/users" style="color:#4F46E5;text-decoration:none;font-size:13px">← 返回用户列表</a>
+<h1 style="margin-top:8px">👤 <%= user.nickname || user.email %></h1>
+<div class="stat-grid">
+  <div class="stat-item"><div class="stat-val"><%= totalStudyMin %></div><div class="stat-lbl">学习分钟</div></div>
+  <div class="stat-item"><div class="stat-val"><%= readCompleted %></div><div class="stat-lbl">完成文章</div></div>
+  <div class="stat-item"><div class="stat-val"><%= vocabTotal %></div><div class="stat-lbl">生词总数</div></div>
+  <div class="stat-item"><div class="stat-val"><%= vocabMastered %></div><div class="stat-lbl">已掌握</div></div>
+</div>
+<div class="card">
+  <h2>基本信息</h2>
+  <table><tr><td style="width:120px;font-weight:500">邮箱</td><td><%= user.email %></td></tr>
+  <tr><td style="font-weight:500">昵称</td><td><%= user.nickname || '-' %></td></tr>
+  <tr><td style="font-weight:500">等级</td><td><span class="badge badge-diff"><%= user.level %></span></td></tr>
+  <tr><td style="font-weight:500">目标</td><td><%= user.goal %></td></tr>
+  <tr><td style="font-weight:500">角色</td><td><span class="badge badge-role"><%= user.role %></span></td></tr>
+  <tr><td style="font-weight:500">注册时间</td><td><%= new Date(user.createdAt).toLocaleString() %></td></tr>
+  <tr><td style="font-weight:500">最后登录</td><td><%= user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : '-' %></td></tr>
+  <tr><td style="font-weight:500">邮箱验证</td><td><%= user.emailVerified ? '✅ 已验证' : '❌ 未验证' %></td></tr>
+  </table>
+  <form method="POST" action="/admin/users/<%= user._id %>/role" style="margin-top:12px;display:flex;gap:8px;align-items:center">
+    <label style="font-size:13px;font-weight:500">修改角色:</label>
+    <select name="role" style="padding:6px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px">
+      <option value="user" <%= user.role==='user'?'selected':'' %>>user</option>
+      <option value="editor" <%= user.role==='editor'?'selected':'' %>>editor</option>
+      <option value="admin" <%= user.role==='admin'?'selected':'' %>>admin</option>
+    </select>
+    <button type="submit" class="btn btn-primary btn-sm">更新</button>
+  </form>
+</div>
+<div class="card">
+  <h2>📚 阅读历史</h2>
+  <table><tr><th>文章</th><th>难度</th><th>进度</th><th>得分</th><th>时间</th></tr>
+  <% readings.forEach(r => { %>
+  <tr>
+    <td><%= r.articleId ? r.articleId.title : '-' %></td>
+    <td><span class="badge badge-diff"><%= r.articleId ? r.articleId.difficulty : '-' %></span></td>
+    <td><%= r.progress %>%</td>
+    <td><%= r.exerciseScore !== null ? r.exerciseScore + '%' : '-' %></td>
+    <td><%= new Date(r.updatedAt).toLocaleDateString() %></td>
+  </tr>
+  <% }) %>
+  <% if (!readings.length) { %><tr><td colspan="5" style="text-align:center;color:#6B7280">暂无记录</td></tr><% } %>
+  </table>
+</div>
+<div class="card">
+  <h2>📝 生词本</h2>
+  <table><tr><th>单词</th><th>释义</th><th>掌握等级</th><th>复习次数</th><th>添加时间</th></tr>
+  <% vocabs.forEach(v => { %>
+  <tr>
+    <td style="font-weight:500"><%= v.word %></td>
+    <td><%= v.definition || '-' %></td>
+    <td><span class="badge badge-cat"><%= v.masteryLevel %></span></td>
+    <td><%= v.totalReviews %></td>
+    <td><%= new Date(v.createdAt).toLocaleDateString() %></td>
+  </tr>
+  <% }) %>
+  <% if (!vocabs.length) { %><tr><td colspan="5" style="text-align:center;color:#6B7280">暂无记录</td></tr><% } %>
+  </table>
+</div>
+<div class="card">
+  <h2>❌ 错题记录</h2>
+  <table><tr><th>题目</th><th>用户答案</th><th>正确答案</th><th>掌握</th><th>时间</th></tr>
+  <% wrongAnswers.forEach(w => { %>
+  <tr>
+    <td><%= w.questionText.substring(0,50) %><%= w.questionText.length>50?'...':'' %></td>
+    <td style="color:#EF4444"><%= w.yourAnswer %></td>
+    <td style="color:#10B981"><%= w.correctAnswer %></td>
+    <td><%= w.mastered ? '✅' : '❌' %></td>
+    <td><%= new Date(w.createdAt).toLocaleDateString() %></td>
+  </tr>
+  <% }) %>
+  <% if (!wrongAnswers.length) { %><tr><td colspan="5" style="text-align:center;color:#6B7280">暂无记录</td></tr><% } %>
+  </table>
+</div>
+<div class="card">
+  <h2>🔐 登录历史</h2>
+  <table><tr><th>邮箱</th><th>IP</th><th>结果</th><th>时间</th></tr>
+  <% loginLogs.forEach(l => { %>
+  <tr>
+    <td><%= l.email %></td>
+    <td><%= l.ip || '-' %></td>
+    <td><%= l.success ? '✅ 成功' : '❌ 失败' %></td>
+    <td><%= new Date(l.createdAt).toLocaleString() %></td>
+  </tr>
+  <% }) %>
+  <% if (!loginLogs.length) { %><tr><td colspan="4" style="text-align:center;color:#6B7280">暂无记录</td></tr><% } %>
+  </table>
+</div>
+<%- include("footer") %>

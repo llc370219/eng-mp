@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后台管理 - 英语阅读学习</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,sans-serif;background:#F3F4F6;color:#111827;display:flex;min-height:100vh}
+.sidebar{width:220px;background:#1F2937;color:white;padding:16px 0;flex-shrink:0}
+.sidebar h2{font-size:16px;padding:0 16px 16px;border-bottom:1px solid #374151;margin-bottom:8px}
+.sidebar a{display:block;padding:10px 16px;color:#D1D5DB;text-decoration:none;font-size:13px;border-left:3px solid transparent}
+.sidebar a:hover{background:#374151;color:white}
+.sidebar a.active{background:#374151;color:white;border-left-color:#4F46E5}
+.main{flex:1;padding:24px;overflow-y:auto}
+.card{background:white;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #E5E7EB}
+th{background:#F9FAFB;font-weight:600;font-size:12px;color:#6B7280;text-transform:uppercase}
+.btn{padding:6px 12px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;text-decoration:none;display:inline-block}
+.btn-primary{background:#4F46E5;color:white}
+.btn-danger{background:#EF4444;color:white}
+.btn-success{background:#10B981;color:white}
+.btn-warning{background:#F59E0B;color:white}
+.btn-sm{padding:4px 8px;font-size:11px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px}
+.badge-diff{background:#EEF2FF;color:#4F46E5}
+.badge-cat{background:#F0FDF4;color:#16A34A}
+.badge-role{background:#FEF3C7;color:#D97706}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat-item{text-align:center;padding:16px;background:white;border-radius:12px}
+.stat-val{font-size:24px;font-weight:700;color:#4F46E5}
+.stat-lbl{font-size:11px;color:#6B7280;margin-top:4px}
+.form-row{margin-bottom:12px}
+.form-row label{display:block;font-size:12px;font-weight:500;margin-bottom:4px;color:#374151}
+.form-row input,.form-row select{padding:8px 12px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px}
+.msg{padding:10px;border-radius:8px;margin-bottom:12px;font-size:13px}
+.msg-ok{background:#D1FAE5;color:#059669}
+.msg-err{background:#FEE2E2;color:#DC2626}
+h1{font-size:20px;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <h2>📖 后台管理</h2>
+  <a href="/admin/" class="<%= page==='dashboard'?'active':'' %>">📊 Dashboard</a>
+  <a href="/admin/users" class="<%= page==='users'||page==='userDetail'?'active':'' %>">👥 用户管理</a>
+  <a href="/admin/invite" class="<%= page==='invite'?'active':'' %>">🎫 邀请码</a>
+  <a href="/admin/articles" class="<%= page==='articles'?'active':'' %>">📚 文章管理</a>
+  <a href="/admin/grammar" class="<%= page==='grammar'?'active':'' %>">📐 语法管理</a>
+  <a href="/admin/dict" class="<%= page==='dict'?'active':'' %>">📖 词典管理</a>
+  <a href="/admin/checkin" class="<%= page==='checkin'?'active':'' %>">✅ 打卡记录</a>
+  <a href="/admin/ai" class="<%= page==='ai'?'active':'' %>">🤖 AI 管理</a>
+  <a href="/admin/stats" class="<%= page==='stats'?'active':'' %>">📈 统计报表</a>
+  <a href="/admin/settings" class="<%= page==='settings'?'active':'' %>">⚙️ 系统设置</a>
+  <div style="margin-top:auto;padding:16px;border-top:1px solid #374151;margin-top:200px">
+    <div style="font-size:12px;color:#9CA3AF"><%= user ? user.email : '' %></div>
+    <a href="/admin/logout" style="color:#F87171;font-size:12px">退出登录</a>
+  </div>
+</div>
+<div class="main">

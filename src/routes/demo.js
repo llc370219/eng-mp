@@ -82,10 +82,24 @@ router.post('/send-code', async (req, res) => {
 
 // 验证码注册
 router.post('/register', async (req, res) => {
-  const { email, code, password, nickname } = req.body;
+  const { email, code, password, nickname, inviteCode } = req.body;
   try {
     const existing = await User.findOne({ email });
     if (existing) return res.render('register', { msg: '该邮箱已注册', page: 'register', user: null });
+
+    // 验证邀请码
+    const SystemSetting = require('../models/SystemSetting');
+    const requireInvite = await SystemSetting.get('requireInviteCode');
+    if (requireInvite) {
+      if (!inviteCode) return res.render('register', { msg: '请输入邀请码', page: 'register', user: null, email });
+      const InviteCode = require('../models/InviteCode');
+      const invite = await InviteCode.findOne({ code: inviteCode.toUpperCase(), isActive: true });
+      if (!invite) return res.render('register', { msg: '邀请码无效', page: 'register', user: null, email });
+      if (invite.expiresAt && invite.expiresAt < new Date()) return res.render('register', { msg: '邀请码已过期', page: 'register', user: null, email });
+      if (invite.usedCount >= invite.maxUses) return res.render('register', { msg: '邀请码已用完', page: 'register', user: null, email });
+      // 暂存邀请码，注册成功后更新
+      req._inviteCode = invite;
+    }
 
     const record = await VerificationCode.findOne({
       email, type: 'register', used: false,
@@ -104,7 +118,14 @@ router.post('/register', async (req, res) => {
     await record.save();
 
     const passwordHash = await User.hashPassword(password);
-    await User.create({ email, passwordHash, nickname: nickname || '', emailVerified: true });
+    const newUser = await User.create({ email, passwordHash, nickname: nickname || '', emailVerified: true });
+
+    // 更新邀请码
+    if (req._inviteCode) {
+      req._inviteCode.usedCount += 1;
+      req._inviteCode.usedBy.push(newUser._id);
+      await req._inviteCode.save();
+    }
 
     res.render('login', { msg: '注册成功，请登录', type: 'ok', page: 'login', user: null });
   } catch (e) { res.render('register', { msg: '注册失败: ' + e.message, page: 'register', user: null }); }

@@ -1,0 +1,39 @@
+<%- include("header") %>
+<h1>🤖 AI 管理</h1>
+<div class="stat-grid">
+  <div class="stat-item"><div class="stat-val"><%= totalCalls %></div><div class="stat-lbl">总调用次数</div></div>
+  <div class="stat-item"><div class="stat-val"><%= todayCalls %></div><div class="stat-lbl">今日调用</div></div>
+</div>
+<div class="card">
+  <h2>提供商分布</h2>
+  <table><tr><th>提供商</th><th>调用次数</th><th>Token消耗</th></tr>
+  <% providerStats.forEach(p => { %>
+  <tr><td><%= p._id || '-' %></td><td><%= p.count %></td><td><%= p.tokens %></td></tr>
+  <% }) %>
+  <% if (!providerStats.length) { %><tr><td colspan="3" style="text-align:center;color:#6B7280">暂无数据</td></tr><% } %>
+  </table>
+</div>
+<div class="card">
+  <h2>功能分布</h2>
+  <table><tr><th>功能</th><th>调用次数</th></tr>
+  <% functionStats.forEach(f => { %>
+  <tr><td><%= f._id || '-' %></td><td><%= f.count %></td></tr>
+  <% }) %>
+  </table>
+</div>
+<div class="card">
+  <h2>最近调用日志</h2>
+  <table><tr><th>用户</th><th>提供商</th><th>功能</th><th>耗时</th><th>状态</th><th>时间</th></tr>
+  <% recentLogs.forEach(l => { %>
+  <tr>
+    <td><%= l.userId ? l.userId.email : '-' %></td>
+    <td><%= l.provider %></td>
+    <td><%= l.function %></td>
+    <td><%= l.durationMs %>ms</td>
+    <td><%= l.success ? '✅' : '❌' %></td>
+    <td><%= new Date(l.createdAt).toLocaleString() %></td>
+  </tr>
+  <% }) %>
+  </table>
+</div>
+<%- include("footer") %>

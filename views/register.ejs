@@ -21,6 +21,10 @@
     <form method="POST" action="/demo/register" style="margin-top:16px;border-top:1px solid #E5E7EB;padding-top:16px">
       <input type="hidden" name="email" value="<%= typeof email !== 'undefined' && email ? email : '' %>">
       <div class="form-row">
+        <label>邀请码</label>
+        <input type="text" name="inviteCode" placeholder="8位邀请码" maxlength="8" required>
+      </div>
+      <div class="form-row">
         <label>验证码</label>
         <input type="text" name="code" placeholder="6位数字验证码" maxlength="6" required>
       </div>
