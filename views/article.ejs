@@ -10,6 +10,36 @@
   <div class="content"><%= article.content %></div>
 </div>
 
+<div class="card" style="border-left:4px solid #4F46E5">
+  <h2>🤖 AI 分析本文</h2>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+    <form method="POST" action="/demo/article/<%= article._id %>/ai" style="display:inline"><input type="hidden" name="task" value="summarize"><button type="submit" class="btn btn-primary btn-sm">📝 生成摘要</button></form>
+    <form method="POST" action="/demo/article/<%= article._id %>/ai" style="display:inline"><input type="hidden" name="task" value="translate"><button type="submit" class="btn btn-primary btn-sm">🌐 翻译全文</button></form>
+    <form method="POST" action="/demo/article/<%= article._id %>/ai" style="display:inline"><input type="hidden" name="task" value="quiz"><button type="submit" class="btn btn-primary btn-sm">❓ AI 出题</button></form>
+  </div>
+  <% if (aiResult) { %>
+    <div style="margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;border-left:4px solid #10B981">
+      <% if (aiResult.type === 'error') { %>
+        <div style="color:#EF4444"><%= aiResult.data.error %></div>
+      <% } else if (aiResult.type === 'summarize') { %>
+        <div><strong>中文摘要:</strong> <%= aiResult.data.summaryZh %></div>
+        <div style="margin-top:6px"><strong>English Summary:</strong> <%= aiResult.data.summaryEn %></div>
+      <% } else if (aiResult.type === 'translate') { %>
+        <div style="line-height:1.8"><%= aiResult.data.translation %></div>
+      <% } else if (aiResult.type === 'quiz') { %>
+        <% if (aiResult.data.questions) { aiResult.data.questions.forEach((q, i) => { %>
+          <div style="margin-bottom:12px">
+            <div style="font-weight:500"><%= i+1 %>. <%= q.text %></div>
+            <% if (q.options) { q.options.forEach(o => { %><div style="padding:4px 8px;margin:2px 0;font-size:13px">• <%= o %></div><% }); } %>
+            <div style="font-size:12px;color:#10B981;margin-top:4px">答案: <%= q.answer %></div>
+            <% if (q.explanation) { %><div style="font-size:12px;color:#6B7280"><%= q.explanation %></div><% } %>
+          </div>
+        <% }); } %>
+      <% } %>
+    </div>
+  <% } %>
+</div>
+
 <% if (exercise && exercise.questions.length) { %>
 <div class="card">
   <h2>📝 阅读理解</h2>
@@ -18,22 +48,14 @@
       <div class="q-title"><%= i + 1 %>. <%= q.text %></div>
       <% q.options.forEach(o => { %>
         <div class="option <%= results ? (o === results[i].correctAnswer ? 'correct' : (o === results[i].userAnswer && !results[i].isCorrect ? 'wrong' : '')) : '' %>">
-          <label style="display:block;cursor:pointer;padding:4px 0">
-            <input type="radio" name="q<%= i %>" value="<%= o %>" <%= results ? 'disabled' : '' %>> <%= o %>
-          </label>
+          <label style="display:block;cursor:pointer;padding:4px 0"><input type="radio" name="q<%= i %>" value="<%= o %>" <%= results ? 'disabled' : '' %>> <%= o %></label>
         </div>
       <% }) %>
-      <% if (results) { %>
-        <div class="exp"><%= results[i].explanation || '' %></div>
-      <% } %>
+      <% if (results) { %><div class="exp"><%= results[i].explanation || '' %></div><% } %>
     <% }) %>
-    <% if (!results) { %>
-      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:12px">提交答案</button>
-    <% } %>
+    <% if (!results) { %><button type="submit" class="btn btn-primary" style="width:100%;margin-top:12px">提交答案</button><% } %>
   </form>
-  <% if (results) { %>
-    <div class="score" style="color: <%= score >= 80 ? '#10B981' : score >= 60 ? '#F59E0B' : '#EF4444' %>"><%= score %>%</div>
-  <% } %>
+  <% if (results) { %><div class="score" style="color:<%= score >= 80 ? '#10B981' : score >= 60 ? '#F59E0B' : '#EF4444' %>"><%= score %>%</div><% } %>
 </div>
 <% } %>
 <%- include("footer") %>

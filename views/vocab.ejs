@@ -1,8 +1,32 @@
 <%- include("header") %>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-  <h2>📝 我的生词本 (<%= vocabs.length %>)</h2>
-  <a href="/demo/vocab/review" class="btn btn-primary btn-sm" style="text-decoration:none;color:white">开始复习</a>
+  <h2>📝 我的生词本</h2>
+  <a href="/demo/vocab/review" class="btn btn-primary btn-sm" style="text-decoration:none;color:white">开始复习 (<%= reviewCount %>)</a>
 </div>
+
+<div class="card">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center">
+    <div><div style="font-size:24px;font-weight:700;color:#4F46E5"><%= totalCount %></div><div style="font-size:12px;color:#6B7280">总词汇</div></div>
+    <div><div style="font-size:24px;font-weight:700;color:#10B981"><%= masteredCount %></div><div style="font-size:12px;color:#6B7280">已掌握</div></div>
+    <div><div style="font-size:24px;font-weight:700;color:#F59E0B"><%= reviewCount %></div><div style="font-size:12px;color:#6B7280">待复习</div></div>
+    <div><div style="font-size:24px;font-weight:700;color:#6366F1"><%= totalCount > 0 ? Math.round(masteredCount/totalCount*100) : 0 %>%</div><div style="font-size:12px;color:#6B7280">掌握率</div></div>
+  </div>
+</div>
+
+<% if (dailyAdd.length > 0) { %>
+<div class="card">
+  <h2>📈 近30天添加趋势</h2>
+  <% const maxCount = Math.max(...dailyAdd.map(d => d.count), 1); %>
+  <svg width="100%" height="120" viewBox="0 0 <%= dailyAdd.length * 40 %> 120" style="margin-top:8px">
+    <% dailyAdd.forEach((d, i) => { %>
+      <rect x="<%= i * 40 + 10 %>" y="<%= 100 - (d.count / maxCount * 80) %>" width="28" height="<%= (d.count / maxCount * 80) %>" fill="#4F46E5" rx="4" opacity="0.8"/>
+      <text x="<%= i * 40 + 24 %>" y="115" text-anchor="middle" font-size="9" fill="#6B7280"><%= d._id %></text>
+      <text x="<%= i * 40 + 24 %>" y="<%= 95 - (d.count / maxCount * 80) %>" text-anchor="middle" font-size="10" fill="#4F46E5" font-weight="600"><%= d.count %></text>
+    <% }) %>
+  </svg>
+</div>
+<% } %>
+
 <% if (!vocabs.length) { %>
   <div class="card" style="text-align:center;color:#6B7280">生词本为空，去词典查词添加吧</div>
 <% } %>

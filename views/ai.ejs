@@ -1,40 +1,91 @@
 <%- include("header") %>
 <h2>🤖 AI 辅助工具</h2>
-<div class="card">
-  <h2>文章摘要</h2>
+
+<div class="card" style="border-left:4px solid #4F46E5">
+  <h2>📝 文章摘要</h2>
   <form method="POST" action="/demo/ai/summarize">
-    <textarea name="text" rows="4" style="width:100%;padding:10px;border:1px solid #E5E7EB;border-radius:8px;font-size:14px" placeholder="粘贴英文文章..."><%= task === 'summarize' ? inputText : '' %></textarea>
+    <div style="margin-bottom:8px">
+      <label style="font-size:13px;color:#6B7280">选择已有文章（或手动输入）:</label>
+      <select name="articleId" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;margin-top:4px">
+        <option value="">-- 手动输入 --</option>
+        <% articles.forEach(a => { %>
+          <option value="<%= a._id %>" <%= selectedArticle && selectedArticle._id.toString() === a._id.toString() ? 'selected' : '' %>>[<%= a.difficulty %>] <%= a.title %></option>
+        <% }) %>
+      </select>
+    </div>
+    <textarea name="text" rows="3" style="width:100%;padding:10px;border:1px solid #E5E7EB;border-radius:8px;font-size:14px" placeholder="或粘贴英文文章..."></textarea>
     <button type="submit" class="btn btn-primary" style="margin-top:8px">生成摘要</button>
   </form>
   <% if (task === 'summarize' && result) { %>
     <div style="margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px">
-      <% if (result.error) { %>
-        <div style="color:#EF4444"><%= result.error %></div>
+      <% if (result.data.error) { %><div style="color:#EF4444"><%= result.data.error %></div>
       <% } else { %>
-        <div><strong>中文摘要:</strong> <%= result.summaryZh %></div>
-        <div style="margin-top:8px"><strong>English Summary:</strong> <%= result.summaryEn %></div>
+        <div><strong>中文摘要:</strong> <%= result.data.summaryZh %></div>
+        <div style="margin-top:6px"><strong>English Summary:</strong> <%= result.data.summaryEn %></div>
       <% } %>
     </div>
   <% } %>
 </div>
 
-<div class="card">
-  <h2>单词解析</h2>
+<div class="card" style="border-left:4px solid #10B981">
+  <h2>❓ 智能出题</h2>
+  <form method="POST" action="/demo/ai/quiz">
+    <div style="margin-bottom:8px">
+      <label style="font-size:13px;color:#6B7280">选择已有文章（或手动输入）:</label>
+      <select name="articleId" style="width:100%;padding:8px;border:1px solid #E5E7EB;border-radius:8px;margin-top:4px">
+        <option value="">-- 手动输入 --</option>
+        <% articles.forEach(a => { %>
+          <option value="<%= a._id %>">[<%= a.difficulty %>] <%= a.title %></option>
+        <% }) %>
+      </select>
+    </div>
+    <textarea name="text" rows="3" style="width:100%;padding:10px;border:1px solid #E5E7EB;border-radius:8px;font-size:14px" placeholder="或粘贴英文文章..."></textarea>
+    <button type="submit" class="btn btn-primary" style="margin-top:8px">生成练习题</button>
+  </form>
+  <% if (task === 'quiz' && result && result.data.questions) { %>
+    <div style="margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px">
+      <% result.data.questions.forEach((q, i) => { %>
+        <div style="margin-bottom:12px">
+          <div style="font-weight:500"><%= i+1 %>. <%= q.text %></div>
+          <% if (q.options) { q.options.forEach(o => { %><div style="padding:4px 8px;margin:2px 0;font-size:13px">• <%= o %></div><% }); } %>
+          <div style="font-size:12px;color:#10B981;margin-top:4px">答案: <%= q.answer %></div>
+          <% if (q.explanation) { %><div style="font-size:12px;color:#6B7280"><%= q.explanation %></div><% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<div class="card" style="border-left:4px solid #F59E0B">
+  <h2>🔤 单词深度解析</h2>
   <form method="POST" action="/demo/ai/analyze" style="display:flex;gap:8px">
-    <input type="text" name="word" value="<%= task === 'analyze' ? inputWord : '' %>" placeholder="输入单词..." style="flex:1;padding:10px;border:1px solid #E5E7EB;border-radius:8px">
+    <input type="text" name="word" placeholder="输入单词..." style="flex:1;padding:10px;border:1px solid #E5E7EB;border-radius:8px">
     <button type="submit" class="btn btn-primary">解析</button>
   </form>
   <% if (task === 'analyze' && result) { %>
     <div style="margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;font-size:14px">
-      <% if (result.error) { %>
-        <div style="color:#EF4444"><%= result.error %></div>
+      <% if (result.data.error) { %><div style="color:#EF4444"><%= result.data.error %></div>
       <% } else { %>
-        <% if (result.root) { %><div><strong>词根:</strong> <%= result.root %></div><% } %>
-        <% if (result.synonyms) { %><div><strong>同义词:</strong> <%= result.synonyms.join(', ') %></div><% } %>
-        <% if (result.antonyms) { %><div><strong>反义词:</strong> <%= result.antonyms.join(', ') %></div><% } %>
-        <% if (result.collocations) { %><div><strong>搭配:</strong> <%= result.collocations.join(', ') %></div><% } %>
-        <% if (result.memoryTip) { %><div style="margin-top:8px;padding:8px;background:#FFFBEB;border-radius:6px"><strong>💡 记忆技巧:</strong> <%= result.memoryTip %></div><% } %>
+        <% if (result.data.root) { %><div><strong>词根:</strong> <%= result.data.root %></div><% } %>
+        <% if (result.data.synonyms) { %><div><strong>同义词:</strong> <%= result.data.synonyms.join(', ') %></div><% } %>
+        <% if (result.data.antonyms) { %><div><strong>反义词:</strong> <%= result.data.antonyms.join(', ') %></div><% } %>
+        <% if (result.data.collocations) { %><div><strong>搭配:</strong> <%= result.data.collocations.join(', ') %></div><% } %>
+        <% if (result.data.memoryTip) { %><div style="margin-top:8px;padding:8px;background:#FFFBEB;border-radius:6px"><strong>💡 记忆技巧:</strong> <%= result.data.memoryTip %></div><% } %>
       <% } %>
+    </div>
+  <% } %>
+</div>
+
+<div class="card" style="border-left:4px solid #EF4444">
+  <h2>📊 学习历史分析</h2>
+  <p style="font-size:13px;color:#6B7280;margin-bottom:8px">AI 分析你的学习数据，给出个性化建议</p>
+  <form method="POST" action="/demo/ai/history">
+    <button type="submit" class="btn btn-primary">🔍 分析我的学习数据</button>
+  </form>
+  <% if (task === 'history' && result) { %>
+    <div style="margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;line-height:1.8">
+      <% if (result.data.error) { %><div style="color:#EF4444"><%= result.data.error %></div>
+      <% } else { %><div><%- result.data.analysis.replace(/\n/g, '<br>') %></div><% } %>
     </div>
   <% } %>
 </div>
