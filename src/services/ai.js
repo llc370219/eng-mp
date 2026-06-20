@@ -1,55 +1,122 @@
 const config = require('../config');
 
-// 延迟初始化客户端
-let openai = null;
-let anthropic = null;
+// ===== Provider 注册表 =====
+// 大部分国产模型使用 OpenAI 兼容格式
+const PROVIDERS = {
+  openai: {
+    name: 'OpenAI',
+    baseURL: 'https://api.openai.com/v1',
+    defaultModel: 'gpt-4o-mini',
+    sdk: 'openai',
+  },
+  claude: {
+    name: 'Claude',
+    defaultModel: 'claude-sonnet-4-20250514',
+    sdk: 'anthropic',
+  },
+  deepseek: {
+    name: 'DeepSeek',
+    baseURL: 'https://api.deepseek.com/v1',
+    defaultModel: 'deepseek-chat',
+    sdk: 'openai',
+  },
+  mimo: {
+    name: 'MiMo',
+    baseURL: 'https://api.mimo.ai/v1',
+    defaultModel: 'mimo-v2-pro',
+    sdk: 'openai',
+  },
+  moonshot: {
+    name: 'Moonshot (Kimi)',
+    baseURL: 'https://api.moonshot.cn/v1',
+    defaultModel: 'moonshot-v1-8k',
+    sdk: 'openai',
+  },
+  zhipu: {
+    name: '智谱 (GLM)',
+    baseURL: 'https://open.bigmodel.cn/api/paas/v4',
+    defaultModel: 'glm-4-flash',
+    sdk: 'openai',
+  },
+  qwen: {
+    name: '通义千问',
+    baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    defaultModel: 'qwen-turbo',
+    sdk: 'openai',
+  },
+};
 
-function getOpenAI() {
-  if (!openai && config.ai.openaiKey) {
-    const { OpenAI } = require('openai');
-    openai = new OpenAI({ apiKey: config.ai.openaiKey });
+// 客户端缓存
+const clients = {};
+
+// 获取 OpenAI 兼容客户端
+function getOpenAIClient(providerName) {
+  if (clients[providerName]) return clients[providerName];
+
+  const provider = PROVIDERS[providerName];
+  const apiKey = config.ai.keys[providerName];
+
+  if (!apiKey) {
+    throw new Error(`${provider.name} API Key 未配置，请在 .env 中设置对应的 Key`);
   }
-  return openai;
+
+  const { OpenAI } = require('openai');
+  clients[providerName] = new OpenAI({
+    apiKey,
+    baseURL: provider.baseURL,
+  });
+
+  return clients[providerName];
 }
 
-function getAnthropic() {
-  if (!anthropic && config.ai.claudeKey) {
-    const Anthropic = require('@anthropic-ai/sdk');
-    anthropic = new Anthropic({ apiKey: config.ai.claudeKey });
+// 获取 Anthropic 客户端
+function getAnthropicClient() {
+  if (clients.claude) return clients.claude;
+
+  const apiKey = config.ai.keys.claude;
+  if (!apiKey) {
+    throw new Error('Claude API Key 未配置，请在 .env 中设置 CLAUDE_API_KEY');
   }
-  return anthropic;
+
+  const Anthropic = require('@anthropic-ai/sdk');
+  clients.claude = new Anthropic({ apiKey });
+
+  return clients.claude;
 }
 
-// 统一调用接口
+// ===== 统一调用接口 =====
 async function chat(systemPrompt, userPrompt, options = {}) {
-  const provider = options.provider || config.ai.provider;
+  const providerName = options.provider || config.ai.provider;
+  const provider = PROVIDERS[providerName];
 
-  if (provider === 'claude') {
-    const client = getAnthropic();
-    if (!client) throw new Error('Claude API key 未配置');
+  if (!provider) {
+    throw new Error(`不支持的 AI 提供商: ${providerName}。支持的提供商: ${Object.keys(PROVIDERS).join(', ')}`);
+  }
 
+  const model = options.model || config.ai.model || provider.defaultModel;
+  const maxTokens = options.maxTokens || config.ai.maxTokens;
+
+  if (provider.sdk === 'anthropic') {
+    // Claude API
+    const client = getAnthropicClient();
     const response = await client.messages.create({
-      model: options.model || 'claude-sonnet-4-20250514',
-      max_tokens: options.maxTokens || 2048,
+      model,
+      max_tokens: maxTokens,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
     });
-
     return response.content[0].text;
   } else {
-    // 默认 OpenAI
-    const client = getOpenAI();
-    if (!client) throw new Error('OpenAI API key 未配置');
-
+    // OpenAI 兼容 API（DeepSeek, MiMo, Moonshot, 智谱, 千问等）
+    const client = getOpenAIClient(providerName);
     const response = await client.chat.completions.create({
-      model: options.model || 'gpt-4o-mini',
-      max_tokens: options.maxTokens || 2048,
+      model,
+      max_tokens: maxTokens,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
     });
-
     return response.choices[0].message.content;
   }
 }
@@ -59,7 +126,7 @@ async function chat(systemPrompt, userPrompt, options = {}) {
 /**
  * 生成文章摘要
  */
-async function summarize(text, lang = 'both') {
+async function summarize(text, lang = 'both', options = {}) {
   const langHint = lang === 'zh' ? '只输出中文摘要'
     : lang === 'en' ? 'Only output English summary'
     : '输出中文摘要和英文摘要';
@@ -70,7 +137,7 @@ ${langHint}。
 返回 JSON 格式：{"summaryZh": "...", "summaryEn": "..."}`;
 
   try {
-    const result = await chat(systemPrompt, text);
+    const result = await chat(systemPrompt, text, options);
     const parsed = JSON.parse(result);
     return { summaryZh: parsed.summaryZh || '', summaryEn: parsed.summaryEn || '' };
   } catch (err) {
@@ -81,14 +148,14 @@ ${langHint}。
 /**
  * 翻译
  */
-async function translate(text, targetLang = 'zh') {
+async function translate(text, targetLang = 'zh', options = {}) {
   const target = targetLang === 'zh' ? '中文' : targetLang === 'ja' ? '日文' : '英文';
 
   const systemPrompt = `你是一个专业翻译。请将以下文本翻译成${target}。
 保持原文的语气和风格。只输出翻译结果，不要解释。`;
 
   try {
-    const translation = await chat(systemPrompt, text);
+    const translation = await chat(systemPrompt, text, options);
     return { translation };
   } catch (err) {
     return { translation: '', error: err.message };
@@ -98,7 +165,7 @@ async function translate(text, targetLang = 'zh') {
 /**
  * 生成阅读理解题
  */
-async function generateQuiz(articleContent, count = 5) {
+async function generateQuiz(articleContent, count = 5, options = {}) {
   const systemPrompt = `你是一个英语教学专家。请根据以下英文文章生成 ${count} 道阅读理解题。
 
 题型要求：
@@ -112,7 +179,7 @@ async function generateQuiz(articleContent, count = 5) {
 返回 JSON 格式：{"questions": [...]}`;
 
   try {
-    const result = await chat(systemPrompt, articleContent);
+    const result = await chat(systemPrompt, articleContent, options);
     const parsed = JSON.parse(result);
     return { questions: parsed.questions || [] };
   } catch (err) {
@@ -123,7 +190,7 @@ async function generateQuiz(articleContent, count = 5) {
 /**
  * 单词深度解析
  */
-async function analyzeWord(word) {
+async function analyzeWord(word, options = {}) {
   const systemPrompt = `你是一个英语词汇专家。请对以下单词进行深度解析。
 
 包含：
@@ -145,7 +212,7 @@ async function analyzeWord(word) {
 }`;
 
   try {
-    const result = await chat(systemPrompt, word);
+    const result = await chat(systemPrompt, word, options);
     return JSON.parse(result);
   } catch (err) {
     return { error: err.message };
@@ -155,7 +222,7 @@ async function analyzeWord(word) {
 /**
  * 语法讲解
  */
-async function grammarExplain(topic) {
+async function grammarExplain(topic, options = {}) {
   const systemPrompt = `你是一个英语语法专家。请对以下语法主题进行详细讲解。
 
 要求：
@@ -175,17 +242,20 @@ async function grammarExplain(topic) {
 }`;
 
   try {
-    const result = await chat(systemPrompt, topic);
+    const result = await chat(systemPrompt, topic, options);
     return JSON.parse(result);
   } catch (err) {
     return { error: err.message };
   }
 }
 
+// 导出
 module.exports = {
+  chat,
   summarize,
   translate,
   generateQuiz,
   analyzeWord,
   grammarExplain,
+  PROVIDERS,
 };

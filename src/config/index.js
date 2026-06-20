@@ -19,9 +19,20 @@ module.exports = {
   },
 
   ai: {
-    provider: process.env.AI_PROVIDER || 'openai',
-    openaiKey: process.env.OPENAI_API_KEY || '',
-    claudeKey: process.env.CLAUDE_API_KEY || '',
+    provider: process.env.AI_PROVIDER || 'deepseek',
+    model: process.env.AI_MODEL || '',
+    maxTokens: parseInt(process.env.AI_MAX_TOKENS) || 2048,
+
+    // 各 provider API Key
+    keys: {
+      openai: process.env.OPENAI_API_KEY || '',
+      claude: process.env.CLAUDE_API_KEY || '',
+      deepseek: process.env.DEEPSEEK_API_KEY || '',
+      mimo: process.env.MIMO_API_KEY || '',
+      moonshot: process.env.MOONSHOT_API_KEY || '',
+      zhipu: process.env.ZHIPU_API_KEY || '',
+      qwen: process.env.QWEN_API_KEY || '',
+    },
   },
 
   dictApiUrl: process.env.DICT_API_URL || 'https://api.dictionaryapi.dev/api/v2/entries/en',
