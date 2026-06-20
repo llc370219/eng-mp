@@ -13,7 +13,7 @@ const getProfile = async (req, res) => {
 // 更新个人资料
 const updateProfile = [
   body('nickname').optional().trim(),
-  body('level').optional().isIn(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
+  body('level').optional().isIn(['初中', '高中', 'CET4', 'CET6', '雅思']),
   body('goal').optional().isIn(['CET4', 'CET6', 'IELTS', 'TOEFL', 'general']),
   body('settings').optional().isObject(),
   validate,

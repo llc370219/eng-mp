@@ -249,6 +249,98 @@ async function grammarExplain(topic, options = {}) {
   }
 }
 
+/**
+ * AI 生成英语文章
+ * @param {string} prompt - 用户主题提示
+ * @param {string} level - 难度等级 (初中/高中/CET4/CET6/雅思)
+ * @param {object} options - {provider, model, vocabWords}
+ */
+async function generateArticle(prompt, level = '高中', options = {}) {
+  const levelGuide = {
+    '初中': '使用简单句型，词汇量 1000 以内，句式以主谓宾为主，时态限一般现在/过去/将来。300-500 词。',
+    '高中': '使用复合句，词汇量 2500 以内，可使用定语从句、状语从句。400-600 词。',
+    'CET4': '使用较复杂句式，词汇量 4500 以内，可使用虚拟语气、倒装等。500-700 词。',
+    'CET6': '使用高级句式和学术词汇，词汇量 6000 以内。600-800 词。',
+    '雅思': '使用学术英语，复杂句式，高级词汇，接近 native 水平。700-1000 词。',
+  };
+
+  const guide = levelGuide[level] || levelGuide['高中'];
+  const vocabHint = options.vocabWords && options.vocabWords.length > 0
+    ? `\n用户生词本中的单词（请尽量在文章中自然使用这些词）：${options.vocabWords.join(', ')}`
+    : '';
+
+  const systemPrompt = `你是一个英语教学专家和文章创作者。请根据用户提供的主题，生成一篇适合该难度等级的英语阅读文章。
+
+难度要求（${level}）：${guide}${vocabHint}
+
+返回严格的 JSON 格式（不要包含任何其他文字）：
+{
+  "title": "英文标题",
+  "content": "英文正文（段落间用 \\n\\n 分隔，句子间用句号分隔）",
+  "summaryZh": "中文摘要（50字以内）",
+  "tags": ["标签1", "标签2", "标签3"],
+  "category": "tech/life/news/literature/science/business",
+  "highlightedVocab": [
+    {"word": "重点单词", "definition": "中文释义", "phonetic": "/音标/"}
+  ],
+  "sentenceTranslations": [
+    {"en": "英文句子", "zh": "中文翻译"}
+  ],
+  "grammarPoints": [
+    {"title": "语法点名称", "explanation": "简要说明", "example": "文中例句"}
+  ],
+  "questions": [
+    {
+      "type": "multiple-choice",
+      "text": "题目英文",
+      "options": ["A选项", "B选项", "C选项", "D选项"],
+      "answer": "正确选项文本",
+      "explanation": "中文解析"
+    }
+  ]
+}
+
+要求：
+1. 文章内容要有趣、有教育意义，贴近生活
+2. tags 生成 3-5 个英文标签（主题相关）
+3. category 从 6 个分类中选最匹配的一个
+4. highlightedVocab 列出 5-10 个该难度等级的重点词汇，附音标和中文释义
+5. sentenceTranslations 为每个句子提供中文翻译
+6. grammarPoints 列出文章中出现的 2-3 个语法点
+7. questions 生成 3-5 道阅读理解题（至少 2 道选择题，1 道判断题）
+8. 所有内容必须是英文，解析和翻译用中文`;
+
+  try {
+    const result = await chat(systemPrompt, `主题：${prompt}`, { ...options, maxTokens: 8192 });
+    let jsonStr = result;
+    const jsonMatch = result.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) jsonStr = jsonMatch[1];
+    jsonStr = jsonStr.trim();
+
+    const parsed = JSON.parse(jsonStr);
+
+    const wordCount = (parsed.content || '').split(/\s+/).filter(w => /[a-zA-Z]/.test(w)).length;
+    const readingTimeMin = Math.max(1, Math.ceil(wordCount / 200));
+
+    return {
+      title: parsed.title || '',
+      content: parsed.content || '',
+      summaryZh: parsed.summaryZh || '',
+      difficulty: level,
+      category: parsed.category || 'life',
+      tags: parsed.tags || [],
+      wordCount,
+      readingTimeMin,
+      highlightedVocab: parsed.highlightedVocab || [],
+      sentenceTranslations: parsed.sentenceTranslations || [],
+      grammarPoints: parsed.grammarPoints || [],
+      questions: parsed.questions || [],
+    };
+  } catch (err) {
+    return { error: err.message };
+  }
+}
+
 // 导出
 module.exports = {
   chat,
@@ -257,5 +349,6 @@ module.exports = {
   generateQuiz,
   analyzeWord,
   grammarExplain,
+  generateArticle,
   PROVIDERS,
 };

@@ -20,7 +20,7 @@ const articleSchema = new mongoose.Schema({
   summaryEn: { type: String, default: '' },
   difficulty: {
     type: String,
-    enum: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
+    enum: ['初中', '高中', 'CET4', 'CET6', '雅思'],
     required: true,
   },
   category: {

@@ -1,7 +1,7 @@
 const Article = require('../models/Article');
 const ReadingLog = require('../models/ReadingLog');
 
-const CEFR_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+const LEVEL_ORDER = ['初中', '高中', 'CET4', 'CET6', '雅思'];
 
 /**
  * 获取用户每日推荐文章
@@ -11,7 +11,7 @@ const CEFR_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
  * 2. 根据用户水平 + 正确率动态调整难度范围
  * 3. 返回多篇推荐（默认 5 篇）
  */
-async function getDailyRecommendations(userId, userLevel = 'B1', limit = 5) {
+async function getDailyRecommendations(userId, userLevel = '高中', limit = 5) {
   // 获取已读文章 ID
   const readLogs = await ReadingLog.find({ userId }).select('articleId').lean();
   const readIds = readLogs.map((log) => log.articleId);
@@ -34,9 +34,9 @@ async function getDailyRecommendations(userId, userLevel = 'B1', limit = 5) {
   }
 
   // 计算推荐难度范围
-  const baseIndex = CEFR_ORDER.indexOf(userLevel);
-  const adjustedIndex = Math.max(0, Math.min(CEFR_ORDER.length - 1, baseIndex + difficultyAdjustment));
-  const targetLevel = CEFR_ORDER[adjustedIndex];
+  const baseIndex = LEVEL_ORDER.indexOf(userLevel);
+  const adjustedIndex = Math.max(0, Math.min(LEVEL_ORDER.length - 1, baseIndex + difficultyAdjustment));
+  const targetLevel = LEVEL_ORDER[adjustedIndex];
 
   // 优先推荐目标难度，其次相邻难度
   const nearbyLevels = getNearbyLevels(targetLevel);
@@ -97,10 +97,10 @@ async function getDailyRecommendations(userId, userLevel = 'B1', limit = 5) {
 }
 
 function getNearbyLevels(level) {
-  const idx = CEFR_ORDER.indexOf(level);
+  const idx = LEVEL_ORDER.indexOf(level);
   const start = Math.max(0, idx - 1);
-  const end = Math.min(CEFR_ORDER.length - 1, idx + 1);
-  return CEFR_ORDER.slice(start, end + 1);
+  const end = Math.min(LEVEL_ORDER.length - 1, idx + 1);
+  return LEVEL_ORDER.slice(start, end + 1);
 }
 
 module.exports = { getDailyRecommendations };

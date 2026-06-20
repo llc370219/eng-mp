@@ -2,6 +2,7 @@ const { Router } = require('express');
 const ai = require('../services/ai');
 const config = require('../config');
 const auth = require('../middlewares/auth');
+const VocabProgress = require('../models/VocabProgress');
 
 const router = Router();
 
@@ -87,6 +88,30 @@ router.post('/grammar-explain', async (req, res, next) => {
     const { topic } = req.body;
     if (!topic) return res.status(400).json({ error: '请提供语法主题' });
     const result = await ai.grammarExplain(topic, getOptions(req.body));
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// AI 生成文章
+router.post('/generate-article', async (req, res, next) => {
+  try {
+    const { prompt, level } = req.body;
+    if (!prompt) return res.status(400).json({ error: '请提供文章主题或提示信息' });
+    const validLevels = ['初中', '高中', 'CET4', 'CET6', '雅思'];
+    const articleLevel = validLevels.includes(level) ? level : '高中';
+
+    // 读取用户生词本
+    const vocabList = await VocabProgress.find({ userId: req.user._id })
+      .select('word -_id')
+      .limit(50)
+      .lean();
+    const vocabWords = vocabList.map(v => v.word);
+
+    const opts = { ...getOptions(req.body), vocabWords };
+    const result = await ai.generateArticle(prompt, articleLevel, opts);
+    if (result.error) return res.status(500).json({ error: result.error });
     res.json(result);
   } catch (err) {
     next(err);

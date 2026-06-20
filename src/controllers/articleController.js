@@ -10,7 +10,7 @@ const validate = require('../middlewares/validator');
 const list = [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 50 }),
-  query('difficulty').optional().isIn(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
+  query('difficulty').optional().isIn(['初中', '高中', 'CET4', 'CET6', '雅思']),
   query('category').optional().isIn(['tech', 'life', 'news', 'literature', 'science', 'business']),
   query('tag').optional().trim(),
   validate,
@@ -65,7 +65,7 @@ const detail = async (req, res, next) => {
 // 每日推荐
 const daily = async (req, res, next) => {
   try {
-    const userLevel = req.user?.level || 'B1';
+    const userLevel = req.user?.level || '高中';
     const limit = Number(req.query.limit) || 5;
 
     const result = await getDailyRecommendations(
@@ -117,7 +117,7 @@ const search = [
 const create = [
   body('title').notEmpty().withMessage('标题不能为空'),
   body('content').notEmpty().withMessage('内容不能为空'),
-  body('difficulty').isIn(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
+  body('difficulty').isIn(['初中', '高中', 'CET4', 'CET6', '雅思']),
   body('category').isIn(['tech', 'life', 'news', 'literature', 'science', 'business']),
   validate,
   async (req, res, next) => {
@@ -150,7 +150,7 @@ const create = [
 const update = [
   body('title').optional().trim(),
   body('content').optional().trim(),
-  body('difficulty').optional().isIn(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
+  body('difficulty').optional().isIn(['初中', '高中', 'CET4', 'CET6', '雅思']),
   body('category').optional().isIn(['tech', 'life', 'news', 'literature', 'science', 'business']),
   validate,
   async (req, res, next) => {

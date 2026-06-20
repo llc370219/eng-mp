@@ -9,7 +9,7 @@ const router = Router();
 
 // 语法列表
 router.get('/', [
-  query('level').optional().isIn(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
+  query('level').optional().isIn(['初中', '高中', 'CET4', 'CET6', '雅思']),
   query('category').optional().isIn(['tense', 'clause', 'voice', 'mood', 'agreement', 'punctuation', 'other']),
   validate,
   async (req, res, next) => {

@@ -70,6 +70,7 @@
         </sc-for>
       </nav>
       <button onClick="{{ goAi }}" style="margin-left:auto;display:flex;align-items:center;gap:7px;background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:999px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:8px 16px;font-family:'Space Grotesk';font-weight:700;font-size:14px">✦ AI 助手</button>
+      <a href="/admin/" style="display:flex;align-items:center;gap:6px;background:#1a1817;color:#fff;border:2.5px solid #1a1817;border-radius:999px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:8px 16px;font-family:'Space Grotesk';font-weight:700;font-size:14px;text-decoration:none">🔒 后台管理</a>
       <button onClick="{{ goSettings }}" title="设置" style="width:42px;height:42px;border-radius:50%;background:#e34e98;color:#fff;border:2.5px solid #1a1817;box-shadow:3px 3px 0 #1a1817;cursor:pointer;font-weight:700;font-size:16px">桔</button>
     </div>
   </header>
@@ -101,7 +102,7 @@
                 <button onClick="{{ setAuthRegister }}" style="flex:1;padding:10px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:15px;background:{{ regTabBg }};color:{{ regTabFg }}">注册</button>
               </div>
               <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block">邮箱 Email</label>
-              <input placeholder="you@example.com" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
+              <input value="{{ loginEmail }}" onInput="{{ onEmailInput }}" placeholder="you@example.com" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
               <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex;gap:10px;margin-bottom:16px">
                   <input placeholder="验证码" style="flex:1;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;background:#fffdf6;outline:none">
@@ -109,11 +110,14 @@
                 </div>
               </sc-if>
               <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block">密码 Password</label>
-              <input type="password" placeholder="••••••••" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
+              <input type="password" value="{{ loginPassword }}" onInput="{{ onPasswordInput }}" placeholder="••••••••" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
               <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
                 <input placeholder="邀请码 Invite code" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
               </sc-if>
               <button onClick="{{ doLogin }}" style="width:100%;padding:14px;background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:4px 4px 0 #1a1817;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:17px">{{ authCta }} →</button>
+              <sc-if value="{{ hasLoginError }}" hint-placeholder-val="{{ false }}">
+                <p style="text-align:center;font-size:13px;color:#d94646;margin:10px 0 0;font-weight:600">{{ loginError }}</p>
+              </sc-if>
               <p style="text-align:center;font-size:13px;color:#7a7568;margin:18px 0 0">需要邀请码注册 · 邮箱验证登录</p>
             </div>
           </div>
@@ -178,7 +182,7 @@
     <sc-if value="{{ isArticle }}" hint-placeholder-val="{{ false }}">
       <section style="padding:26px 0">
         <button onClick="{{ goHome }}" style="background:none;border:none;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#7a7568;padding:0;margin-bottom:14px">← 返回书架</button>
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) 312px;gap:30px;align-items:start">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:30px;align-items:start">
           <!-- reading column -->
           <article>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
@@ -189,23 +193,24 @@
             <p style="font-family:'Newsreader',serif;font-style:italic;color:#7a7568;font-size:17px;margin:0 0 22px">{{ curArticle.summaryZh }}</p>
 
             <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:34px 36px">
-              <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
-                <button onClick="{{ toggleSentenceTrans }}" style="display:flex;align-items:center;gap:8px;background:{{ stBg }};color:{{ stFg }};border:2px solid #1a1817;border-radius:999px;cursor:pointer;padding:6px 13px;font-family:'Space Grotesk';font-weight:700;font-size:12.5px">整句翻译 {{ stState }}</button>
+              <!-- toggle buttons -->
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
+                <div style="position:relative" title="双击段落即可查看翻译">
+                  <button onClick="{{ toggleSentenceTrans }}" style="display:flex;align-items:center;gap:8px;background:{{ stBg }};color:{{ stFg }};border:2px solid #1a1817;border-radius:999px;cursor:pointer;padding:6px 13px;font-family:'Space Grotesk';font-weight:700;font-size:12.5px">整句翻译 {{ stState }}</button>
+                </div>
+                <div style="position:relative" title="开启后每句显示淡色下划线">
+                  <button onClick="{{ toggleSentUnderline }}" style="display:flex;align-items:center;gap:8px;background:{{ suBg }};color:{{ suFg }};border:2px solid #1a1817;border-radius:999px;cursor:pointer;padding:6px 13px;font-family:'Space Grotesk';font-weight:700;font-size:12.5px">分句提示 {{ suState }}</button>
+                </div>
               </div>
+              <!-- article body -->
               <sc-for list="{{ curParagraphs }}" as="p" hint-placeholder-count="3">
                 <p style="font-family:'Newsreader',serif;font-size:19.5px;line-height:1.9;color:#26241f;margin:0 0 18px;text-wrap:pretty">
                   <sc-for list="{{ p.sentences }}" as="s" hint-placeholder-count="2">
-                    <span onMouseEnter="{{ s.onEnter }}" onMouseLeave="{{ s.onLeave }}" style="border-radius:4px;background:{{ s.hl }};transition:background .15s">
-                      <sc-for list="{{ s.segs }}" as="g" hint-placeholder-count="3">
-                        <sc-if value="{{ g.v }}" hint-placeholder-val="{{ false }}">
-                          <span onClick="{{ g.onClick }}" style="color:#ec6a2b;font-weight:600;border-bottom:2.5px dotted #ec6a2b;cursor:pointer">{{ g.t }}</span>
-                        </sc-if>
-                        <sc-if value="{{ g.plain }}" hint-placeholder-val="{{ true }}">{{ g.t }}</sc-if>
+                    <span onMouseEnter="{{ s.onEnter }}" onMouseLeave="{{ s.onLeave }}" onDblClick="{{ s.onDbl }}" style="border-radius:4px;background:{{ s.hl }};border-bottom:{{ s.ul }};transition:background .15s;cursor:default">
+                      <sc-for list="{{ s.segs }}" as="g" hint-placeholder-count="8">
+                        <span onClick="{{ g.onClick }}" style="{{ g.style }}cursor:pointer">{{ g.t }}</span>
                       </sc-for>
                     </span>
-                    <sc-if value="{{ s.showZh }}" hint-placeholder-val="{{ false }}">
-                      <span style="display:block;font-family:'Space Grotesk';font-size:14.5px;color:#2f7fd6;font-weight:500;margin:2px 0 10px;padding-left:10px;border-left:3px solid #2f7fd6">{{ s.zh }}</span>
-                    </sc-if>
                   </sc-for>
                 </p>
               </sc-for>
@@ -237,8 +242,9 @@
             </div>
           </article>
 
-          <!-- side rail -->
-          <aside style="position:sticky;top:90px;display:flex;flex-direction:column;gap:18px">
+          <!-- side rail — sticky centered -->
+          <aside style="position:sticky;top:100px;display:flex;flex-direction:column;gap:18px">
+            <!-- mode 1: word lookup -->
             <sc-if value="{{ hasSelectedWord }}" hint-placeholder-val="{{ false }}">
               <div style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:20px;animation:popin .25s ease">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -250,19 +256,25 @@
                 <button onClick="{{ addSelWord }}" style="margin-top:16px;width:100%;background:#f3c44b;color:#1a1817;border:2.5px solid #1a1817;border-radius:12px;cursor:pointer;padding:10px;font-family:'Space Grotesk';font-weight:700;font-size:14px">+ 加入生词本</button>
               </div>
             </sc-if>
-            <sc-if value="{{ noSelectedWord }}" hint-placeholder-val="{{ true }}">
-              <div style="background:#fffdf6;border:2.5px dashed #c9c1a8;border-radius:18px;padding:22px;text-align:center;color:#7a7568">
-                <div style="font-size:13px;line-height:1.6">点击正文中 <span style="color:#ec6a2b;font-weight:700;border-bottom:2.5px dotted #ec6a2b">橙色单词</span> 查看释义</div>
+            <!-- mode 2: sentence translation -->
+            <sc-if value="{{ hasSelectedSent }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#2f7fd6;color:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:20px;animation:popin .25s ease">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                  <div style="font-weight:700;font-size:13px;letter-spacing:1.5px;opacity:.8">段落翻译</div>
+                  <button onClick="{{ closeSent }}" style="background:#1a1817;color:#fffdf6;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-weight:700">×</button>
+                </div>
+                <div style="font-family:'Newsreader',serif;font-size:15px;line-height:1.7;margin-top:10px;opacity:.9">{{ selSent.en }}</div>
+                <div style="font-size:16px;font-weight:600;margin-top:12px;line-height:1.6">{{ selSent.zh }}</div>
+                <button onClick="{{ grammarAnalyze }}" style="margin-top:16px;width:100%;background:#f3c44b;color:#1a1817;border:2.5px solid #1a1817;border-radius:12px;cursor:pointer;padding:10px;font-family:'Space Grotesk';font-weight:700;font-size:14px">📐 语法解析</button>
               </div>
             </sc-if>
-            <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:20px">
-              <div style="font-weight:700;font-size:13px;letter-spacing:1.5px;color:#7a7568;margin-bottom:12px">AI 工具</div>
-              <div style="display:grid;gap:9px">
-                <button onClick="{{ goAi }}" style="text-align:left;background:#f2ecda;border:2px solid #1a1817;border-radius:11px;cursor:pointer;padding:11px 14px;font-family:'Space Grotesk';font-weight:600;font-size:14px">📝 全文摘要</button>
-                <button onClick="{{ goAi }}" style="text-align:left;background:#f2ecda;border:2px solid #1a1817;border-radius:11px;cursor:pointer;padding:11px 14px;font-family:'Space Grotesk';font-weight:600;font-size:14px">🈯 整篇翻译</button>
-                <button onClick="{{ goAi }}" style="text-align:left;background:#f2ecda;border:2px solid #1a1817;border-radius:11px;cursor:pointer;padding:11px 14px;font-family:'Space Grotesk';font-weight:600;font-size:14px">❓ 生成测验</button>
+            <!-- mode 3: empty state -->
+            <sc-if value="{{ showSideEmpty }}" hint-placeholder-val="{{ true }}">
+              <div style="background:#fffdf6;border:2.5px dashed #c9c1a8;border-radius:18px;padding:22px;text-align:center;color:#7a7568">
+                <div style="font-size:14px;margin-bottom:6px">📖</div>
+                <div style="font-size:13px;line-height:1.7">点击任意单词查词释义<br><span style="color:#2f7fd6;font-weight:600">开启整句翻译</span>后双击段落查看翻译</div>
               </div>
-            </div>
+            </sc-if>
           </aside>
         </div>
       </section>
@@ -546,9 +558,8 @@
               </sc-for>
             </div>
             <div style="display:flex;gap:24px;margin-top:24px;flex-wrap:wrap">
-              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#ec6a2b">31</div><div style="font-size:13px;font-weight:600;color:#7a7568">本月打卡</div></div>
-              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#2f7fd6">86%</div><div style="font-size:13px;font-weight:600;color:#7a7568">完成率</div></div>
-              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#e34e98">23</div><div style="font-size:13px;font-weight:600;color:#7a7568">最长连续</div></div>
+              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#ec6a2b">{{ monthChecked }}</div><div style="font-size:13px;font-weight:600;color:#7a7568">本月打卡</div></div>
+              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#e34e98">{{ maxStreak }}</div><div style="font-size:13px;font-weight:600;color:#7a7568">最长连续</div></div>
             </div>
           </div>
         </div>
@@ -739,19 +750,56 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:820},&quot;showFlowers&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;primaryAccent&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;orange&quot;,&quot;options&quot;:[&quot;orange&quot;,&quot;pink&quot;,&quot;blue&quot;],&quot;tsType&quot;:&quot;string&quot;}}">
 class Component extends DCLogic {
   state = {
-    screen: 'articles', authMode: 'login',
+    screen: 'login', authMode: 'login',
+    token: (typeof localStorage !== 'undefined' && localStorage.getItem('token')) || '',
+    email: '', password: '', loginError: '',
     diff: '', cat: '',
-    articleId: 1, sentenceTrans: false, selWordKey: null, hoverSent: null,
+    articleId: 1, sentenceTrans: false, sentUnderline: false, selWordKey: null, selSentKey: null, hoverSent: null,
     quizPick: {}, quizSubmitted: false,
     reviewIndex: 0, reviewFlipped: false,
     vocabFilter: 'all',
     gLevel: '', gCat: '', grammarId: 1, gPick: {}, gSubmitted: false,
-    checkedIn: false,
+    checkedIn: false, streak: 0, maxStreak: 0, monthChecked: 0, checkinCal: [],
     aiTask: 'summarize', aiRun: false,
     setSentence: true, setGoal: 30, setReminder: true,
     dictQuery: '', dictShown: false,
     aiArticleId: '',
   };
+
+  async api(path, opts = {}) {
+    const headers = { 'Content-Type': 'application/json', ...opts.headers };
+    if (this.state.token) headers['Authorization'] = 'Bearer ' + this.state.token;
+    const res = await fetch('/api' + path, { ...opts, headers });
+    if (res.status === 401) {
+      this.setState({ token: '', screen: 'login' });
+      if (typeof localStorage !== 'undefined') localStorage.removeItem('token');
+      throw new Error('认证过期');
+    }
+    return res.json();
+  }
+
+  componentDidMount() {
+    if (this.state.token) {
+      this.setState({ screen: 'articles' });
+      this.loadCheckin();
+    }
+  }
+
+  async loadCheckin() {
+    try {
+      const data = await this.api('/study/checkin');
+      this.setState({
+        checkedIn: data.todayChecked,
+        streak: data.streak || 0,
+        maxStreak: data.maxStreak || 0,
+        monthChecked: data.monthChecked || 0,
+        checkinCal: (data.calendar || []).map(c => ({
+          bg: c.checked ? (c.isToday ? '#ec6a2b' : '#e34e98') : '#e9e1c8',
+          border: c.isToday ? '2.5px solid #1a1817' : '2px solid #d8cfb4',
+        })),
+      });
+    } catch (e) { /* 静默失败 */ }
+  }
 
   // ---------- static data ----------
   ARTICLES = [
@@ -783,6 +831,33 @@ class Component extends DCLogic {
     'vivid':{ phon:'/ˈvɪvɪd/', def:'adj. 鲜明的，生动的' },
     'resilient':{ phon:'/rɪˈzɪliənt/', def:'adj. 有韧性的，能复原的' },
     'linger':{ phon:'/ˈlɪŋɡər/', def:'v. 徘徊，逗留，萦绕' },
+    'little':{ phon:'/ˈlɪtl/', def:'adj. 小的，少量的' },
+    'most':{ phon:'/moʊst/', def:'adj. 最多的；大部分的' },
+    'seeds':{ phon:'/siːdz/', def:'n. 种子（复数）' },
+    'seed':{ phon:'/siːd/', def:'n. 种子' },
+    'lie':{ phon:'/laɪ/', def:'v. 躺，位于，处于' },
+    'soil':{ phon:'/sɔɪl/', def:'n. 土壤，泥土' },
+    'spring':{ phon:'/sprɪŋ/', def:'n. 春天；泉水' },
+    'arrives':{ phon:'/əˈraɪvz/', def:'v. 到来，到达' },
+    'faint':{ phon:'/feɪnt/', def:'adj. 微弱的，淡淡的' },
+    'drifts':{ phon:'/drɪfts/', def:'v. 飘散，漂流' },
+    'orchard':{ phon:'/ˈɔːrtʃərd/', def:'n. 果园' },
+    'farmers':{ phon:'/ˈfɑːrmərz/', def:'n. 农民，农夫' },
+    'centuries':{ phon:'/ˈsentʃəriz/', def:'n. 几个世纪' },
+    'orange':{ phon:'/ˈɔːrɪndʒ/', def:'n. 橙子；adj. 橙色的' },
+    'skin':{ phon:'/skɪn/', def:'n. 皮肤，表皮' },
+    'surprisingly':{ phon:'/sərˈpraɪzɪŋli/', def:'adv. 出人意料地' },
+    'fruit':{ phon:'/fruːt/', def:'n. 水果，果实' },
+    'scent':{ phon:'/sent/', def:'n. 气味，香味' },
+    'seems':{ phon:'/siːmz/', def:'v. 似乎，好像' },
+    'gone':{ phon:'/ɡɔːn/', def:'adj. 消失的，离去的' },
+    'trees':{ phon:'/triːz/', def:'n. 树木（复数）' },
+    'its':{ phon:'/ɪts/', def:'pron. 它的' },
+    'their':{ phon:'/ðɛr/', def:'pron. 他们的' },
+    'these':{ phon:'/ðiːz/', def:'pron. 这些' },
+    'after':{ phon:'/ˈæftər/', def:'prep. 在……之后' },
+    'long':{ phon:'/lɔːŋ/', def:'adj. 长的；adv. 长久地' },
+    'year':{ phon:'/jɪr/', def:'n. 年，年份' },
   };
   QUIZ = [
     { text:'What lies dormant in the soil?', opts:['The seeds','The leaves','The roots','The petals'], answer:'The seeds' },
@@ -845,7 +920,7 @@ class Component extends DCLogic {
 
     // ---- articles ----
     const filteredArticles = this.ARTICLES.filter(a=>(!st.diff||a.difficulty===st.diff)&&(!st.cat||a.cat===st.cat)).map(a=>({
-      ...a, catLabel:this.CAT_LABELS[a.cat], onClick:()=>{ this.setState({ articleId:a.id, screen:'article', quizPick:{}, quizSubmitted:false, selWordKey:null }); if(typeof window!=='undefined') window.scrollTo(0,0); },
+      ...a, catLabel:this.CAT_LABELS[a.cat], onClick:()=>{ this.setState({ articleId:a.id, screen:'article', quizPick:{}, quizSubmitted:false, selWordKey:null, selSentKey:null }); if(typeof window!=='undefined') window.scrollTo(0,0); },
     }));
     const chipBase=(active,color)=>({ bg: active?color:'#fffdf6', fg: active? (color===YELLOW?INK:'#fff') : INK });
     const diffChips = [{label:'全部',v:''}].concat(this.DIFFS.map(d=>({label:d,v:d}))).map(c=>{
@@ -858,24 +933,46 @@ class Component extends DCLogic {
     // ---- current article / reading ----
     const ca = this.ARTICLES.find(a=>a.id===st.articleId) || this.ARTICLES[0];
     const curArticle = { ...ca, catLabel:this.CAT_LABELS[ca.cat] };
+    // vocab word set for highlighting
+    const vocabSet = new Set(this.VOCAB.map(v=>v.word.toLowerCase()));
+    const segIsVocab = (txt) => vocabSet.has(txt.toLowerCase().replace(/[^a-z]/g,''));
+
     const curParagraphs = this.PARAS.map((para,pi)=>({
       sentences: para.map((s,si)=>{
         const key='p'+pi+'s'+si;
+        const sentKey = key;
         return {
           hl: st.hoverSent===key ? '#fdeecb' : 'transparent',
+          ul: st.sentUnderline ? '2px solid rgba(47,127,214,0.18)' : 'none',
           onEnter:()=>this.setState({hoverSent:key}),
           onLeave:()=>this.setState({hoverSent:null}),
-          showZh: st.sentenceTrans,
-          zh: s.zh,
+          onDbl:()=>{ if(st.sentenceTrans) this.setState({selSentKey:sentKey}); },
           segs: s.segs.map((g,gi)=>{
-            const isV=g[1]===1; const w=isV?g[0].toLowerCase().replace(/[^a-z]/g,''):'';
-            return { t:g[0], v:isV, plain:!isV, onClick:isV?(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.setState({selWordKey:w}); }:null };
+            const txt=g[0];
+            const w=txt.toLowerCase().replace(/[^a-z]/g,'');
+            const isV=g[1]===1 || segIsVocab(txt);
+            const style = isV ? 'color:#ec6a2b;font-weight:600;border-bottom:2.5px dotted #ec6a2b;' : '';
+            return { t:txt, style, onClick:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.setState({selWordKey:w,selSentKey:null}); } };
           }),
         };
       }),
     }));
     const selDef = st.selWordKey ? this.WORD_DEFS[st.selWordKey] : null;
-    const selWord = selDef ? { word:st.selWordKey, phon:selDef.phon, def:selDef.def } : {};
+    const selWord = selDef ? { word:st.selWordKey, phon:selDef.phon, def:selDef.def } : { word:st.selWordKey, phon:'', def:'暂无释义' };
+    const hasWord = !!st.selWordKey;
+    const hasSent = !!st.selSentKey && !st.selWordKey;
+    const selSent = (() => {
+      if(!st.selSentKey) return null;
+      const m = st.selSentKey.match(/^p(\d+)s(\d+)$/);
+      if(!m) return null;
+      const para = this.PARAS[+m[1]];
+      if(!para) return null;
+      const sent = para[+m[2]];
+      if(!sent) return null;
+      const en = sent.segs.map(g=>g[0]).join('');
+      return { en, zh: sent.zh };
+    })();
+    const showSideEmpty = !hasWord && !hasSent;
 
     // ---- quiz ----
     const quizQuestions = this.QUIZ.map((q,qi)=>({
@@ -936,13 +1033,6 @@ class Component extends DCLogic {
     const gCorrect=this.GRAMMAR_DETAIL.exercises.filter((q,qi)=>st.gPick[qi]===q.answer).length;
     const gScore=Math.round(gCorrect/this.GRAMMAR_DETAIL.exercises.length*100);
 
-    // ---- checkin calendar ----
-    const cal=[]; const today=new Date();
-    const doneSet = new Set([1,2,3,4,5,8,9,10,11,12,15,16,17,18,19,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41]);
-    for(let i=41;i>=0;i--){ const idx=41-i; cal.push({ done: doneSet.has(idx) || (idx>=36 && st.checkedIn) , isToday:i===0 }); }
-    const checkinCal = cal.map(c=>({ bg: c.done? (c.isToday?ORANGE:PINK) : '#e9e1c8', border: c.isToday?'2.5px solid #1a1817':'2px solid #d8cfb4', dot: c.isToday }));
-    const streak=12;
-
     // ---- stats ----
     const maxTrend=Math.max(...this.WEEK_TREND);
     const weekBars=this.WEEK_TREND.map((v,i)=>({ h: Math.round(v/maxTrend*100), val:v, label:this.WEEK_LABELS[i], color: i%2?BLUE:PINK }));
@@ -999,17 +1089,37 @@ class Component extends DCLogic {
       isCheckin:screen==='checkin', isStats:screen==='stats', isAi:screen==='ai', isSettings:screen==='settings',
       // auth
       isRegister:st.authMode==='register',
-      setAuthLogin:()=>this.setState({authMode:'login'}), setAuthRegister:()=>this.setState({authMode:'register'}),
-      doLogin:()=>this.go('articles'), authCta: st.authMode==='register'?'注册并登录':'登录',
+      setAuthLogin:()=>this.setState({authMode:'login',loginError:''}), setAuthRegister:()=>this.setState({authMode:'register',loginError:''}),
+      loginEmail:st.email, onEmailInput:(e)=>this.setState({email:e.target.value,loginError:''}),
+      loginPassword:st.password, onPasswordInput:(e)=>this.setState({password:e.target.value,loginError:''}),
+      loginError:st.loginError, hasLoginError:!!st.loginError,
+      doLogin: async ()=>{
+        if(!st.email||!st.password){ this.setState({loginError:'请输入邮箱和密码'}); return; }
+        try{
+          const data = await this.api('/auth/login',{ method:'POST', body:JSON.stringify({email:st.email,password:st.password}) });
+          if(data.accessToken){
+            localStorage.setItem('token',data.accessToken);
+            this.setState({token:data.accessToken,loginError:'',screen:'articles'});
+            this.loadCheckin();
+          } else {
+            this.setState({loginError:data.error||'登录失败'});
+          }
+        }catch(e){ this.setState({loginError:'网络错误，请重试'}); }
+      },
+      authCta: st.authMode==='register'?'注册并登录':'登录',
       loginTabBg: st.authMode==='login'?INK:'#fffdf6', loginTabFg: st.authMode==='login'?'#fffdf6':INK,
       regTabBg: st.authMode==='register'?INK:'#fffdf6', regTabFg: st.authMode==='register'?'#fffdf6':INK,
       // articles
       filteredArticles, diffChips, catChips,
       // reading
       curArticle, curParagraphs,
-      toggleSentenceTrans:()=>this.setState({sentenceTrans:!st.sentenceTrans}),
+      toggleSentenceTrans:()=>this.setState({sentenceTrans:!st.sentenceTrans,sentUnderline:st.sentenceTrans?st.sentUnderline:true}),
       stState: st.sentenceTrans?'ON':'OFF', stBg: st.sentenceTrans?BLUE:'#fffdf6', stFg: st.sentenceTrans?'#fff':INK,
-      hasSelectedWord:!!selDef, noSelectedWord:!selDef, selWord, closeWord:()=>this.setState({selWordKey:null}), addSelWord:()=>this.setState({selWordKey:null}),
+      toggleSentUnderline:()=>this.setState({sentUnderline:!st.sentUnderline}),
+      suState: st.sentUnderline?'ON':'OFF', suBg: st.sentUnderline?'#1f9d5c':'#fffdf6', suFg: st.sentUnderline?'#fff':INK,
+      hasSelectedWord:hasWord, selWord, closeWord:()=>this.setState({selWordKey:null}), addSelWord:()=>this.setState({selWordKey:null}),
+      hasSelectedSent:hasSent, selSent, closeSent:()=>this.setState({selSentKey:null}),
+      showSideEmpty, grammarAnalyze:()=>this.setState({selSentKey:null}),
       quizQuestions, submitQuiz:()=>this.setState({quizSubmitted:true}), quizSubmitted:st.quizSubmitted, quizNotSubmitted:!st.quizSubmitted, quizScore, quizMsg,
       // dict
       dictResultShown: st.dictShown, dictSearch:()=>this.setState({dictShown:true}),
@@ -1027,7 +1137,17 @@ class Component extends DCLogic {
       submitGrammar:()=>this.setState({gSubmitted:true}), gSubmitted:st.gSubmitted, gNotSubmitted:!st.gSubmitted, gScore,
       goGrammar:()=>this.go('grammar'),
       // checkin
-      checkinCal, streak, checkedIn:st.checkedIn, notCheckedIn:!st.checkedIn, doCheckin:()=>this.setState({checkedIn:true}),
+      checkinCal:st.checkinCal, streak:st.streak, checkedIn:st.checkedIn, notCheckedIn:!st.checkedIn,
+      monthChecked:st.monthChecked, maxStreak:st.maxStreak,
+      doCheckin: async ()=>{
+        if(st.checkedIn) return;
+        try{
+          const data = await this.api('/study/checkin',{method:'POST',body:JSON.stringify({type:'study'})});
+          if(data.success){
+            this.loadCheckin();
+          }
+        }catch(e){}
+      },
       // stats
       weekBars, statCards,
       radarRings, radarAxes, radarData, radarDataPts, radarLegend, radarAvg,
@@ -1041,7 +1161,7 @@ class Component extends DCLogic {
       setGoal:st.setGoal, goalMinus:()=>this.setState({setGoal:Math.max(10,st.setGoal-10)}), goalPlus:()=>this.setState({setGoal:Math.min(120,st.setGoal+10)}),
       sentenceTrackBg: st.setSentence?'#1f9d5c':'#cfc7ad', sentenceKnobX: st.setSentence?'24px':'2px',
       reminderTrackBg: st.setReminder?'#1f9d5c':'#cfc7ad', reminderKnobX: st.setReminder?'24px':'2px',
-      logout:()=>this.go('login'),
+      logout:()=>{ localStorage.removeItem('token'); this.setState({token:'',screen:'login',email:'',password:''}); },
     };
   }
 }

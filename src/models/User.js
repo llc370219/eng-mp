@@ -24,8 +24,8 @@ const userSchema = new mongoose.Schema({
   },
   level: {
     type: String,
-    enum: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
-    default: 'A1',
+    enum: ['初中', '高中', 'CET4', 'CET6', '雅思'],
+    default: '初中',
   },
   goal: {
     type: String,

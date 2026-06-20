@@ -1,9 +1,11 @@
 const Dictionary = require('../models/Dictionary');
 const config = require('../config');
 
+const DICT_API = 'https://dictionary-api-7hmy.onrender.com/define';
+
 /**
  * 查询单词释义
- * 优先查内置词典，无结果时调用外部 API
+ * 优先查内置词典，无结果时调用第三方 API
  */
 async function lookupWord(word) {
   const lowerWord = word.toLowerCase().trim();
@@ -14,10 +16,9 @@ async function lookupWord(word) {
     return formatLocalResult(local);
   }
 
-  // 2. 调用外部 API
-  const external = await fetchFromExternalAPI(lowerWord);
+  // 2. 调用第三方简明词典 API
+  const external = await fetchFromDictAPI(lowerWord);
   if (external) {
-    // 缓存到内置词典（异步，不阻塞返回）
     cacheToDB(lowerWord, external).catch(() => {});
     return external;
   }
@@ -29,53 +30,34 @@ async function lookupWord(word) {
 function formatLocalResult(doc) {
   return {
     word: doc.word,
-    phonetic: doc.phonetic,
-    translation: doc.translation,
-    definitionEn: doc.definitionEn,
+    phonetic: doc.phonetic || '',
+    translation: doc.translation || '',
+    definitionEn: doc.definitionEn || '',
+    partOfSpeech: doc.partOfSpeech || '',
     collins: doc.collins,
-    examples: doc.examples,
+    examples: doc.examples || [],
     tag: doc.tag,
-    exchange: doc.exchange,
     source: 'local',
   };
 }
 
-// 调用 Free Dictionary API
-async function fetchFromExternalAPI(word) {
+// 调用第三方简明词典 API
+async function fetchFromDictAPI(word) {
   try {
-    const url = `${config.dictApiUrl}/${encodeURIComponent(word)}`;
-    const res = await fetch(url);
-
+    const res = await fetch(`${DICT_API}?word=${encodeURIComponent(word)}`);
     if (!res.ok) return null;
 
     const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) return null;
-
-    const entry = data[0];
-    const phonetic = entry.phonetics?.find((p) => p.text)?.text || '';
-    const audio = entry.phonetics?.find((p) => p.audio)?.audio || '';
-
-    // 提取释义
-    const definitions = [];
-    const examples = [];
-
-    for (const meaning of entry.meanings || []) {
-      for (const def of meaning.definitions || []) {
-        definitions.push(`(${meaning.partOfSpeech}) ${def.definition}`);
-        if (def.example) {
-          examples.push(def.example);
-        }
-      }
-    }
+    if (!data || !data.definition) return null;
 
     return {
-      word: entry.word,
-      phonetic,
-      audio,
-      translation: '', // 外部 API 无中文释义
-      definitionEn: definitions.slice(0, 5).join('\n'),
-      examples: examples.slice(0, 3),
-      source: 'external',
+      word: data.word || word,
+      phonetic: '',
+      partOfSpeech: data.partOfSpeech || '',
+      translation: '',
+      definitionEn: data.definition || '',
+      examples: [],
+      source: 'dictionary-api',
     };
   } catch {
     return null;
@@ -93,6 +75,7 @@ async function cacheToDB(word, data) {
           phonetic: data.phonetic || '',
           translation: data.translation || '',
           definitionEn: data.definitionEn || '',
+          partOfSpeech: data.partOfSpeech || '',
           examples: data.examples || [],
         },
       },

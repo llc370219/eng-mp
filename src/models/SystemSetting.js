@@ -18,7 +18,7 @@ const DEFAULTS = {
   siteName: { value: '英语阅读学习', description: '站点名称' },
   allowRegistration: { value: true, description: '是否开放注册' },
   requireInviteCode: { value: true, description: '是否需要邀请码' },
-  defaultUserLevel: { value: 'A1', description: '默认用户等级' },
+  defaultUserLevel: { value: '初中', description: '默认用户等级' },
   aiProvider: { value: 'deepseek', description: '默认AI提供商' },
   dailyCheckInMin: { value: 5, description: '打卡最低学习分钟' },
   maintenanceMode: { value: false, description: '维护模式' },

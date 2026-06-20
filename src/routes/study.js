@@ -5,6 +5,7 @@ const ReadingProgress = require('../models/ReadingProgress');
 const VocabProgress = require('../models/VocabProgress');
 const StudyGoal = require('../models/StudyGoal');
 const Article = require('../models/Article');
+const { hasCheckedIn, tryCheckIn, getCheckInHistory, getStreak } = require('../services/checkin');
 const auth = require('../middlewares/auth');
 const validate = require('../middlewares/validator');
 
@@ -359,6 +360,143 @@ router.get('/goal', async (req, res, next) => {
     }).sort({ createdAt: -1 });
 
     res.json({ goals });
+  } catch (err) { next(err); }
+});
+
+// ===== 打卡 =====
+
+// 获取打卡状态
+router.get('/checkin', async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const [todayChecked, history, streak] = await Promise.all([
+      hasCheckedIn(userId),
+      getCheckInHistory(userId, 42),
+      getStreak(userId),
+    ]);
+
+    // 构建最近 42 天日历
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const historySet = new Set(history.map(r => r.date));
+    const calendar = [];
+    for (let i = 41; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      calendar.push({
+        date: dateStr,
+        checked: historySet.has(dateStr),
+        isToday: i === 0,
+      });
+    }
+
+    // 本月打卡天数
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
+    const monthChecked = history.filter(r => r.date >= monthStart).length;
+
+    res.json({
+      todayChecked,
+      streak: streak.current,
+      maxStreak: streak.max,
+      monthChecked,
+      calendar,
+    });
+  } catch (err) { next(err); }
+});
+
+// 执行打卡
+router.post('/checkin', async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { type = 'study' } = req.body; // 'reading' | 'vocab' | 'study'
+
+    const already = await hasCheckedIn(userId);
+    if (already) {
+      return res.json({ success: true, alreadyChecked: true, message: '今日已打卡' });
+    }
+
+    const result = await tryCheckIn(userId, { type, count: 1, minutes: 5 });
+
+    if (result.qualified) {
+      const streak = await getStreak(userId);
+      res.json({ success: true, qualified: true, streak: streak.current, message: '打卡成功' });
+    } else {
+      res.json({ success: true, qualified: false, message: '活动已记录，尚未满足打卡条件' });
+    }
+  } catch (err) { next(err); }
+});
+
+// ===== 文章统计 =====
+
+// 获取文章阅读统计
+router.get('/article-stats', async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+
+    // 按难度分组统计
+    const byDifficulty = await ReadingProgress.aggregate([
+      { $match: { userId } },
+      { $lookup: { from: 'articles', localField: 'articleId', foreignField: '_id', as: 'article' } },
+      { $unwind: '$article' },
+      { $group: {
+        _id: '$article.difficulty',
+        total: { $sum: 1 },
+        completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+        avgScore: { $avg: '$exerciseScore' },
+      }},
+      { $sort: { _id: 1 } },
+    ]);
+
+    // 按分类分组统计
+    const byCategory = await ReadingProgress.aggregate([
+      { $match: { userId } },
+      { $lookup: { from: 'articles', localField: 'articleId', foreignField: '_id', as: 'article' } },
+      { $unwind: '$article' },
+      { $group: {
+        _id: '$article.category',
+        total: { $sum: 1 },
+        completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+      }},
+      { $sort: { _id: 1 } },
+    ]);
+
+    // 总体统计
+    const [totalReading, completedReading, inProgress] = await Promise.all([
+      ReadingProgress.countDocuments({ userId }),
+      ReadingProgress.countDocuments({ userId, status: 'completed' }),
+      ReadingProgress.countDocuments({ userId, status: 'reading' }),
+    ]);
+
+    // 最近完成的文章
+    const recentCompleted = await ReadingProgress.find({ userId, status: 'completed' })
+      .sort({ updatedAt: -1 })
+      .limit(10)
+      .populate('articleId', 'title difficulty category wordCount')
+      .select('articleId exerciseScore updatedAt durationSec');
+
+    res.json({
+      total: totalReading,
+      completed: completedReading,
+      inProgress,
+      byDifficulty: byDifficulty.map(d => ({
+        level: d._id,
+        total: d.total,
+        completed: d.completed,
+        avgScore: d.avgScore ? Math.round(d.avgScore) : null,
+      })),
+      byCategory: byCategory.map(c => ({
+        category: c._id,
+        total: c.total,
+        completed: c.completed,
+      })),
+      recentCompleted: recentCompleted.map(r => ({
+        article: r.articleId,
+        score: r.exerciseScore,
+        completedAt: r.updatedAt,
+        durationSec: r.durationSec,
+      })),
+    });
   } catch (err) { next(err); }
 });
 

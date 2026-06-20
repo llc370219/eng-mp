@@ -15,6 +15,7 @@ const logger = require('./utils/logger');
 // 路由
 const authRoutes = require('./routes/auth');
 const articleRoutes = require('./routes/articles');
+const personalArticleRoutes = require('./routes/personalArticles');
 const vocabRoutes = require('./routes/vocab');
 const userRoutes = require('./routes/user');
 const exerciseRoutes = require('./routes/exercises');
@@ -64,7 +65,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// 首页跳转新前端（放在静态文件之前，避免 public/index.html 抢先）
+app.get('/', (req, res) => res.redirect('/Lull-Reading.dc.html'));
+
 // ===== 静态文件 =====
+app.use(express.static(path.join(__dirname, '../frontend')));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // ===== 健康检查 =====
@@ -75,6 +80,7 @@ app.get('/api/health', (req, res) => {
 // ===== API 路由 =====
 app.use('/api/auth', authRoutes);
 app.use('/api/articles', articleRoutes);
+app.use('/api/personal-articles', personalArticleRoutes);
 app.use('/api/vocab', vocabRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api', exerciseRoutes);
@@ -89,9 +95,6 @@ app.use('/demo', demoRoutes);
 
 // ===== 后台管理 =====
 app.use('/admin', adminRoutes);
-
-// 首页跳转 Demo
-app.get('/', (req, res) => res.redirect('/demo/'));
 
 // ===== 404 =====
 app.use((req, res) => {

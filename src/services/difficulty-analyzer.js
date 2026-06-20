@@ -52,14 +52,13 @@ function analyzeDifficulty(text) {
 
   const roundedGrade = Math.round(grade * 10) / 10;
 
-  // 映射到 CEFR 等级
+  // 映射到考试等级
   let difficulty;
-  if (grade <= 1) difficulty = 'A1';
-  else if (grade <= 3) difficulty = 'A2';
-  else if (grade <= 6) difficulty = 'B1';
-  else if (grade <= 9) difficulty = 'B2';
-  else if (grade <= 13) difficulty = 'C1';
-  else difficulty = 'C2';
+  if (grade <= 3) difficulty = '初中';
+  else if (grade <= 6) difficulty = '高中';
+  else if (grade <= 9) difficulty = 'CET4';
+  else if (grade <= 13) difficulty = 'CET6';
+  else difficulty = '雅思';
 
   return {
     wordCount,
