@@ -74,7 +74,7 @@ router.post('/:id/exercises/submit', auth, [
           await WrongAnswer.findOneAndUpdate(
             {
               userId: req.user._id,
-              sourceType: 'grammar',
+              sourceType: 'Grammar',
               sourceId: grammar._id,
               questionIndex: i,
             },

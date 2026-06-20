@@ -57,7 +57,7 @@ router.post('/exercises/:id/submit', auth, [
         await WrongAnswer.findOneAndUpdate(
           {
             userId: req.user._id,
-            sourceType: 'article',
+            sourceType: 'Article',
             sourceId: exercise.articleId,
             questionIndex: i,
           },
@@ -66,7 +66,6 @@ router.post('/exercises/:id/submit', auth, [
             yourAnswer: userAnswer,
             correctAnswer: q.answer,
             explanation: q.explanation,
-            $inc: { reviewCount: 0 },
           },
           { upsert: true }
         );

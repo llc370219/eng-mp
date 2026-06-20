@@ -82,6 +82,7 @@ router.get('/article/:id', requireAuth, async (req, res) => {
 // ===== 提交练习 =====
 router.post('/article/:id/submit', requireAuth, async (req, res) => {
   const article = await Article.findById(req.params.id);
+  if (!article) return res.redirect('/demo/');
   const exercise = await Exercise.findOne({ articleId: article._id });
   if (!exercise) return res.redirect('/demo/article/' + req.params.id);
   const answers = req.body;
@@ -92,13 +93,14 @@ router.post('/article/:id/submit', requireAuth, async (req, res) => {
     if (isCorrect) correct++;
     return { question: q.text, options: q.options, userAnswer, correctAnswer: q.answer, isCorrect, explanation: q.explanation };
   });
-  const score = Math.round((correct / exercise.questions.length) * 100);
+  const score = exercise.questions.length > 0 ? Math.round((correct / exercise.questions.length) * 100) : 0;
   render(res, 'article', { article, exercise, results, score, aiResult: null });
 });
 
 // ===== 文章内 AI 分析 =====
 router.post('/article/:id/ai', requireAuth, async (req, res) => {
   const article = await Article.findById(req.params.id);
+  if (!article) return res.redirect('/demo/');
   const exercise = await Exercise.findOne({ articleId: article._id });
   const { task } = req.body;
   const ai = require('../services/ai');
@@ -129,7 +131,7 @@ router.get('/dict', requireAuth, async (req, res) => {
             const entry = data[0];
             const defs = [], exs = [];
             for (const m of entry.meanings || []) for (const d of m.definitions || []) { defs.push(`(${m.partOfSpeech}) ${d.definition}`); if (d.example) exs.push(d.example); }
-            result = { word: entry.word, phonetic: entry.phonetics?.find(p => p.text)?.text || '', translation: '', definitionEn: defs.slice(0, 5).join('\n'), examples: exs.slice(0, 3), source: 'external' };
+            result = { word: entry.word, phonetic: entry.phonetics?.find(p => p.text)?.text || '', translation: '', definitionEn: defs.slice(0, 5).join('\n'), examples: exs.slice(0, 3), collins: '', tag: '', exchange: '', source: 'external' };
           }
         }
       } catch {}
@@ -212,9 +214,9 @@ router.post('/grammar/:id/submit', requireAuth, async (req, res) => {
     const userAnswer = answers['q' + i] || '';
     const isCorrect = userAnswer === q.answer;
     if (isCorrect) correct++;
-    return { ...q.toObject(), userAnswer, isCorrect };
+    return { ...q.toObject(), userAnswer, correctAnswer: q.answer, isCorrect };
   });
-  const score = Math.round((correct / grammar.exercises.length) * 100);
+  const score = grammar.exercises.length > 0 ? Math.round((correct / grammar.exercises.length) * 100) : 0;
   render(res, 'grammarDetail', { grammar, results, score });
 });
 

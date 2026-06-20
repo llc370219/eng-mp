@@ -10,13 +10,13 @@ const wrongAnswerSchema = new mongoose.Schema({
   // 来源：文章练习 或 语法练习
   sourceType: {
     type: String,
-    enum: ['article', 'grammar'],
+    enum: ['Article', 'Grammar'],
     required: true,
   },
   sourceId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
-    refPath: 'sourceType === "article" ? "Article" : "Grammar"',
+    refPath: 'sourceType',
   },
   questionIndex: { type: Number, required: true },
   questionText: { type: String, required: true },
