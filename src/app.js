@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -53,6 +54,12 @@ app.use((req, res, next) => {
   req.requestId = req.headers['x-request-id'] || generateRequestId();
   res.setHeader('X-Request-Id', req.requestId);
   next();
+});
+
+// ===== 静态文件（Demo 页面）=====
+app.use(express.static(path.join(__dirname, '../public')));
+app.use('/demo', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // ===== 健康检查 =====

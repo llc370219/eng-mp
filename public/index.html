@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英语阅读学习</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --primary: #4F46E5;
+  --primary-light: #818CF8;
+  --bg: #F9FAFB;
+  --card: #FFFFFF;
+  --text: #111827;
+  --text-secondary: #6B7280;
+  --border: #E5E7EB;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --radius: 12px;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+.container { max-width: 900px; margin: 0 auto; padding: 16px; }
+
+/* Header */
+.header { background: var(--primary); color: white; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 100; }
+.header h1 { font-size: 20px; font-weight: 600; }
+.header .subtitle { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+
+/* Tabs */
+.tabs { display: flex; background: white; border-bottom: 1px solid var(--border); position: sticky; top: 64px; z-index: 99; overflow-x: auto; }
+.tab { flex: 1; padding: 12px 8px; text-align: center; font-size: 13px; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.tab:hover { background: #F3F4F6; }
+
+/* Panels */
+.panel { display: none; padding: 16px 0; }
+.panel.active { display: block; }
+
+/* Cards */
+.card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.card-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+
+/* Article list */
+.article-item { cursor: pointer; transition: transform 0.15s; }
+.article-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.article-meta { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.badge-difficulty { background: #EEF2FF; color: var(--primary); }
+.badge-category { background: #F0FDF4; color: #16A34A; }
+.badge-tag { background: #FEF3C7; color: #D97706; font-size: 10px; }
+.badge-time { color: var(--text-secondary); font-size: 12px; }
+
+/* Article detail */
+.article-content { font-size: 15px; line-height: 1.8; white-space: pre-wrap; }
+.article-content .vocab-highlight { background: #FEF3C7; padding: 1px 4px; border-radius: 3px; cursor: pointer; }
+.back-btn { display: inline-flex; align-items: center; gap: 4px; color: var(--primary); cursor: pointer; font-size: 14px; margin-bottom: 12px; }
+.back-btn:hover { text-decoration: underline; }
+
+/* Exercises */
+.question { margin-bottom: 20px; }
+.question-text { font-weight: 500; margin-bottom: 10px; }
+.option { display: block; padding: 10px 14px; margin: 6px 0; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s; font-size: 14px; }
+.option:hover { border-color: var(--primary-light); background: #EEF2FF; }
+.option.selected { border-color: var(--primary); background: #EEF2FF; }
+.option.correct { border-color: var(--success); background: #ECFDF5; }
+.option.wrong { border-color: var(--danger); background: #FEF2F2; }
+.explanation { font-size: 13px; color: var(--text-secondary); margin-top: 6px; padding: 8px; background: #F9FAFB; border-radius: 6px; }
+
+/* Dict */
+.dict-result { margin-top: 12px; }
+.dict-word { font-size: 24px; font-weight: 700; }
+.dict-phonetic { color: var(--text-secondary); margin-left: 8px; }
+.dict-translation { font-size: 15px; margin-top: 8px; }
+.dict-examples { margin-top: 10px; }
+.dict-example { font-size: 13px; color: var(--text-secondary); padding: 6px 0; border-bottom: 1px solid var(--border); }
+.dict-example em { color: var(--text); font-style: normal; font-weight: 500; }
+
+/* Vocab */
+.vocab-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.vocab-word { font-weight: 600; font-size: 15px; }
+.vocab-def { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+.vocab-actions { display: flex; gap: 6px; }
+
+/* Review */
+.review-card { text-align: center; padding: 30px; }
+.review-word { font-size: 32px; font-weight: 700; margin: 16px 0; }
+.review-phonetic { color: var(--text-secondary); font-size: 16px; }
+.review-meaning { font-size: 18px; margin: 16px 0; display: none; }
+.review-meaning.show { display: block; }
+.rating-buttons { display: flex; gap: 8px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+.rating-btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+.rating-btn.r0 { background: #FEE2E2; color: #DC2626; }
+.rating-btn.r1 { background: #FEF3C7; color: #D97706; }
+.rating-btn.r2 { background: #FEF9C3; color: #CA8A04; }
+.rating-btn.r3 { background: #D1FAE5; color: #059669; }
+.rating-btn.r4 { background: #DBEAFE; color: #2563EB; }
+.rating-btn.r5 { background: #E0E7FF; color: #4F46E5; }
+.rating-btn:hover { transform: scale(1.05); }
+
+/* Grammar */
+.grammar-content { font-size: 14px; line-height: 1.8; }
+.grammar-content h2, .grammar-content h3 { margin: 16px 0 8px; }
+.grammar-content ul { padding-left: 20px; }
+.grammar-content code { background: #F3F4F6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+.grammar-example { padding: 10px; background: #FFFBEB; border-left: 3px solid #F59E0B; margin: 8px 0; border-radius: 0 6px 6px 0; }
+.grammar-example .en { font-weight: 500; }
+.grammar-example .zh { color: var(--text-secondary); font-size: 13px; }
+
+/* Stats */
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.stat-item { text-align: center; padding: 16px; }
+.stat-value { font-size: 28px; font-weight: 700; color: var(--primary); }
+.stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+/* Buttons */
+.btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: #4338CA; }
+.btn-outline { background: white; border: 1px solid var(--border); color: var(--text); }
+.btn-outline:hover { background: #F9FAFB; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-danger { background: var(--danger); color: white; }
+
+/* Input */
+.input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+input, select { padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.15s; }
+input:focus, select:focus { border-color: var(--primary); }
+input[type="text"] { flex: 1; }
+
+/* Auth */
+.auth-form { max-width: 360px; margin: 40px auto; }
+.auth-form .card { padding: 24px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.form-group input { width: 100%; }
+.auth-toggle { text-align: center; margin-top: 12px; font-size: 13px; color: var(--text-secondary); }
+.auth-toggle a { color: var(--primary); cursor: pointer; text-decoration: none; }
+
+/* Toast */
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1F2937; color: white; padding: 10px 20px; border-radius: 8px; font-size: 14px; z-index: 1000; opacity: 0; transition: opacity 0.3s; }
+.toast.show { opacity: 1; }
+
+/* Loading */
+.loading { text-align: center; padding: 40px; color: var(--text-secondary); }
+.spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Score */
+.score-display { text-align: center; padding: 20px; }
+.score-number { font-size: 48px; font-weight: 700; }
+.score-label { font-size: 14px; color: var(--text-secondary); }
+
+/* Search */
+.search-bar { position: relative; }
+.search-bar input { width: 100%; padding-left: 36px; }
+.search-bar::before { content: '🔍'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+
+/* AI Provider */
+.provider-select { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.provider-chip { padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px; font-size: 11px; cursor: pointer; }
+.provider-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📖 英语阅读学习</h1>
+  <div class="subtitle">分级阅读 · 词汇记忆 · AI 辅助</div>
+</div>
+
+<div class="tabs" id="mainTabs">
+  <div class="tab active" data-tab="articles">📚 阅读</div>
+  <div class="tab" data-tab="dict">🔍 词典</div>
+  <div class="tab" data-tab="vocab">📝 生词</div>
+  <div class="tab" data-tab="grammar">📐 语法</div>
+  <div class="tab" data-tab="stats">📊 统计</div>
+  <div class="tab" data-tab="ai">🤖 AI</div>
+</div>
+
+<div class="container">
+  <!-- Auth Panel -->
+  <div id="authPanel" class="auth-form">
+    <div class="card">
+      <div class="card-title" id="authTitle">登录</div>
+      <div class="form-group">
+        <label>邮箱</label>
+        <input type="email" id="authEmail" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="authPassword" placeholder="至少 6 位">
+      </div>
+      <div class="form-group" id="nicknameGroup" style="display:none">
+        <label>昵称</label>
+        <input type="text" id="authNickname" placeholder="可选">
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="handleAuth()">登录</button>
+      <div class="auth-toggle">
+        <span id="authToggle">没有账号？<a onclick="toggleAuthMode()">注册</a></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Articles Panel -->
+  <div id="articlesPanel" class="panel active">
+    <div id="articleListView">
+      <div class="input-group">
+        <input type="text" id="searchInput" placeholder="搜索文章..." onkeyup="if(event.key==='Enter')searchArticles()">
+        <select id="filterDifficulty" onchange="loadArticles()">
+          <option value="">全部难度</option>
+          <option value="A1">A1</option><option value="A2">A2</option>
+          <option value="B1">B1</option><option value="B2">B2</option>
+          <option value="C1">C1</option><option value="C2">C2</option>
+        </select>
+      </div>
+      <div id="articleList"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div id="articleDetailView" style="display:none">
+      <div class="back-btn" onclick="backToList()">← 返回列表</div>
+      <div class="card" id="articleContent"></div>
+      <div id="exerciseArea"></div>
+    </div>
+  </div>
+
+  <!-- Dict Panel -->
+  <div id="dictPanel" class="panel">
+    <div class="card">
+      <div class="card-title">词典查询</div>
+      <div class="input-group">
+        <input type="text" id="dictInput" placeholder="输入英文单词..." onkeyup="if(event.key==='Enter')lookupWord()">
+        <button class="btn btn-primary" onclick="lookupWord()">查询</button>
+      </div>
+      <div id="dictResult"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">快捷查词</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="quickDict('ubiquitous')">ubiquitous</button>
+        <button class="btn btn-outline btn-sm" onclick="quickDict('eloquent')">eloquent</button>
+        <button class="btn btn-outline btn-sm" onclick="quickDict('resilient')">resilient</button>
+        <button class="btn btn-outline btn-sm" onclick="quickDict('paradigm')">paradigm</button>
+        <button class="btn btn-outline btn-sm" onclick="quickDict('meticulous')">meticulous</button>
+        <button class="btn btn-outline btn-sm" onclick="quickDict('pragmatic')">pragmatic</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vocab Panel -->
+  <div id="vocabPanel" class="panel">
+    <div id="vocabListView">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-weight:600" id="vocabCount">我的生词本</span>
+        <button class="btn btn-primary btn-sm" onclick="startReview()">开始复习</button>
+      </div>
+      <div id="vocabList"></div>
+    </div>
+    <div id="reviewView" style="display:none">
+      <div class="back-btn" onclick="backToVocab()">← 返回生词本</div>
+      <div class="card review-card" id="reviewCard"></div>
+    </div>
+  </div>
+
+  <!-- Grammar Panel -->
+  <div id="grammarPanel" class="panel">
+    <div id="grammarListView">
+      <div class="card-title" style="margin-bottom:12px">语法学习</div>
+      <div id="grammarList"></div>
+    </div>
+    <div id="grammarDetailView" style="display:none">
+      <div class="back-btn" onclick="backToGrammar()">← 返回列表</div>
+      <div class="card" id="grammarContent"></div>
+      <div id="grammarExerciseArea"></div>
+    </div>
+  </div>
+
+  <!-- Stats Panel -->
+  <div id="statsPanel" class="panel">
+    <div class="card">
+      <div class="card-title">学习统计</div>
+      <div class="stat-grid" id="statsGrid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">本周趋势</div>
+      <div id="trendArea"></div>
+    </div>
+  </div>
+
+  <!-- AI Panel -->
+  <div id="aiPanel" class="panel">
+    <div class="card">
+      <div class="card-title">AI 辅助工具</div>
+      <div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary)">选择模型:</div>
+      <div class="provider-select" id="providerSelect"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">文章摘要</div>
+      <textarea id="aiSummarizeInput" rows="4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;resize:vertical" placeholder="粘贴英文文章..."></textarea>
+      <button class="btn btn-primary" style="margin-top:8px" onclick="aiSummarize()">生成摘要</button>
+      <div id="aiSummarizeResult" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">翻译</div>
+      <textarea id="aiTranslateInput" rows="3" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;resize:vertical" placeholder="输入要翻译的文本..."></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <select id="translateLang">
+          <option value="zh">英 → 中</option>
+          <option value="en">中 → 英</option>
+        </select>
+        <button class="btn btn-primary" onclick="aiTranslate()">翻译</button>
+      </div>
+      <div id="aiTranslateResult" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">单词解析</div>
+      <div class="input-group">
+        <input type="text" id="aiWordInput" placeholder="输入单词..." onkeyup="if(event.key==='Enter')aiAnalyzeWord()">
+        <button class="btn btn-primary" onclick="aiAnalyzeWord()">解析</button>
+      </div>
+      <div id="aiWordResult" style="margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:3000/api';
+let token = localStorage.getItem('token');
+let currentUser = null;
+let isLogin = true;
+let currentArticle = null;
+let reviewVocabs = [];
+let reviewIndex = 0;
+let currentProvider = 'deepseek';
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', () => {
+  initTabs();
+  if (token) {
+    loadUserProfile();
+  } else {
+    showAuth();
+  }
+});
+
+// ===== Tabs =====
+function initTabs() {
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab + 'Panel').classList.add('active');
+      if (tab.dataset.tab === 'articles' && !currentArticle) loadArticles();
+      if (tab.dataset.tab === 'vocab') loadVocab();
+      if (tab.dataset.tab === 'grammar') loadGrammar();
+      if (tab.dataset.tab === 'stats') loadStats();
+      if (tab.dataset.tab === 'ai') loadProviders();
+    });
+  });
+}
+
+// ===== Auth =====
+function showAuth() {
+  document.getElementById('authPanel').style.display = 'block';
+  document.getElementById('mainTabs').style.display = 'none';
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+}
+function hideAuth() {
+  document.getElementById('authPanel').style.display = 'none';
+  document.getElementById('mainTabs').style.display = 'flex';
+  document.querySelector('.tab').click();
+}
+function toggleAuthMode() {
+  isLogin = !isLogin;
+  document.getElementById('authTitle').textContent = isLogin ? '登录' : '注册';
+  document.getElementById('nicknameGroup').style.display = isLogin ? 'none' : 'block';
+  document.querySelector('#authPanel .btn').textContent = isLogin ? '登录' : '注册';
+  document.getElementById('authToggle').innerHTML = isLogin
+    ? '没有账号？<a onclick="toggleAuthMode()">注册</a>'
+    : '已有账号？<a onclick="toggleAuthMode()">登录</a>';
+}
+async function handleAuth() {
+  const email = document.getElementById('authEmail').value;
+  const password = document.getElementById('authPassword').value;
+  if (!email || !password) return toast('请填写邮箱和密码');
+  const endpoint = isLogin ? '/auth/login' : '/auth/register';
+  const body = { email, password };
+  if (!isLogin) body.nickname = document.getElementById('authNickname').value || '';
+  try {
+    const res = await api('POST', endpoint, body);
+    token = res.accessToken;
+    localStorage.setItem('token', token);
+    currentUser = res.user;
+    hideAuth();
+    toast(isLogin ? '登录成功' : '注册成功');
+  } catch (e) { toast(e.message); }
+}
+
+// ===== API Helper =====
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || '请求失败');
+  return data;
+}
+
+// ===== Toast =====
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ===== User =====
+async function loadUserProfile() {
+  try {
+    const res = await api('GET', '/user/profile');
+    currentUser = res.user;
+    hideAuth();
+  } catch { token = null; localStorage.removeItem('token'); showAuth(); }
+}
+
+// ===== Articles =====
+async function loadArticles() {
+  const diff = document.getElementById('filterDifficulty').value;
+  const url = diff ? `/articles?difficulty=${diff}` : '/articles';
+  try {
+    const res = await api('GET', url);
+    renderArticleList(res.articles);
+  } catch (e) { toast(e.message); }
+}
+async function searchArticles() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return loadArticles();
+  try {
+    const res = await api('GET', `/articles/search?q=${encodeURIComponent(q)}`);
+    renderArticleList(res.articles);
+  } catch (e) { toast(e.message); }
+}
+function renderArticleList(articles) {
+  const el = document.getElementById('articleList');
+  if (!articles.length) { el.innerHTML = '<div class="card" style="text-align:center;color:var(--text-secondary)">暂无文章</div>'; return; }
+  el.innerHTML = articles.map(a => `
+    <div class="card article-item" onclick="viewArticle('${a._id}')">
+      <div class="card-title">${a.title}</div>
+      <div class="article-meta">
+        <span class="badge badge-difficulty">${a.difficulty}</span>
+        <span class="badge badge-category">${a.category}</span>
+        <span class="badge badge-time">⏱ ${a.readingTimeMin} min · ${a.wordCount} 词</span>
+        ${a.tags.map(t => `<span class="badge badge-tag">${t}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+async function viewArticle(id) {
+  try {
+    const res = await api('GET', `/articles/${id}`);
+    currentArticle = res;
+    document.getElementById('articleListView').style.display = 'none';
+    document.getElementById('articleDetailView').style.display = 'block';
+    const a = res.article;
+    document.getElementById('articleContent').innerHTML = `
+      <div class="card-title">${a.title}</div>
+      <div class="article-meta" style="margin-bottom:16px">
+        <span class="badge badge-difficulty">${a.difficulty}</span>
+        <span class="badge badge-category">${a.category}</span>
+        <span class="badge badge-time">⏱ ${a.readingTimeMin} min</span>
+      </div>
+      <div class="article-content">${escapeHtml(a.content)}</div>
+    `;
+    renderExercises(res.exercise);
+  } catch (e) { toast(e.message); }
+}
+function renderExercises(exercise) {
+  const el = document.getElementById('exerciseArea');
+  if (!exercise || !exercise.questions.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="card"><div class="card-title">📝 阅读理解</div></div>` +
+    exercise.questions.map((q, i) => `
+      <div class="card question" id="q${i}">
+        <div class="question-text">${i + 1}. ${q.text}</div>
+        ${q.options.map((o, j) => `
+          <div class="option" data-q="${i}" data-a="${o}" onclick="selectOption(this)">${o}</div>
+        `).join('')}
+        <div class="explanation" id="exp${i}" style="display:none">${q.explanation || ''}</div>
+      </div>
+    `).join('') + `
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitExercise('${exercise._id}')">提交答案</button>
+  `;
+}
+function selectOption(el) {
+  const q = el.dataset.q;
+  document.querySelectorAll(`[data-q="${q}"]`).forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+async function submitExercise(id) {
+  const answers = currentArticle.exercise.questions.map((q, i) => {
+    const sel = document.querySelector(`.option.selected[data-q="${i}"]`);
+    return sel ? sel.dataset.a : '';
+  });
+  try {
+    const res = await api('POST', `/exercises/${id}/submit`, { answers });
+    res.results.forEach((r, i) => {
+      document.querySelectorAll(`[data-q="${i}"]`).forEach(o => {
+        o.style.pointerEvents = 'none';
+        if (o.dataset.a === r.correctAnswer) o.classList.add('correct');
+        if (o.classList.contains('selected') && !r.isCorrect) o.classList.add('wrong');
+      });
+      document.getElementById(`exp${i}`).style.display = 'block';
+    });
+    const scoreColor = res.score >= 80 ? 'var(--success)' : res.score >= 60 ? 'var(--warning)' : 'var(--danger)';
+    toast(`得分: ${res.score}% (${res.correct}/${res.total})`);
+  } catch (e) { toast(e.message); }
+}
+function backToList() {
+  document.getElementById('articleListView').style.display = 'block';
+  document.getElementById('articleDetailView').style.display = 'none';
+  currentArticle = null;
+  loadArticles();
+}
+
+// ===== Dict =====
+async function lookupWord() {
+  const word = document.getElementById('dictInput').value.trim();
+  if (!word) return;
+  try {
+    const res = await api('GET', `/dict/${encodeURIComponent(word)}`);
+    document.getElementById('dictResult').innerHTML = `
+      <div class="dict-result">
+        <div><span class="dict-word">${res.word}</span> <span class="dict-phonetic">${res.phonetic || ''}</span></div>
+        <div class="dict-translation">${res.translation || res.definitionEn || '无释义'}</div>
+        ${res.definitionEn ? `<div style="font-size:13px;color:var(--text-secondary);margin-top:4px">${res.definitionEn}</div>` : ''}
+        ${res.tag ? `<div style="margin-top:6px"><span class="badge badge-difficulty">${res.tag}</span></div>` : ''}
+        ${res.examples && res.examples.length ? `
+          <div class="dict-examples">
+            <div style="font-size:13px;font-weight:500;margin-top:12px;margin-bottom:6px">例句:</div>
+            ${res.examples.map(e => `<div class="dict-example">${e}</div>`).join('')}
+          </div>
+        ` : ''}
+        <button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="addToVocab('${res.word}','${(res.translation||'').replace(/'/g,"\\'")}','${(res.phonetic||'').replace(/'/g,"\\'")}')">+ 添加到生词本</button>
+      </div>
+    `;
+  } catch (e) { document.getElementById('dictResult').innerHTML = `<div style="color:var(--danger);margin-top:8px">未找到: ${word}</div>`; }
+}
+function quickDict(word) { document.getElementById('dictInput').value = word; lookupWord(); }
+
+// ===== Vocab =====
+async function loadVocab() {
+  try {
+    const res = await api('GET', '/vocab');
+    document.getElementById('vocabCount').textContent = `我的生词本 (${res.total})`;
+    const el = document.getElementById('vocabList');
+    if (!res.vocabs.length) { el.innerHTML = '<div class="card" style="text-align:center;color:var(--text-secondary)">生词本为空，去词典查词添加吧</div>'; return; }
+    el.innerHTML = res.vocabs.map(v => `
+      <div class="vocab-item">
+        <div>
+          <div class="vocab-word">${v.word}</div>
+          <div class="vocab-def">${v.definition || ''}</div>
+          ${v.nextReview ? `<div style="font-size:11px;color:var(--text-secondary)">复习: ${new Date(v.nextReview).toLocaleDateString()}</div>` : ''}
+        </div>
+        <div class="vocab-actions">
+          <button class="btn btn-outline btn-sm" onclick="deleteVocab('${v._id}')">删除</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) { toast(e.message); }
+}
+async function addToVocab(word, definition, phonetic) {
+  try {
+    await api('POST', '/vocab', { word, definition, phonetic });
+    toast(`已添加: ${word}`);
+  } catch (e) { toast(e.message); }
+}
+async function deleteVocab(id) {
+  try {
+    await api('DELETE', `/vocab/${id}`);
+    toast('已删除');
+    loadVocab();
+  } catch (e) { toast(e.message); }
+}
+async function startReview() {
+  try {
+    const res = await api('GET', '/vocab/review');
+    if (!res.count) { toast('今天没有需要复习的单词'); return; }
+    reviewVocabs = res.vocabs;
+    reviewIndex = 0;
+    document.getElementById('vocabListView').style.display = 'none';
+    document.getElementById('reviewView').style.display = 'block';
+    showReviewCard();
+  } catch (e) { toast(e.message); }
+}
+function showReviewCard() {
+  const v = reviewVocabs[reviewIndex];
+  document.getElementById('reviewCard').innerHTML = `
+    <div style="font-size:12px;color:var(--text-secondary)">${reviewIndex + 1} / ${reviewVocabs.length}</div>
+    <div class="review-word">${v.word}</div>
+    <div class="review-phonetic">${v.phonetic || ''}</div>
+    <div class="review-meaning" id="reviewMeaning">${v.definition || ''}</div>
+    <button class="btn btn-outline" onclick="document.getElementById('reviewMeaning').classList.add('show')" style="margin:16px 0">显示释义</button>
+    <div class="rating-buttons">
+      <button class="rating-btn r0" onclick="rateVocab(0)">😵 不认识</button>
+      <button class="rating-btn r2" onclick="rateVocab(2)">😰 模糊</button>
+      <button class="rating-btn r3" onclick="rateVocab(3)">🤔 费力</button>
+      <button class="rating-btn r4" onclick="rateVocab(4)">😊 记得</button>
+      <button class="rating-btn r5" onclick="rateVocab(5)">😎 熟练</button>
+    </div>
+  `;
+}
+async function rateVocab(quality) {
+  const v = reviewVocabs[reviewIndex];
+  try {
+    await api('POST', `/vocab/${v._id}/review`, { quality });
+    reviewIndex++;
+    if (reviewIndex >= reviewVocabs.length) {
+      toast('复习完成！');
+      backToVocab();
+    } else { showReviewCard(); }
+  } catch (e) { toast(e.message); }
+}
+function backToVocab() {
+  document.getElementById('vocabListView').style.display = 'block';
+  document.getElementById('reviewView').style.display = 'none';
+  loadVocab();
+}
+
+// ===== Grammar =====
+async function loadGrammar() {
+  try {
+    const res = await api('GET', '/grammar');
+    const el = document.getElementById('grammarList');
+    el.innerHTML = res.grammars.map(g => `
+      <div class="card article-item" onclick="viewGrammar('${g._id}')">
+        <div class="card-title">${g.title}</div>
+        <div class="article-meta">
+          <span class="badge badge-difficulty">${g.level}</span>
+          <span class="badge badge-category">${g.category}</span>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) { toast(e.message); }
+}
+async function viewGrammar(id) {
+  try {
+    const res = await api('GET', `/grammar/${id}`);
+    const g = res.grammar;
+    document.getElementById('grammarListView').style.display = 'none';
+    document.getElementById('grammarDetailView').style.display = 'block';
+    document.getElementById('grammarContent').innerHTML = `
+      <div class="card-title">${g.title}</div>
+      <div class="article-meta" style="margin-bottom:16px">
+        <span class="badge badge-difficulty">${g.level}</span>
+        <span class="badge badge-category">${g.category}</span>
+      </div>
+      <div class="grammar-content">${renderMarkdown(g.explanation)}</div>
+      ${g.examples.length ? `
+        <div style="margin-top:16px;font-weight:500">例句:</div>
+        ${g.examples.map(e => `
+          <div class="grammar-example">
+            <div class="en">${e.sentence}</div>
+            <div class="zh">${e.translation}</div>
+          </div>
+        `).join('')}
+      ` : ''}
+    `;
+    if (g.exercises && g.exercises.length) {
+      document.getElementById('grammarExerciseArea').innerHTML = `
+        <div class="card"><div class="card-title">练习</div></div>
+        ${g.exercises.map((q, i) => `
+          <div class="card question" id="gq${i}">
+            <div class="question-text">${i + 1}. ${q.text}</div>
+            ${q.options ? q.options.map(o => `
+              <div class="option" data-q="g${i}" data-a="${o}" onclick="selectOption(this)">${o}</div>
+            `).join('') : `<input type="text" id="gqInput${i}" placeholder="输入答案..." style="width:100%;margin-top:6px">`}
+            <div class="explanation" id="gexp${i}" style="display:none">${q.explanation || ''}</div>
+          </div>
+        `).join('')}
+        <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="submitGrammarExercise('${id}', ${g.exercises.length})">提交答案</button>
+      `;
+    }
+  } catch (e) { toast(e.message); }
+}
+async function submitGrammarExercise(grammarId, count) {
+  const answers = [];
+  for (let i = 0; i < count; i++) {
+    const sel = document.querySelector(`.option.selected[data-q="g${i}"]`);
+    const input = document.getElementById(`gqInput${i}`);
+    answers.push(sel ? sel.dataset.a : (input ? input.value : ''));
+  }
+  try {
+    const res = await api('POST', `/grammar/${grammarId}/exercises/submit`, { answers });
+    res.results.forEach((r, i) => {
+      document.querySelectorAll(`[data-q="g${i}"]`).forEach(o => {
+        o.style.pointerEvents = 'none';
+        if (o.dataset.a === r.correctAnswer) o.classList.add('correct');
+        if (o.classList.contains('selected') && !r.isCorrect) o.classList.add('wrong');
+      });
+      document.getElementById(`gexp${i}`).style.display = 'block';
+    });
+    toast(`得分: ${res.score}% (${res.correct}/${res.total})`);
+  } catch (e) { toast(e.message); }
+}
+function backToGrammar() {
+  document.getElementById('grammarListView').style.display = 'block';
+  document.getElementById('grammarDetailView').style.display = 'none';
+  loadGrammar();
+}
+
+// ===== Stats =====
+async function loadStats() {
+  try {
+    const s = await api('GET', '/user/stats');
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-item"><div class="stat-value">${s.streak}</div><div class="stat-label">连续学习天数</div></div>
+      <div class="stat-item"><div class="stat-value">${s.totalReads}</div><div class="stat-label">总阅读篇数</div></div>
+      <div class="stat-item"><div class="stat-value">${s.vocabCount}</div><div class="stat-label">生词总数</div></div>
+      <div class="stat-item"><div class="stat-value">${s.vocabMastered}</div><div class="stat-label">已掌握</div></div>
+      <div class="stat-item"><div class="stat-value">${s.totalDurationMin}</div><div class="stat-label">阅读时长(分)</div></div>
+      <div class="stat-item"><div class="stat-value">${s.avgScore || '-'}</div><div class="stat-label">平均正确率</div></div>
+      <div class="stat-item"><div class="stat-value">${s.reviewCount}</div><div class="stat-label">待复习</div></div>
+      <div class="stat-item"><div class="stat-value">${s.wrongUnmastered}</div><div class="stat-label">未掌握错题</div></div>
+    `;
+    const trend = s.dailyTrend || [];
+    document.getElementById('trendArea').innerHTML = trend.length
+      ? trend.map(d => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${d._id}</span><span>${d.reads} 篇 · ${Math.round(d.duration/60)} 分钟</span></div>`).join('')
+      : '<div style="text-align:center;color:var(--text-secondary);padding:20px">暂无数据</div>';
+  } catch (e) { toast(e.message); }
+}
+
+// ===== AI =====
+async function loadProviders() {
+  try {
+    const res = await api('GET', '/ai/providers');
+    currentProvider = res.current;
+    const el = document.getElementById('providerSelect');
+    el.innerHTML = res.providers.map(p => `
+      <div class="provider-chip ${p.key === currentProvider ? 'active' : ''} ${!p.configured ? 'disabled' : ''}"
+           onclick="${p.configured ? `selectProvider('${p.key}', this)` : ''}"
+           title="${p.configured ? p.defaultModel : '未配置 API Key'}">
+        ${p.name} ${p.configured ? '' : '🔒'}
+      </div>
+    `).join('');
+  } catch (e) { toast(e.message); }
+}
+function selectProvider(key, el) {
+  currentProvider = key;
+  document.querySelectorAll('.provider-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+async function aiSummarize() {
+  const text = document.getElementById('aiSummarizeInput').value.trim();
+  if (!text) return toast('请输入文本');
+  document.getElementById('aiSummarizeResult').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const res = await api('POST', '/ai/summarize', { text, lang: 'both', provider: currentProvider });
+    document.getElementById('aiSummarizeResult').innerHTML = `
+      <div style="margin-bottom:8px"><strong>中文摘要:</strong><br>${res.summaryZh}</div>
+      <div><strong>English Summary:</strong><br>${res.summaryEn}</div>
+    `;
+  } catch (e) { document.getElementById('aiSummarizeResult').innerHTML = `<div style="color:var(--danger)">${e.message}</div>`; }
+}
+async function aiTranslate() {
+  const text = document.getElementById('aiTranslateInput').value.trim();
+  if (!text) return toast('请输入文本');
+  const targetLang = document.getElementById('translateLang').value;
+  document.getElementById('aiTranslateResult').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const res = await api('POST', '/ai/translate', { text, targetLang, provider: currentProvider });
+    document.getElementById('aiTranslateResult').innerHTML = `<div style="padding:12px;background:#F9FAFB;border-radius:8px">${res.translation}</div>`;
+  } catch (e) { document.getElementById('aiTranslateResult').innerHTML = `<div style="color:var(--danger)">${e.message}</div>`; }
+}
+async function aiAnalyzeWord() {
+  const word = document.getElementById('aiWordInput').value.trim();
+  if (!word) return toast('请输入单词');
+  document.getElementById('aiWordResult').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const res = await api('POST', '/ai/analyze-word', { word, provider: currentProvider });
+    if (res.error) throw new Error(res.error);
+    document.getElementById('aiWordResult').innerHTML = `
+      ${res.root ? `<div><strong>词根:</strong> ${res.root}</div>` : ''}
+      ${res.affixes ? `<div><strong>词缀:</strong> ${res.affixes}</div>` : ''}
+      ${res.synonyms ? `<div><strong>同义词:</strong> ${res.synonyms.join(', ')}</div>` : ''}
+      ${res.antonyms ? `<div><strong>反义词:</strong> ${res.antonyms.join(', ')}</div>` : ''}
+      ${res.collocations ? `<div><strong>搭配:</strong> ${res.collocations.join(', ')}</div>` : ''}
+      ${res.memoryTip ? `<div style="margin-top:8px;padding:8px;background:#FFFBEB;border-radius:6px"><strong>💡 记忆技巧:</strong> ${res.memoryTip}</div>` : ''}
+    `;
+  } catch (e) { document.getElementById('aiWordResult').innerHTML = `<div style="color:var(--danger)">${e.message}</div>`; }
+}
+
+// ===== Utils =====
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+function renderMarkdown(text) {
+  return text
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+</script>
+</body>
+</html>
