@@ -17,6 +17,6 @@ const dictionarySchema = new mongoose.Schema({
   exchange: { type: String, default: '' },
 }, { timestamps: true });
 
-dictionarySchema.index({ word: 1 });
+// word 字段已有 unique: true 自动创建索引，无需重复定义
 
 module.exports = mongoose.model('Dictionary', dictionarySchema);
