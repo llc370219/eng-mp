@@ -13,7 +13,7 @@ const router = Router();
 
 // 模板渲染辅助
 function render(res, page, data = {}) {
-  res.render('layout', { page, user: res.locals.user || null, ...data });
+  res.render(page, { page, user: res.locals.user || null, ...data });
 }
 
 // Cookie 认证中间件

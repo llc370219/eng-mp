@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英语阅读学习</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, sans-serif; background: #F9FAFB; color: #111827; }
+.header { background: #4F46E5; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 18px; }
+.header a { color: white; text-decoration: none; font-size: 13px; }
+.nav { display: flex; background: white; border-bottom: 1px solid #E5E7EB; overflow-x: auto; }
+.nav a { flex: 1; padding: 12px 8px; text-align: center; text-decoration: none; color: #6B7280; font-size: 13px; border-bottom: 2px solid transparent; white-space: nowrap; }
+.nav a.active { color: #4F46E5; border-bottom-color: #4F46E5; font-weight: 600; }
+.nav a:hover { background: #F3F4F6; }
+.container { max-width: 800px; margin: 0 auto; padding: 16px; }
+.card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+.badge-diff { background: #EEF2FF; color: #4F46E5; }
+.badge-cat { background: #F0FDF4; color: #16A34A; }
+.meta { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+.meta span { font-size: 12px; color: #6B7280; }
+.article-link { text-decoration: none; color: inherit; display: block; }
+.article-link:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+h2 { font-size: 16px; margin-bottom: 12px; }
+.content { line-height: 1.8; font-size: 15px; white-space: pre-wrap; }
+.dict-word { font-size: 24px; font-weight: 700; }
+.dict-phonetic { color: #6B7280; margin-left: 8px; }
+.dict-trans { margin-top: 8px; font-size: 15px; }
+.dict-ex { font-size: 13px; color: #6B7280; padding: 6px 0; border-bottom: 1px solid #E5E7EB; }
+.form-row { margin-bottom: 12px; }
+.form-row label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.form-row input, .form-row select { width: 100%; padding: 10px; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 14px; }
+.btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
+.btn-primary { background: #4F46E5; color: white; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.msg { padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; }
+.msg-ok { background: #D1FAE5; color: #059669; }
+.msg-err { background: #FEE2E2; color: #DC2626; }
+.grammar-example { padding: 10px; background: #FFFBEB; border-left: 3px solid #F59E0B; margin: 8px 0; border-radius: 0 6px 6px 0; }
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.stat-item { text-align: center; padding: 16px; }
+.stat-val { font-size: 28px; font-weight: 700; color: #4F46E5; }
+.stat-lbl { font-size: 12px; color: #6B7280; }
+.q-title { font-weight: 500; margin: 12px 0 8px; }
+.option { padding: 8px 12px; margin: 4px 0; border: 1px solid #E5E7EB; border-radius: 8px; }
+.option.correct { background: #D1FAE5; border-color: #10B981; }
+.option.wrong { background: #FEE2E2; border-color: #EF4444; }
+.exp { font-size: 12px; color: #6B7280; margin-top: 4px; padding: 6px; background: #F9FAFB; border-radius: 4px; }
+.score { font-size: 36px; font-weight: 700; text-align: center; padding: 16px; }
+.vocab-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #E5E7EB; }
+.vocab-word { font-weight: 600; }
+.vocab-def { font-size: 13px; color: #6B7280; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>📖 英语阅读学习</h1>
+  <div>
+    <% if (typeof user !== 'undefined' && user) { %>
+      <span style="font-size:13px;margin-right:12px"><%= user.nickname || user.email %></span>
+      <a href="/demo/logout">退出</a>
+    <% } else { %>
+      <a href="/demo/login">登录</a>
+    <% } %>
+  </div>
+</div>
+<div class="nav">
+  <a href="/demo/" class="<%= typeof page !== 'undefined' && page === 'articles' ? 'active' : '' %>">📚 阅读</a>
+  <a href="/demo/dict" class="<%= typeof page !== 'undefined' && page === 'dict' ? 'active' : '' %>">🔍 词典</a>
+  <a href="/demo/vocab" class="<%= typeof page !== 'undefined' && page === 'vocab' ? 'active' : '' %>">📝 生词</a>
+  <a href="/demo/grammar" class="<%= typeof page !== 'undefined' && page === 'grammar' ? 'active' : '' %>">📐 语法</a>
+  <a href="/demo/stats" class="<%= typeof page !== 'undefined' && page === 'stats' ? 'active' : '' %>">📊 统计</a>
+  <a href="/demo/ai" class="<%= typeof page !== 'undefined' && page === 'ai' ? 'active' : '' %>">🤖 AI</a>
+</div>
+<div class="container">
