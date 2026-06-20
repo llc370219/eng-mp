@@ -88,19 +88,14 @@ router.post('/register', async (req, res) => {
     const existing = await User.findOne({ email });
     if (existing) return res.render('register', { msg: '该邮箱已注册', page: 'register', user: null });
 
-    // 验证邀请码
-    const SystemSetting = require('../models/SystemSetting');
-    const requireInvite = await SystemSetting.get('requireInviteCode');
-    if (requireInvite) {
-      if (!inviteCode) return res.render('register', { msg: '请输入邀请码', page: 'register', user: null, email });
-      const InviteCode = require('../models/InviteCode');
-      const invite = await InviteCode.findOne({ code: inviteCode.toUpperCase(), isActive: true });
-      if (!invite) return res.render('register', { msg: '邀请码无效', page: 'register', user: null, email });
-      if (invite.expiresAt && invite.expiresAt < new Date()) return res.render('register', { msg: '邀请码已过期', page: 'register', user: null, email });
-      if (invite.usedCount >= invite.maxUses) return res.render('register', { msg: '邀请码已用完', page: 'register', user: null, email });
-      // 暂存邀请码，注册成功后更新
-      req._inviteCode = invite;
-    }
+    // 验证邀请码（必须）
+    if (!inviteCode) return res.render('register', { msg: '请输入邀请码', page: 'register', user: null, email });
+    const InviteCode = require('../models/InviteCode');
+    const invite = await InviteCode.findOne({ code: inviteCode.toUpperCase(), isActive: true });
+    if (!invite) return res.render('register', { msg: '邀请码无效', page: 'register', user: null, email });
+    if (invite.expiresAt && invite.expiresAt < new Date()) return res.render('register', { msg: '邀请码已过期', page: 'register', user: null, email });
+    if (invite.usedCount >= invite.maxUses) return res.render('register', { msg: '邀请码已用完', page: 'register', user: null, email });
+    req._inviteCode = invite;
 
     const record = await VerificationCode.findOne({
       email, type: 'register', used: false,

@@ -57,20 +57,28 @@ const sendCode = [
   },
 ];
 
-// 验证码注册
+// 验证码注册（必须有邀请码）
 const register = [
   body('email').isEmail().withMessage('请输入有效的邮箱'),
   body('code').isLength({ min: 6, max: 6 }).withMessage('验证码为6位数字'),
   body('password').isLength({ min: 6 }).withMessage('密码至少6位'),
+  body('inviteCode').notEmpty().withMessage('请输入邀请码'),
   body('nickname').optional().trim(),
   validate,
   async (req, res, next) => {
     try {
-      const { email, code, password, nickname } = req.body;
+      const { email, code, password, nickname, inviteCode } = req.body;
 
       // 检查是否已注册
       const existing = await User.findOne({ email });
       if (existing) return res.status(409).json({ error: '该邮箱已注册' });
+
+      // 验证邀请码
+      const InviteCode = require('../models/InviteCode');
+      const invite = await InviteCode.findOne({ code: inviteCode.toUpperCase(), isActive: true });
+      if (!invite) return res.status(400).json({ error: '邀请码无效' });
+      if (invite.expiresAt && invite.expiresAt < new Date()) return res.status(400).json({ error: '邀请码已过期' });
+      if (invite.usedCount >= invite.maxUses) return res.status(400).json({ error: '邀请码已用完' });
 
       // 验证验证码
       const record = await VerificationCode.findOne({
@@ -98,6 +106,11 @@ const register = [
         nickname: nickname || '',
         emailVerified: true,
       });
+
+      // 更新邀请码
+      invite.usedCount += 1;
+      invite.usedBy.push(user._id);
+      await invite.save();
 
       const tokens = generateTokens(user._id);
       res.status(201).json({ user, ...tokens });
