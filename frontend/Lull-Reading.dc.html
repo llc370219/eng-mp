@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: #f2ecda; }
+  ::selection { background: #f3c44b; color: #1a1817; }
+  @keyframes spin360 { to { transform: rotate(360deg); } }
+  @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes popin { 0% { transform: scale(.8) rotate(-4deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+  @keyframes growUp { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes growBranch { 0% { transform: scaleX(0); } 60% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+  @keyframes bloom { 0% { transform: scale(0); } 65% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  @keyframes sway { 0%,100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+  .tg-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+  .tg-scroll::-webkit-scrollbar-thumb { background: #1a1817; border-radius: 999px; }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#f2ecda;font-family:'Space Grotesk',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;color:#1a1817;position:relative;overflow-x:hidden">
+
+  <!-- ===== background motifs ===== -->
+  <div style="position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0">
+    <sc-if value="{{ showFlowers }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;top:-40px;right:-50px;opacity:.5;animation:spin360 38s linear infinite">
+        <dc-import name="Flower" petal="#2f7fd6" center="#f3c44b" size="190" hint-size="190px,190px"></dc-import>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showFlowers }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;bottom:-70px;left:-60px;opacity:.45;animation:spin360 52s linear infinite reverse">
+        <dc-import name="Flower" petal="#ec6a2b" center="#e34e98" size="220" hint-size="220px,220px"></dc-import>
+      </div>
+    </sc-if>
+    <div style="position:absolute;top:32%;left:-30px;width:90px;height:90px;border-radius:50%;background:#e34e98;border:2.5px solid #1a1817;opacity:.18"></div>
+    <div style="position:absolute;top:62%;right:6%;width:64px;height:64px;background:conic-gradient(#1a1817 0 25%,transparent 0 50%,#1a1817 0 75%,transparent 0);background-size:32px 32px;opacity:.12"></div>
+  </div>
+
+  <!-- ===== top nav ===== -->
+  <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+  <header style="position:sticky;top:0;z-index:30;background:#f2ecda;border-bottom:3px solid #1a1817">
+    <div style="max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <button onClick="{{ goHome }}" style="display:flex;align-items:center;gap:10px;background:none;border:none;cursor:pointer;padding:0">
+        <span style="display:inline-block;animation:floaty 5s ease-in-out infinite">
+          <dc-import name="Flower" petal="#ec6a2b" center="#f2ecda" size="40" hint-size="40px,40px"></dc-import>
+        </span>
+        <span style="display:flex;align-items:center;gap:9px">
+          <span style="font-family:'Shrikhand',serif;font-size:27px;color:#ec6a2b;letter-spacing:.5px;text-shadow:2px 2px 0 #1a1817;font-style:italic">Lull</span>
+          <span style="width:5px;height:5px;border-radius:50%;background:#1a1817"></span>
+          <span style="font-family:'Newsreader','Songti SC','Noto Serif SC',serif;font-size:18px;font-weight:500;color:#3c382f;letter-spacing:3px">听简</span>
+        </span>
+      </button>
+      <nav style="display:flex;gap:4px;flex-wrap:wrap;margin-left:6px">
+        <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="7">
+          <button onClick="{{ item.onClick }}" style="position:relative;background:none;border:none;cursor:pointer;padding:8px 12px;font-family:'Space Grotesk';font-weight:600;font-size:15px;color:#1a1817;border-radius:10px">
+            {{ item.cn }}
+            <sc-if value="{{ item.active }}" hint-placeholder-val="{{ false }}">
+              <span style="position:absolute;left:10px;right:10px;bottom:1px;height:7px;background:#f3c44b;border-radius:999px;z-index:-1"></span>
+            </sc-if>
+          </button>
+        </sc-for>
+      </nav>
+      <button onClick="{{ goAi }}" style="margin-left:auto;display:flex;align-items:center;gap:7px;background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:999px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:8px 16px;font-family:'Space Grotesk';font-weight:700;font-size:14px">✦ AI 助手</button>
+      <button onClick="{{ goSettings }}" title="设置" style="width:42px;height:42px;border-radius:50%;background:#e34e98;color:#fff;border:2.5px solid #1a1817;box-shadow:3px 3px 0 #1a1817;cursor:pointer;font-weight:700;font-size:16px">桔</button>
+    </div>
+  </header>
+  </sc-if>
+
+  <main style="position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 24px 90px">
+
+    <!-- ============ LOGIN / REGISTER ============ -->
+    <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 0">
+        <div style="display:grid;grid-template-columns:1fr;gap:0;max-width:880px;width:100%;background:#fffdf6;border:3px solid #1a1817;border-radius:26px;box-shadow:9px 9px 0 #1a1817;overflow:hidden">
+          <div style="display:grid;grid-template-columns:1.05fr .95fr">
+            <!-- poster side -->
+            <div style="background:#e34e98;border-right:3px solid #1a1817;padding:38px 34px;position:relative;overflow:hidden;min-height:520px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="position:absolute;inset:0;background:conic-gradient(#00000022 0 25%,transparent 0 50%,#00000022 0 75%,transparent 0);background-size:60px 60px;opacity:.5"></div>
+              <div style="position:relative">
+                <div style="font-family:'Space Grotesk';font-weight:700;font-size:13px;letter-spacing:3px;color:#1a1817;background:#f3c44b;display:inline-block;padding:4px 12px;border:2px solid #1a1817;border-radius:999px">GRADED ENGLISH READING</div>
+                <h1 style="font-family:'Shrikhand',serif;font-style:italic;color:#fffdf6;font-size:62px;line-height:.92;margin:22px 0 0;text-shadow:4px 4px 0 #1a1817">Read,<br>Slice,<br>Repeat.</h1>
+                <p style="font-family:'Newsreader',serif;font-size:18px;color:#1a1817;margin:20px 0 0;max-width:280px;line-height:1.5">分级精读 · 点词翻译 · 智能复习。<br>把生词，一片片剥开。</p>
+              </div>
+              <div style="position:relative;align-self:flex-end;animation:spin360 24s linear infinite">
+                <dc-import name="Flower" petal="#fffdf6" center="#2f7fd6" size="130" hint-size="130px,130px"></dc-import>
+              </div>
+            </div>
+            <!-- form side -->
+            <div style="padding:42px 38px;display:flex;flex-direction:column;justify-content:center">
+              <div style="display:flex;gap:8px;margin-bottom:26px">
+                <button onClick="{{ setAuthLogin }}" style="flex:1;padding:10px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:15px;background:{{ loginTabBg }};color:{{ loginTabFg }}">登录</button>
+                <button onClick="{{ setAuthRegister }}" style="flex:1;padding:10px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:15px;background:{{ regTabBg }};color:{{ regTabFg }}">注册</button>
+              </div>
+              <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block">邮箱 Email</label>
+              <input placeholder="you@example.com" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
+              <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;gap:10px;margin-bottom:16px">
+                  <input placeholder="验证码" style="flex:1;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;background:#fffdf6;outline:none">
+                  <button style="white-space:nowrap;padding:0 14px;border:2.5px solid #1a1817;border-radius:12px;background:#f3c44b;font-family:'Space Grotesk';font-weight:700;font-size:13px;cursor:pointer">获取验证码</button>
+                </div>
+              </sc-if>
+              <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block">密码 Password</label>
+              <input type="password" placeholder="••••••••" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
+              <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+                <input placeholder="邀请码 Invite code" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
+              </sc-if>
+              <button onClick="{{ doLogin }}" style="width:100%;padding:14px;background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:4px 4px 0 #1a1817;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:17px">{{ authCta }} →</button>
+              <p style="text-align:center;font-size:13px;color:#7a7568;margin:18px 0 0">需要邀请码注册 · 邮箱验证登录</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ ARTICLES (HOME) ============ -->
+    <sc-if value="{{ isArticles }}" hint-placeholder-val="{{ true }}">
+      <section style="padding:40px 0 26px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:700;font-size:13px;letter-spacing:3px;color:#ec6a2b">今日阅读 · DAILY READS</div>
+            <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(40px,7vw,72px);line-height:.95;margin:8px 0 0;color:#1a1817">Fresh<br><span style="color:#e34e98;text-shadow:3px 3px 0 #1a1817">Squeezed</span> Stories</h1>
+          </div>
+          <div style="background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:16px 20px;min-width:200px">
+            <div style="font-size:13px;font-weight:600;opacity:.85">连续阅读 STREAK</div>
+            <div style="font-family:'Shrikhand',serif;font-size:40px;line-height:1;margin-top:4px">12 天 🔥</div>
+          </div>
+        </div>
+
+        <!-- filters -->
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:30px;align-items:center">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span style="font-weight:700;font-size:13px;color:#7a7568;margin-right:4px">难度</span>
+            <sc-for list="{{ diffChips }}" as="c" hint-placeholder-count="7">
+              <button onClick="{{ c.onClick }}" style="padding:6px 13px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:13px;background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <span style="font-weight:700;font-size:13px;color:#7a7568;margin-right:4px">分类</span>
+            <sc-for list="{{ catChips }}" as="c" hint-placeholder-count="7">
+              <button onClick="{{ c.onClick }}" style="padding:6px 13px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:600;font-size:13px;background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- grid -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:22px;margin-top:30px">
+          <sc-for list="{{ filteredArticles }}" as="a" hint-placeholder-count="6">
+            <button onClick="{{ a.onClick }}" style="text-align:left;background:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:5px 5px 0 #1a1817;cursor:pointer;padding:0;overflow:hidden;display:flex;flex-direction:column;transition:transform .12s,box-shadow .12s" style-hover="transform:translate(-2px,-2px);box-shadow:8px 8px 0 #1a1817">
+              <div style="height:128px;background:{{ a.color }};border-bottom:2.5px solid #1a1817;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center">
+                <div style="position:absolute;inset:0;background:conic-gradient(#00000018 0 25%,transparent 0 50%,#00000018 0 75%,transparent 0);background-size:34px 34px"></div>
+                <span style="position:relative;font-family:'Shrikhand',serif;font-size:54px;color:#fffdf6;text-shadow:2px 2px 0 #1a1817;opacity:.92">{{ a.glyph }}</span>
+                <span style="position:absolute;top:10px;left:10px;background:#1a1817;color:#fffdf6;font-weight:700;font-size:12px;padding:3px 10px;border-radius:999px">{{ a.difficulty }}</span>
+              </div>
+              <div style="padding:16px 17px 18px">
+                <div style="font-weight:600;font-size:11px;letter-spacing:1.5px;color:#7a7568;text-transform:uppercase">{{ a.catLabel }}</div>
+                <h3 style="font-family:'Newsreader',serif;font-size:21px;font-weight:500;margin:5px 0 8px;line-height:1.2;color:#1a1817">{{ a.title }}</h3>
+                <p style="font-size:13.5px;color:#5c5749;line-height:1.5;margin:0 0 14px">{{ a.summaryZh }}</p>
+                <div style="display:flex;gap:14px;font-size:12.5px;font-weight:600;color:#7a7568">
+                  <span>📖 {{ a.wordCount }} 词</span><span>⏱ {{ a.readingTimeMin }} 分钟</span>
+                </div>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ============ ARTICLE DETAIL (READING) ============ -->
+    <sc-if value="{{ isArticle }}" hint-placeholder-val="{{ false }}">
+      <section style="padding:26px 0">
+        <button onClick="{{ goHome }}" style="background:none;border:none;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#7a7568;padding:0;margin-bottom:14px">← 返回书架</button>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 312px;gap:30px;align-items:start">
+          <!-- reading column -->
+          <article>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+              <span style="background:#1a1817;color:#fffdf6;font-weight:700;font-size:12px;padding:3px 11px;border-radius:999px">{{ curArticle.difficulty }}</span>
+              <span style="font-weight:600;font-size:12px;letter-spacing:1.5px;color:#7a7568;text-transform:uppercase">{{ curArticle.catLabel }} · {{ curArticle.wordCount }} 词</span>
+            </div>
+            <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(32px,5vw,50px);line-height:1.02;margin:0 0 6px;color:#1a1817">{{ curArticle.title }}</h1>
+            <p style="font-family:'Newsreader',serif;font-style:italic;color:#7a7568;font-size:17px;margin:0 0 22px">{{ curArticle.summaryZh }}</p>
+
+            <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:34px 36px">
+              <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+                <button onClick="{{ toggleSentenceTrans }}" style="display:flex;align-items:center;gap:8px;background:{{ stBg }};color:{{ stFg }};border:2px solid #1a1817;border-radius:999px;cursor:pointer;padding:6px 13px;font-family:'Space Grotesk';font-weight:700;font-size:12.5px">整句翻译 {{ stState }}</button>
+              </div>
+              <sc-for list="{{ curParagraphs }}" as="p" hint-placeholder-count="3">
+                <p style="font-family:'Newsreader',serif;font-size:19.5px;line-height:1.9;color:#26241f;margin:0 0 18px;text-wrap:pretty">
+                  <sc-for list="{{ p.sentences }}" as="s" hint-placeholder-count="2">
+                    <span onMouseEnter="{{ s.onEnter }}" onMouseLeave="{{ s.onLeave }}" style="border-radius:4px;background:{{ s.hl }};transition:background .15s">
+                      <sc-for list="{{ s.segs }}" as="g" hint-placeholder-count="3">
+                        <sc-if value="{{ g.v }}" hint-placeholder-val="{{ false }}">
+                          <span onClick="{{ g.onClick }}" style="color:#ec6a2b;font-weight:600;border-bottom:2.5px dotted #ec6a2b;cursor:pointer">{{ g.t }}</span>
+                        </sc-if>
+                        <sc-if value="{{ g.plain }}" hint-placeholder-val="{{ true }}">{{ g.t }}</sc-if>
+                      </sc-for>
+                    </span>
+                    <sc-if value="{{ s.showZh }}" hint-placeholder-val="{{ false }}">
+                      <span style="display:block;font-family:'Space Grotesk';font-size:14.5px;color:#2f7fd6;font-weight:500;margin:2px 0 10px;padding-left:10px;border-left:3px solid #2f7fd6">{{ s.zh }}</span>
+                    </sc-if>
+                  </sc-for>
+                </p>
+              </sc-for>
+            </div>
+
+            <!-- quiz -->
+            <div style="background:#f3c44b;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:26px 28px;margin-top:26px">
+              <h3 style="font-family:'Shrikhand',serif;font-style:italic;font-size:26px;margin:0 0 4px;color:#1a1817">读后小测</h3>
+              <p style="font-size:13px;font-weight:600;color:#1a1817;opacity:.7;margin:0 0 18px">答对即自动打卡 · Auto check-in</p>
+              <sc-for list="{{ quizQuestions }}" as="q" hint-placeholder-count="3">
+                <div style="margin-bottom:18px">
+                  <div style="font-family:'Newsreader',serif;font-size:18px;font-weight:500;margin-bottom:10px">{{ q.n }}. {{ q.text }}</div>
+                  <div style="display:grid;gap:8px">
+                    <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="4">
+                      <button onClick="{{ o.onClick }}" style="text-align:left;background:{{ o.bg }};color:{{ o.fg }};border:2.5px solid #1a1817;border-radius:12px;cursor:pointer;padding:10px 14px;font-family:'Space Grotesk';font-weight:600;font-size:14.5px">{{ o.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ quizSubmitted }}" hint-placeholder-val="{{ false }}">
+                <div style="background:#1a1817;color:#fffdf6;border-radius:14px;padding:16px 20px;margin-top:4px;display:flex;align-items:center;gap:14px">
+                  <span style="font-family:'Shrikhand',serif;font-size:34px;color:#f3c44b">{{ quizScore }}</span>
+                  <span style="font-weight:600;font-size:15px">{{ quizMsg }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ quizNotSubmitted }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ submitQuiz }}" style="background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:12px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:11px 22px;font-family:'Space Grotesk';font-weight:700;font-size:15px;margin-top:4px">提交答案</button>
+              </sc-if>
+            </div>
+          </article>
+
+          <!-- side rail -->
+          <aside style="position:sticky;top:90px;display:flex;flex-direction:column;gap:18px">
+            <sc-if value="{{ hasSelectedWord }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:20px;animation:popin .25s ease">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                  <div style="font-family:'Shrikhand',serif;font-size:30px;line-height:1">{{ selWord.word }}</div>
+                  <button onClick="{{ closeWord }}" style="background:#1a1817;color:#fffdf6;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-weight:700">×</button>
+                </div>
+                <div style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;opacity:.9;margin-top:2px">{{ selWord.phon }}</div>
+                <div style="font-size:17px;font-weight:600;margin-top:10px">{{ selWord.def }}</div>
+                <button onClick="{{ addSelWord }}" style="margin-top:16px;width:100%;background:#f3c44b;color:#1a1817;border:2.5px solid #1a1817;border-radius:12px;cursor:pointer;padding:10px;font-family:'Space Grotesk';font-weight:700;font-size:14px">+ 加入生词本</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ noSelectedWord }}" hint-placeholder-val="{{ true }}">
+              <div style="background:#fffdf6;border:2.5px dashed #c9c1a8;border-radius:18px;padding:22px;text-align:center;color:#7a7568">
+                <div style="font-size:13px;line-height:1.6">点击正文中 <span style="color:#ec6a2b;font-weight:700;border-bottom:2.5px dotted #ec6a2b">橙色单词</span> 查看释义</div>
+              </div>
+            </sc-if>
+            <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:20px">
+              <div style="font-weight:700;font-size:13px;letter-spacing:1.5px;color:#7a7568;margin-bottom:12px">AI 工具</div>
+              <div style="display:grid;gap:9px">
+                <button onClick="{{ goAi }}" style="text-align:left;background:#f2ecda;border:2px solid #1a1817;border-radius:11px;cursor:pointer;padding:11px 14px;font-family:'Space Grotesk';font-weight:600;font-size:14px">📝 全文摘要</button>
+                <button onClick="{{ goAi }}" style="text-align:left;background:#f2ecda;border:2px solid #1a1817;border-radius:11px;cursor:pointer;padding:11px 14px;font-family:'Space Grotesk';font-weight:600;font-size:14px">🈯 整篇翻译</button>
+                <button onClick="{{ goAi }}" style="text-align:left;background:#f2ecda;border:2px solid #1a1817;border-radius:11px;cursor:pointer;padding:11px 14px;font-family:'Space Grotesk';font-weight:600;font-size:14px">❓ 生成测验</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ============ DICTIONARY ============ -->
+    <sc-if value="{{ isDict }}" hint-placeholder-val="{{ false }}">
+      <section style="padding:40px 0">
+        <div style="font-weight:700;font-size:13px;letter-spacing:3px;color:#2f7fd6">查词 · LOOK IT UP</div>
+        <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(38px,6vw,64px);line-height:.95;margin:8px 0 22px;color:#1a1817">Word <span style="color:#2f7fd6;text-shadow:3px 3px 0 #1a1817">Juicer</span></h1>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;max-width:620px">
+          <input value="linger" placeholder="输入英文单词…" style="flex:1;min-width:240px;padding:15px 18px;border:2.5px solid #1a1817;border-radius:14px;font-family:'Newsreader',serif;font-size:19px;background:#fffdf6;outline:none">
+          <button onClick="{{ dictSearch }}" style="background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:4px 4px 0 #1a1817;cursor:pointer;padding:0 26px;font-family:'Space Grotesk';font-weight:700;font-size:16px">查询 →</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:26px;margin-top:30px;align-items:start">
+          <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;overflow:hidden">
+            <div style="background:#2f7fd6;border-bottom:2.5px solid #1a1817;padding:24px 28px;color:#fffdf6;position:relative;overflow:hidden">
+              <div style="position:absolute;inset:0;background:conic-gradient(#00000018 0 25%,transparent 0 50%,#00000018 0 75%,transparent 0);background-size:40px 40px"></div>
+              <div style="position:relative;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap">
+                <span style="font-family:'Shrikhand',serif;font-size:46px;line-height:1">linger</span>
+                <span style="font-family:'Newsreader',serif;font-style:italic;font-size:22px;opacity:.92">/ˈlɪŋɡər/</span>
+                <span style="margin-left:auto;background:#f3c44b;color:#1a1817;font-weight:700;font-size:12px;padding:4px 12px;border:2px solid #1a1817;border-radius:999px">CET6 · 高频</span>
+              </div>
+            </div>
+            <div style="padding:24px 28px">
+              <div style="font-family:'Newsreader',serif;font-size:21px;font-weight:500;margin-bottom:16px">v. 徘徊；逗留；（气味、感觉等）萦绕，挥之不去</div>
+              <div style="font-weight:700;font-size:12px;letter-spacing:1.5px;color:#7a7568;margin-bottom:8px">英文释义</div>
+              <div style="font-family:'Newsreader',serif;font-size:16.5px;color:#3c382f;line-height:1.6;margin-bottom:18px">(v.) to stay in a place longer than necessary, typically because of a reluctance to leave; to be slow to disappear.</div>
+              <div style="font-weight:700;font-size:12px;letter-spacing:1.5px;color:#7a7568;margin-bottom:10px">例句 EXAMPLES</div>
+              <div style="display:grid;gap:10px">
+                <div style="background:#f2ecda;border-left:4px solid #ec6a2b;border-radius:0 10px 10px 0;padding:12px 16px">
+                  <div style="font-family:'Newsreader',serif;font-size:16.5px">The smell of coffee <span style="color:#ec6a2b;font-weight:600">lingered</span> in the kitchen.</div>
+                  <div style="font-size:13.5px;color:#7a7568;margin-top:3px">咖啡的香味在厨房里久久不散。</div>
+                </div>
+                <div style="background:#f2ecda;border-left:4px solid #2f7fd6;border-radius:0 10px 10px 0;padding:12px 16px">
+                  <div style="font-family:'Newsreader',serif;font-size:16.5px">She <span style="color:#2f7fd6;font-weight:600">lingered</span> at the door, unwilling to say goodbye.</div>
+                  <div style="font-size:13.5px;color:#7a7568;margin-top:3px">她在门口徘徊，不愿道别。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside style="display:flex;flex-direction:column;gap:16px">
+            <button style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:5px 5px 0 #1a1817;cursor:pointer;padding:16px;font-family:'Space Grotesk';font-weight:700;font-size:16px">+ 加入生词本</button>
+            <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;padding:18px">
+              <div style="font-weight:700;font-size:12px;letter-spacing:1.5px;color:#7a7568;margin-bottom:12px">词形变化</div>
+              <div style="display:flex;flex-wrap:wrap;gap:7px">
+                <span style="background:#f2ecda;border:2px solid #1a1817;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:600">lingers</span>
+                <span style="background:#f2ecda;border:2px solid #1a1817;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:600">lingered</span>
+                <span style="background:#f2ecda;border:2px solid #1a1817;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:600">lingering</span>
+              </div>
+            </div>
+            <div style="background:#f3c44b;border:2.5px solid #1a1817;border-radius:16px;padding:18px">
+              <div style="font-weight:700;font-size:13px;margin-bottom:6px">🈯 整句翻译</div>
+              <div style="font-size:13px;color:#1a1817;opacity:.8;line-height:1.5">粘贴一整句英文，AI 帮你翻译并解读语法结构。</div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ============ VOCAB BOOK ============ -->
+    <sc-if value="{{ isVocab }}" hint-placeholder-val="{{ false }}">
+      <section style="padding:40px 0">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:700;font-size:13px;letter-spacing:3px;color:#e34e98">我的生词 · MY WORDS</div>
+            <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(38px,6vw,64px);line-height:.95;margin:8px 0 0;color:#1a1817">The <span style="color:#e34e98;text-shadow:3px 3px 0 #1a1817">Word</span> Jar</h1>
+          </div>
+          <button onClick="{{ goReview }}" style="background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:16px;box-shadow:5px 5px 0 #1a1817;cursor:pointer;padding:15px 24px;font-family:'Space Grotesk';font-weight:700;font-size:16px">开始复习 {{ vDue }} 个 →</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px;max-width:560px">
+          <div style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:4px 4px 0 #1a1817;padding:16px 18px">
+            <div style="font-family:'Shrikhand',serif;font-size:34px;line-height:1">{{ vTotal }}</div>
+            <div style="font-size:12.5px;font-weight:600;opacity:.9;margin-top:2px">总词量</div>
+          </div>
+          <div style="background:#1f9d5c;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:4px 4px 0 #1a1817;padding:16px 18px">
+            <div style="font-family:'Shrikhand',serif;font-size:34px;line-height:1">{{ vMastered }}</div>
+            <div style="font-size:12.5px;font-weight:600;opacity:.9;margin-top:2px">已掌握</div>
+          </div>
+          <div style="background:#2f7fd6;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:4px 4px 0 #1a1817;padding:16px 18px">
+            <div style="font-family:'Shrikhand',serif;font-size:34px;line-height:1">{{ vDue }}</div>
+            <div style="font-size:12.5px;font-weight:600;opacity:.9;margin-top:2px">待复习</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:26px">
+          <sc-for list="{{ vocabTabs }}" as="t" hint-placeholder-count="4">
+            <button onClick="{{ t.onClick }}" style="padding:8px 16px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:13.5px;background:{{ t.bg }};color:{{ t.fg }}">{{ t.label }}</button>
+          </sc-for>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:14px;margin-top:20px">
+          <sc-for list="{{ filteredVocab }}" as="v" hint-placeholder-count="6">
+            <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:4px 4px 0 #1a1817;padding:16px 18px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:'Newsreader',serif;font-size:24px;font-weight:600">{{ v.word }}</span>
+                <span style="background:{{ v.mColor }};color:#fff;font-weight:700;font-size:11px;padding:3px 9px;border-radius:999px;border:2px solid #1a1817">{{ v.mLabel }}</span>
+              </div>
+              <div style="font-family:'Newsreader',serif;font-style:italic;font-size:14px;color:#7a7568;margin-top:1px">{{ v.phon }}</div>
+              <div style="font-size:14.5px;color:#3c382f;margin-top:8px">{{ v.def }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ============ REVIEW (FLASHCARD) ============ -->
+    <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+      <section style="padding:40px 0;min-height:70vh;display:flex;flex-direction:column;align-items:center">
+        <div style="width:100%;max-width:560px">
+          <button onClick="{{ goReview }}" style="background:none;border:none;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#7a7568;padding:0;margin-bottom:18px">← 生词本</button>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px">
+            <div style="flex:1;height:14px;background:#e9e1c8;border:2.5px solid #1a1817;border-radius:999px;overflow:hidden">
+              <div style="height:100%;width:{{ reviewProgress }}%;background:#ec6a2b;transition:width .3s"></div>
+            </div>
+            <span style="font-weight:700;font-size:14px;white-space:nowrap">{{ reviewIndexLabel }} / {{ rTotal }}</span>
+          </div>
+
+          <sc-if value="{{ reviewActive }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ flipCard }}" style="background:#fffdf6;border:3px solid #1a1817;border-radius:24px;box-shadow:8px 8px 0 #1a1817;padding:54px 30px;text-align:center;cursor:pointer;min-height:300px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden">
+              <div style="position:absolute;top:-30px;right:-30px;opacity:.16;animation:spin360 30s linear infinite">
+                <dc-import name="Flower" petal="#e34e98" center="#ec6a2b" size="150" hint-size="150px,150px"></dc-import>
+              </div>
+              <div style="position:relative">
+                <div style="font-family:'Shrikhand',serif;font-style:italic;font-size:56px;line-height:1;color:#1a1817">{{ rCard.word }}</div>
+                <div style="font-family:'Newsreader',serif;font-style:italic;font-size:20px;color:#7a7568;margin-top:10px">{{ rCard.phon }}</div>
+                <sc-if value="{{ reviewFlipped }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:22px;padding-top:20px;border-top:2.5px dashed #d8cfb4;font-size:22px;font-weight:600;color:#ec6a2b">{{ rCard.def }}</div>
+                </sc-if>
+                <sc-if value="{{ reviewNotFlipped }}" hint-placeholder-val="{{ true }}">
+                  <div style="margin-top:26px;font-size:14px;color:#a89f86;font-weight:600">点击卡片显示释义 ↑</div>
+                </sc-if>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:22px">
+              <button onClick="{{ rateAgain }}" style="background:#d94646;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:14px 6px;font-family:'Space Grotesk';font-weight:700;font-size:14px">忘了</button>
+              <button onClick="{{ rateHard }}" style="background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:14px 6px;font-family:'Space Grotesk';font-weight:700;font-size:14px">困难</button>
+              <button onClick="{{ rateGood }}" style="background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:14px 6px;font-family:'Space Grotesk';font-weight:700;font-size:14px">记得</button>
+              <button onClick="{{ rateEasy }}" style="background:#1f9d5c;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:14px 6px;font-family:'Space Grotesk';font-weight:700;font-size:14px">简单</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ reviewDone }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#1f9d5c;color:#fffdf6;border:3px solid #1a1817;border-radius:24px;box-shadow:8px 8px 0 #1a1817;padding:48px 30px;text-align:center">
+              <div style="font-size:56px">🎉</div>
+              <div style="font-family:'Shrikhand',serif;font-style:italic;font-size:38px;margin-top:8px">全部复习完成！</div>
+              <div style="font-size:16px;opacity:.92;margin-top:6px">今天的单词都喂饱啦 · 已自动打卡</div>
+              <button onClick="{{ resetReview }}" style="margin-top:22px;background:#f3c44b;color:#1a1817;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:12px 24px;font-family:'Space Grotesk';font-weight:700;font-size:15px">再来一轮 ↻</button>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ============ GRAMMAR LIST ============ -->
+    <sc-if value="{{ isGrammar }}" hint-placeholder-val="{{ false }}">
+      <section style="padding:40px 0">
+        <div style="font-weight:700;font-size:13px;letter-spacing:3px;color:#ec6a2b">语法库 · GRAMMAR</div>
+        <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(38px,6vw,64px);line-height:.95;margin:8px 0 22px;color:#1a1817">Twist <span style="color:#ec6a2b;text-shadow:3px 3px 0 #1a1817">&amp;</span> Turn</h1>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:13px;color:#7a7568;margin-right:4px">等级</span>
+          <sc-for list="{{ gLevelChips }}" as="c" hint-placeholder-count="7">
+            <button onClick="{{ c.onClick }}" style="padding:6px 13px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:13px;background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px;margin-top:26px">
+          <sc-for list="{{ filteredGrammar }}" as="g" hint-placeholder-count="6">
+            <button onClick="{{ g.onClick }}" style="text-align:left;background:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;cursor:pointer;padding:0;overflow:hidden" style-hover="transform:translate(-2px,-2px);box-shadow:8px 8px 0 #1a1817">
+              <div style="background:{{ g.color }};border-bottom:2.5px solid #1a1817;padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+                <span style="background:#1a1817;color:#fffdf6;font-weight:700;font-size:12px;padding:3px 11px;border-radius:999px">{{ g.level }}</span>
+                <span style="font-weight:700;font-size:12px;color:#1a1817;background:#fffdf6;border:2px solid #1a1817;padding:2px 10px;border-radius:999px">{{ g.catLabel }}</span>
+              </div>
+              <div style="padding:18px">
+                <h3 style="font-family:'Newsreader',serif;font-size:24px;font-weight:600;margin:0;line-height:1.1">{{ g.title }}</h3>
+                <div style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#7a7568;margin:2px 0 8px">{{ g.en }}</div>
+                <p style="font-size:14px;color:#5c5749;line-height:1.5;margin:0">{{ g.desc }}</p>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ============ GRAMMAR DETAIL ============ -->
+    <sc-if value="{{ isGrammarDetail }}" hint-placeholder-val="{{ false }}">
+      <section style="padding:30px 0">
+        <button onClick="{{ goGrammar }}" style="background:none;border:none;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#7a7568;padding:0;margin-bottom:14px">← 语法库</button>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:30px;align-items:start">
+          <div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+              <span style="background:#1a1817;color:#fffdf6;font-weight:700;font-size:12px;padding:3px 11px;border-radius:999px">{{ curGrammar.level }}</span>
+              <span style="font-weight:700;font-size:12px;color:#7a7568;letter-spacing:1.5px">{{ curGrammar.catLabel }}</span>
+            </div>
+            <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(34px,5vw,52px);line-height:1;margin:0;color:#1a1817">{{ curGrammar.title }}</h1>
+            <div style="font-family:'Newsreader',serif;font-style:italic;font-size:20px;color:#7a7568;margin-top:4px">{{ curGrammar.en }}</div>
+
+            <div style="background:#2f7fd6;color:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:24px 28px;margin-top:22px">
+              <div style="font-weight:700;font-size:13px;letter-spacing:1.5px;opacity:.85;margin-bottom:8px">用法说明</div>
+              <div style="font-family:'Newsreader',serif;font-size:18px;line-height:1.7">{{ gExplanation }}</div>
+            </div>
+
+            <h3 style="font-family:'Shrikhand',serif;font-style:italic;font-size:26px;margin:28px 0 14px;color:#1a1817">例句</h3>
+            <div style="display:grid;gap:12px">
+              <sc-for list="{{ gExamples }}" as="e" hint-placeholder-count="3">
+                <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:14px;box-shadow:4px 4px 0 #1a1817;padding:16px 20px">
+                  <div style="font-family:'Newsreader',serif;font-size:19px;line-height:1.5">{{ e.sentence }}</div>
+                  <div style="font-size:14px;color:#2f7fd6;font-weight:600;margin-top:6px">关键结构：{{ e.hl }}</div>
+                  <div style="font-size:14px;color:#7a7568;margin-top:2px">{{ e.zh }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="background:#f3c44b;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:26px 28px;margin-top:28px">
+              <h3 style="font-family:'Shrikhand',serif;font-style:italic;font-size:26px;margin:0 0 18px;color:#1a1817">随堂练习</h3>
+              <sc-for list="{{ gExercises }}" as="q" hint-placeholder-count="3">
+                <div style="margin-bottom:18px">
+                  <div style="font-family:'Newsreader',serif;font-size:18px;font-weight:500;margin-bottom:10px">{{ q.n }}. {{ q.text }}</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="4">
+                      <button onClick="{{ o.onClick }}" style="text-align:left;background:{{ o.bg }};color:{{ o.fg }};border:2.5px solid #1a1817;border-radius:12px;cursor:pointer;padding:10px 14px;font-family:'Space Grotesk';font-weight:600;font-size:14px">{{ o.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ gNotSubmitted }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ submitGrammar }}" style="background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:12px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:11px 22px;font-family:'Space Grotesk';font-weight:700;font-size:15px">提交答案</button>
+              </sc-if>
+              <sc-if value="{{ gSubmitted }}" hint-placeholder-val="{{ false }}">
+                <div style="background:#1a1817;color:#fffdf6;border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:14px">
+                  <span style="font-family:'Shrikhand',serif;font-size:34px;color:#f3c44b">{{ gScore }}</span>
+                  <span style="font-weight:600;font-size:15px">完成！绿色为正确答案</span>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+          <aside style="position:sticky;top:90px">
+            <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:22px;text-align:center">
+              <div style="animation:floaty 5s ease-in-out infinite;display:inline-block">
+                <dc-import name="Flower" petal="#ec6a2b" center="#f3c44b" size="100" hint-size="100px,100px"></dc-import>
+              </div>
+              <div style="font-weight:700;font-size:14px;margin-top:14px">练完即打卡</div>
+              <div style="font-size:13px;color:#7a7568;line-height:1.5;margin-top:4px">每完成一组练习，自动记录到你的学习日历。</div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ============ CHECK-IN ============ -->
+    <sc-if value="{{ isCheckin }}" hint-placeholder-val="{{ false }}">
+      <section style="padding:40px 0">
+        <div style="font-weight:700;font-size:13px;letter-spacing:3px;color:#e34e98">每日打卡 · STREAK</div>
+        <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(38px,6vw,64px);line-height:.95;margin:8px 0 24px;color:#1a1817">Keep the <span style="color:#e34e98;text-shadow:3px 3px 0 #1a1817">Fire</span></h1>
+        <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:28px;align-items:start">
+          <div style="background:#ec6a2b;color:#fffdf6;border:3px solid #1a1817;border-radius:22px;box-shadow:7px 7px 0 #1a1817;padding:30px 26px;text-align:center;position:relative;overflow:hidden">
+            <div style="position:absolute;inset:0;background:conic-gradient(#00000016 0 25%,transparent 0 50%,#00000016 0 75%,transparent 0);background-size:44px 44px"></div>
+            <div style="position:relative">
+              <div style="font-size:60px">🔥</div>
+              <div style="font-family:'Shrikhand',serif;font-size:72px;line-height:.9;margin-top:4px">{{ streak }}</div>
+              <div style="font-weight:700;font-size:16px;letter-spacing:1px">连续打卡天数</div>
+              <sc-if value="{{ notCheckedIn }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ doCheckin }}" style="margin-top:22px;width:100%;background:#f3c44b;color:#1a1817;border:2.5px solid #1a1817;border-radius:14px;box-shadow:4px 4px 0 #1a1817;cursor:pointer;padding:14px;font-family:'Space Grotesk';font-weight:700;font-size:17px">今日打卡 ✓</button>
+              </sc-if>
+              <sc-if value="{{ checkedIn }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:22px;background:#1f9d5c;border:2.5px solid #1a1817;border-radius:14px;padding:14px;font-weight:700;font-size:16px">今日已完成 ✓</div>
+              </sc-if>
+            </div>
+          </div>
+          <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:22px;box-shadow:6px 6px 0 #1a1817;padding:26px 28px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <div style="font-family:'Newsreader',serif;font-size:22px;font-weight:600">最近 6 周</div>
+              <div style="display:flex;gap:14px;font-size:12.5px;font-weight:600;color:#7a7568;flex-wrap:wrap">
+                <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#e34e98;border:2px solid #1a1817;border-radius:4px;display:inline-block"></span>已打卡</span>
+                <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#ec6a2b;border:2px solid #1a1817;border-radius:4px;display:inline-block"></span>今天</span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:9px">
+              <sc-for list="{{ checkinCal }}" as="d" hint-placeholder-count="42">
+                <div style="aspect-ratio:1;background:{{ d.bg }};border:{{ d.border }};border-radius:9px"></div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:24px;margin-top:24px;flex-wrap:wrap">
+              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#ec6a2b">31</div><div style="font-size:13px;font-weight:600;color:#7a7568">本月打卡</div></div>
+              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#2f7fd6">86%</div><div style="font-size:13px;font-weight:600;color:#7a7568">完成率</div></div>
+              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#e34e98">23</div><div style="font-size:13px;font-weight:600;color:#7a7568">最长连续</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ============ STATS ============ -->
+    <sc-if value="{{ isStats }}" hint-placeholder-val="{{ false }}">
+      <section style="padding:40px 0">
+        <div style="font-weight:700;font-size:13px;letter-spacing:3px;color:#2f7fd6">学习统计 · STATS</div>
+        <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(38px,6vw,64px);line-height:.95;margin:8px 0 26px;color:#1a1817">Your <span style="color:#2f7fd6;text-shadow:3px 3px 0 #1a1817">Harvest</span></h1>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px">
+          <sc-for list="{{ statCards }}" as="s" hint-placeholder-count="4">
+            <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:22px;position:relative;overflow:hidden">
+              <div style="width:14px;height:14px;border-radius:50%;background:{{ s.color }};border:2.5px solid #1a1817"></div>
+              <div style="font-family:'Shrikhand',serif;font-size:46px;line-height:1;margin-top:12px;color:#1a1817">{{ s.v }}</div>
+              <div style="font-weight:700;font-size:14px;margin-top:6px">{{ s.k }}</div>
+              <div style="font-size:12.5px;color:#7a7568;margin-top:1px">{{ s.sub }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:22px;margin-top:22px">
+          <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;padding:26px 28px">
+            <div style="font-family:'Newsreader',serif;font-size:22px;font-weight:600;margin-bottom:4px">近 7 天新增生词</div>
+            <div style="font-size:13px;color:#7a7568;margin-bottom:20px">每天坚持一点点 🍊</div>
+            <div style="display:flex;align-items:flex-end;gap:14px;height:200px">
+              <sc-for list="{{ weekBars }}" as="b" hint-placeholder-count="7">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end">
+                  <div style="font-weight:700;font-size:14px">{{ b.val }}</div>
+                  <div style="width:100%;height:{{ b.h }}%;background:{{ b.color }};border:2.5px solid #1a1817;border-radius:8px 8px 0 0;min-height:8px"></div>
+                  <div style="font-size:13px;font-weight:600;color:#7a7568">{{ b.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;padding:24px 26px">
+              <div style="font-weight:700;font-size:13px;letter-spacing:1.5px;opacity:.9">累计学习时长</div>
+              <div style="font-family:'Shrikhand',serif;font-size:48px;line-height:1;margin-top:6px">21 小时</div>
+              <div style="font-size:13px;opacity:.9;margin-top:4px">共 96 次学习 · 平均 13 分钟/次</div>
+            </div>
+            <div style="background:#1f9d5c;color:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;padding:24px 26px;display:flex;align-items:center;gap:16px">
+              <div style="font-size:44px">🔥</div>
+              <div>
+                <div style="font-family:'Shrikhand',serif;font-size:40px;line-height:1">12 天</div>
+                <div style="font-size:13px;opacity:.9">连续学习中，别断哦</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 能力雷达 / Skill Radar -->
+        <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:22px;box-shadow:6px 6px 0 #1a1817;margin-top:22px;overflow:hidden;position:relative">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:0;align-items:stretch">
+            <!-- radar stage -->
+            <div style="position:relative;background:radial-gradient(120% 100% at 50% 42%, #fbeecb 0%, #fffdf6 72%);border-right:2.5px solid #1a1817;display:flex;align-items:center;justify-content:center;padding:26px;min-height:360px">
+              <div style="position:absolute;inset:0;background:conic-gradient(#00000010 0 25%,transparent 0 50%,#00000010 0 75%,transparent 0);background-size:46px 46px;opacity:.5"></div>
+              <svg viewBox="0 0 380 300" style="position:relative;width:100%;max-width:420px">
+                <sc-for list="{{ radarRings }}" as="r" hint-placeholder-count="4">
+                  <polygon points="{{ r.points }}" fill="none" stroke="#cbc09f" stroke-width="2"></polygon>
+                </sc-for>
+                <sc-for list="{{ radarAxes }}" as="a" hint-placeholder-count="5">
+                  <line x1="190" y1="150" x2="{{ a.x }}" y2="{{ a.y }}" stroke="#cbc09f" stroke-width="2"></line>
+                </sc-for>
+                <polygon points="{{ radarData }}" fill="rgba(227,78,152,.28)" stroke="#e34e98" stroke-width="3.5" stroke-linejoin="round"></polygon>
+                <sc-for list="{{ radarDataPts }}" as="p" hint-placeholder-count="5">
+                  <circle cx="{{ p.x }}" cy="{{ p.y }}" r="6" fill="{{ p.color }}" stroke="#1a1817" stroke-width="2.5"></circle>
+                </sc-for>
+                <sc-for list="{{ radarAxes }}" as="a" hint-placeholder-count="5">
+                  <text x="{{ a.lx }}" y="{{ a.ly }}" text-anchor="{{ a.anchor }}" font-family="'Space Grotesk',sans-serif" font-weight="700" font-size="16" fill="#1a1817">{{ a.label }}</text>
+                </sc-for>
+              </svg>
+            </div>
+            <!-- legend panel -->
+            <div style="padding:26px 26px;display:flex;flex-direction:column;justify-content:center">
+              <div style="font-weight:700;font-size:13px;letter-spacing:2px;color:#e34e98">SKILL RADAR</div>
+              <h3 style="font-family:'Shrikhand',serif;font-style:italic;font-size:32px;line-height:1.04;margin:6px 0 4px;color:#1a1817">能力雷达</h3>
+              <p style="font-size:14px;color:#5c5749;line-height:1.55;margin:0 0 18px">五个维度，看清你当前的英语轮廓。</p>
+              <div style="display:flex;flex-direction:column;gap:11px">
+                <sc-for list="{{ radarLegend }}" as="d" hint-placeholder-count="5">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="width:13px;height:13px;border-radius:50%;background:{{ d.color }};border:2.5px solid #1a1817;flex:none"></span>
+                    <span style="font-weight:600;font-size:14px;flex:none;width:36px">{{ d.label }}</span>
+                    <span style="flex:1;height:10px;background:#e9e1c8;border:2px solid #1a1817;border-radius:999px;overflow:hidden"><span style="display:block;height:100%;width:{{ d.val }}%;background:{{ d.color }}"></span></span>
+                    <span style="font-family:'Space Grotesk';font-weight:700;font-size:14px;width:28px;text-align:right">{{ d.val }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="background:#f2ecda;border:2.5px solid #1a1817;border-radius:14px;padding:12px 14px;margin-top:16px;display:flex;align-items:baseline;gap:8px">
+                <span style="font-family:'Shrikhand',serif;font-size:26px;color:#1a1817">{{ radarAvg }}</span>
+                <span style="font-weight:600;font-size:13px;color:#5c5749">综合评分 · 稳步上升中 ↗</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ============ AI ASSISTANT ============ -->
+    <sc-if value="{{ isAi }}" hint-placeholder-val="{{ false }}">
+      <section style="padding:40px 0">
+        <div style="font-weight:700;font-size:13px;letter-spacing:3px;color:#ec6a2b">AI 助手 · ASSISTANT</div>
+        <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(38px,6vw,64px);line-height:.95;margin:8px 0 24px;color:#1a1817">Wiggle <span style="color:#ec6a2b;text-shadow:3px 3px 0 #1a1817">Brain</span> ✦</h1>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px">
+          <sc-for list="{{ aiTabs }}" as="t" hint-placeholder-count="4">
+            <button onClick="{{ t.onClick }}" style="padding:10px 18px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:14.5px;background:{{ t.bg }};color:{{ t.fg }}">{{ t.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start">
+          <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;padding:24px 26px">
+            <div style="font-weight:700;font-size:13px;letter-spacing:1.5px;color:#7a7568;margin-bottom:10px">① 从文章库选取</div>
+            <div style="position:relative;margin-bottom:8px">
+              <select onChange="{{ selectAiArticle }}" style="width:100%;padding:13px 40px 13px 16px;border:2.5px solid #1a1817;border-radius:14px;font-family:'Space Grotesk';font-weight:600;font-size:15px;background:#f2ecda;color:#1a1817;cursor:pointer;appearance:none;-webkit-appearance:none;outline:none">
+                <option value="">— 选择一篇文章 —</option>
+                <sc-for list="{{ aiArticleOptions }}" as="o" hint-placeholder-count="6">
+                  <option value="{{ o.id }}">{{ o.label }}</option>
+                </sc-for>
+              </select>
+              <span style="position:absolute;right:15px;top:50%;transform:translateY(-50%);pointer-events:none;font-weight:700;font-size:13px;color:#1a1817">▼</span>
+            </div>
+            <sc-if value="{{ aiHasArticle }}" hint-placeholder-val="{{ false }}">
+              <div style="display:inline-flex;align-items:center;gap:7px;background:#e34e98;color:#fffdf6;border:2px solid #1a1817;border-radius:999px;padding:5px 13px;font-weight:700;font-size:12.5px;margin-bottom:14px">✓ 已选：{{ aiArticleTitle }}</div>
+            </sc-if>
+            <div style="font-weight:700;font-size:13px;letter-spacing:1.5px;color:#7a7568;margin:6px 0 10px">② 或粘贴文本</div>
+            <textarea placeholder="粘贴一段英文，或在阅读页点击 AI 工具…" style="width:100%;min-height:160px;padding:14px 16px;border:2.5px solid #1a1817;border-radius:14px;font-family:'Newsreader',serif;font-size:16px;background:#f2ecda;outline:none;resize:vertical;line-height:1.6">The tangerine is a peculiar little fruit. For most of the year its seeds lie dormant in the soil...</textarea>
+            <button onClick="{{ runAi }}" style="margin-top:16px;width:100%;background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:4px 4px 0 #1a1817;cursor:pointer;padding:14px;font-family:'Space Grotesk';font-weight:700;font-size:16px">✦ 运行 AI</button>
+          </div>
+          <div style="background:#1a1817;color:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #ec6a2b;padding:26px 28px;min-height:300px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+              <span style="width:36px;height:36px;border-radius:50%;background:#ec6a2b;border:2px solid #fffdf6;display:flex;align-items:center;justify-content:center;font-weight:700">✦</span>
+              <span style="font-family:'Shrikhand',serif;font-style:italic;font-size:24px">{{ aiResult.title }}</span>
+            </div>
+            <sc-if value="{{ aiRun }}" hint-placeholder-val="{{ false }}">
+              <div style="font-family:'Newsreader',serif;font-size:17px;line-height:1.8;color:#f2ecda">{{ aiResult.body }}</div>
+            </sc-if>
+            <sc-if value="{{ aiNotRun }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;text-align:center;opacity:.6">
+                <div style="animation:spin360 16s linear infinite">
+                  <dc-import name="Flower" petal="#ec6a2b" center="#f3c44b" size="80" hint-size="80px,80px"></dc-import>
+                </div>
+                <div style="font-size:14px;margin-top:16px">点击「运行 AI」查看结果</div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </section>
+    </sc-if>
+
+    <!-- ============ SETTINGS ============ -->
+    <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+      <section style="padding:40px 0;max-width:680px">
+        <div style="font-weight:700;font-size:13px;letter-spacing:3px;color:#e34e98">设置 · SETTINGS</div>
+        <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(38px,6vw,60px);line-height:.95;margin:8px 0 26px;color:#1a1817">Tune It</h1>
+
+        <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:22px 26px;border-bottom:2.5px solid #1a1817">
+            <div><div style="font-weight:700;font-size:17px">整句翻译高亮</div><div style="font-size:13px;color:#7a7568;margin-top:2px">阅读时把鼠标悬停的句子高亮</div></div>
+            <button onClick="{{ toggleSentence }}" style="width:52px;height:30px;border-radius:999px;border:2.5px solid #1a1817;background:{{ sentenceTrackBg }};cursor:pointer;position:relative;padding:0;flex:none">
+              <span style="position:absolute;top:1px;left:{{ sentenceKnobX }};width:22px;height:22px;background:#fffdf6;border:2px solid #1a1817;border-radius:50%;transition:left .18s"></span>
+            </button>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:22px 26px;border-bottom:2.5px solid #1a1817">
+            <div><div style="font-weight:700;font-size:17px">每日学习提醒</div><div style="font-size:13px;color:#7a7568;margin-top:2px">每天 09:00 提醒你来读一篇</div></div>
+            <button onClick="{{ toggleReminder }}" style="width:52px;height:30px;border-radius:999px;border:2.5px solid #1a1817;background:{{ reminderTrackBg }};cursor:pointer;position:relative;padding:0;flex:none">
+              <span style="position:absolute;top:1px;left:{{ reminderKnobX }};width:22px;height:22px;background:#fffdf6;border:2px solid #1a1817;border-radius:50%;transition:left .18s"></span>
+            </button>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:22px 26px">
+            <div><div style="font-weight:700;font-size:17px">每日目标时长</div><div style="font-size:13px;color:#7a7568;margin-top:2px">达成后自动打卡</div></div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <button onClick="{{ goalMinus }}" style="width:38px;height:38px;border-radius:50%;border:2.5px solid #1a1817;background:#f2ecda;cursor:pointer;font-weight:700;font-size:20px">−</button>
+              <span style="font-family:'Shrikhand',serif;font-size:26px;min-width:64px;text-align:center">{{ setGoal }}′</span>
+              <button onClick="{{ goalPlus }}" style="width:38px;height:38px;border-radius:50%;border:2.5px solid #1a1817;background:#f2ecda;cursor:pointer;font-weight:700;font-size:20px">+</button>
+            </div>
+          </div>
+        </div>
+
+        <button onClick="{{ logout }}" style="margin-top:22px;background:#fffdf6;color:#d94646;border:2.5px solid #d94646;border-radius:14px;cursor:pointer;padding:13px 24px;font-family:'Space Grotesk';font-weight:700;font-size:15px">退出登录 →</button>
+      </section>
+    </sc-if>
+
+    <!-- SCREENS_APPEND_MARKER -->
+
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:820},&quot;showFlowers&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;primaryAccent&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;orange&quot;,&quot;options&quot;:[&quot;orange&quot;,&quot;pink&quot;,&quot;blue&quot;],&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'articles', authMode: 'login',
+    diff: '', cat: '',
+    articleId: 1, sentenceTrans: false, selWordKey: null, hoverSent: null,
+    quizPick: {}, quizSubmitted: false,
+    reviewIndex: 0, reviewFlipped: false,
+    vocabFilter: 'all',
+    gLevel: '', gCat: '', grammarId: 1, gPick: {}, gSubmitted: false,
+    checkedIn: false,
+    aiTask: 'summarize', aiRun: false,
+    setSentence: true, setGoal: 30, setReminder: true,
+    dictQuery: '', dictShown: false,
+    aiArticleId: '',
+  };
+
+  // ---------- static data ----------
+  ARTICLES = [
+    { id:1, title:'The Secret Life of Citrus', difficulty:'B1', cat:'science', summaryZh:'柑橘的种子如何在土壤里静静等待春天。', wordCount:118, readingTimeMin:4, color:'#ec6a2b', glyph:'🍊' },
+    { id:2, title:'How Tokyo Sleeps', difficulty:'B2', cat:'life', summaryZh:'一座永不熄灯的城市，夜里究竟在做什么。', wordCount:530, readingTimeMin:5, color:'#2f7fd6', glyph:'☾' },
+    { id:3, title:'The Last Bookshop', difficulty:'B1', cat:'literature', summaryZh:'巷子尽头的旧书店，和它最后的店主。', wordCount:380, readingTimeMin:4, color:'#e34e98', glyph:'❦' },
+    { id:4, title:'Why We Dream in Color', difficulty:'A2', cat:'science', summaryZh:'我们为什么会做彩色的梦？', wordCount:260, readingTimeMin:3, color:'#f3c44b', glyph:'✺' },
+    { id:5, title:'The Economics of Coffee', difficulty:'C1', cat:'business', summaryZh:'一杯咖啡背后，跨越三大洲的生意。', wordCount:610, readingTimeMin:6, color:'#2f7fd6', glyph:'☕' },
+    { id:6, title:'Letters from the Sea', difficulty:'A2', cat:'literature', summaryZh:'瓶中信漂过半个海洋，抵达谁的手中。', wordCount:290, readingTimeMin:3, color:'#ec6a2b', glyph:'✉' },
+  ];
+  CAT_LABELS = { tech:'科技 Tech', life:'生活 Life', news:'时事 News', literature:'文学 Lit', science:'科学 Science', business:'商业 Biz' };
+  DIFFS = ['A1','A2','B1','B2','C1','C2'];
+  CATS = ['science','life','literature','business','tech','news'];
+
+  PARAS = [
+    [ { segs:[['The ',0],['tangerine',1],[' is a ',0],['peculiar',1],[' little fruit.',0]], zh:'柑橘是一种奇特的小水果。', vk:'a-0' },
+      { segs:[['For most of the year its seeds lie ',0],['dormant',1],[' in the soil.',0]], zh:'一年中大部分时间，它的种子在土壤里休眠。', vk:'a-1' } ],
+    [ { segs:[['When spring arrives, a faint ',0],['fragrance',1],[' drifts through the orchard.',0]], zh:'当春天来临，一缕淡淡的芳香飘过果园。', vk:'a-2' },
+      { segs:[['Farmers have ',0],['cultivated',1],[' these trees for centuries.',0]], zh:'农民们栽培这些树木已有数百年。', vk:'a-3' } ],
+    [ { segs:[['Their ',0],['vivid',1],[' orange skin is surprisingly ',0],['resilient',1],['.',0]], zh:'它们鲜艳的橙色表皮出人意料地坚韧。', vk:'a-4' },
+      { segs:[['Long after the fruit is gone, its scent seems to ',0],['linger',1],['.',0]], zh:'水果消失很久之后，它的香气似乎仍在萦绕。', vk:'a-5' } ],
+  ];
+  WORD_DEFS = {
+    'tangerine':{ phon:'/ˈtændʒəriːn/', def:'n. 柑橘，红橘' },
+    'peculiar':{ phon:'/pɪˈkjuːliər/', def:'adj. 奇特的，独特的' },
+    'dormant':{ phon:'/ˈdɔːrmənt/', def:'adj. 休眠的，蛰伏的' },
+    'fragrance':{ phon:'/ˈfreɪɡrəns/', def:'n. 芳香，香味' },
+    'cultivated':{ phon:'/ˈkʌltɪveɪtɪd/', def:'v. 栽培，培育' },
+    'vivid':{ phon:'/ˈvɪvɪd/', def:'adj. 鲜明的，生动的' },
+    'resilient':{ phon:'/rɪˈzɪliənt/', def:'adj. 有韧性的，能复原的' },
+    'linger':{ phon:'/ˈlɪŋɡər/', def:'v. 徘徊，逗留，萦绕' },
+  };
+  QUIZ = [
+    { text:'What lies dormant in the soil?', opts:['The seeds','The leaves','The roots','The petals'], answer:'The seeds' },
+    { text:'When does the fragrance appear?', opts:['In spring','In winter','At night','After rain'], answer:'In spring' },
+    { text:'How is the skin described?', opts:['Resilient','Fragile','Pale','Bitter'], answer:'Resilient' },
+  ];
+  VOCAB = [
+    { word:'linger', phon:'/ˈlɪŋɡər/', def:'v. 徘徊，萦绕', mastery:'learning', due:true },
+    { word:'resilient', phon:'/rɪˈzɪliənt/', def:'adj. 有韧性的', mastery:'review', due:true },
+    { word:'fragrance', phon:'/ˈfreɪɡrəns/', def:'n. 芳香', mastery:'learning', due:false },
+    { word:'peculiar', phon:'/pɪˈkjuːliər/', def:'adj. 奇特的', mastery:'review', due:true },
+    { word:'cultivate', phon:'/ˈkʌltɪveɪt/', def:'v. 栽培，培养', mastery:'mastered', due:false },
+    { word:'dormant', phon:'/ˈdɔːrmənt/', def:'adj. 休眠的', mastery:'learning', due:false },
+    { word:'vivid', phon:'/ˈvɪvɪd/', def:'adj. 鲜明的', mastery:'mastered', due:false },
+    { word:'orchard', phon:'/ˈɔːrtʃərd/', def:'n. 果园', mastery:'review', due:true },
+  ];
+  GRAMMARS = [
+    { id:1, title:'现在完成时', en:'Present Perfect', level:'B1', cat:'tense', color:'#ec6a2b', desc:'已发生、对现在有影响的动作。' },
+    { id:2, title:'定语从句', en:'Relative Clauses', level:'B2', cat:'clause', color:'#2f7fd6', desc:'who / which / that 引导的修饰。' },
+    { id:3, title:'被动语态', en:'Passive Voice', level:'B1', cat:'voice', color:'#e34e98', desc:'be + 过去分词，强调承受者。' },
+    { id:4, title:'虚拟语气', en:'Subjunctive Mood', level:'C1', cat:'mood', color:'#f3c44b', desc:'与事实相反的假设。' },
+    { id:5, title:'主谓一致', en:'Subject-Verb Agreement', level:'A2', cat:'agreement', color:'#ec6a2b', desc:'主语与谓语在数上保持一致。' },
+    { id:6, title:'倒装句', en:'Inversion', level:'C1', cat:'other', color:'#2f7fd6', desc:'否定词或 only 提前引起的语序变化。' },
+  ];
+  GCAT_LABELS = { tense:'时态', clause:'从句', voice:'语态', mood:'语气', agreement:'一致', punctuation:'标点', other:'其它' };
+  GLEVELS = ['A1','A2','B1','B2','C1','C2'];
+  GRAMMAR_DETAIL = {
+    explanation:'现在完成时由 have / has + 过去分词构成，表示过去发生、但对现在仍有影响的动作，或从过去持续到现在的状态。常与 already、just、never、for、since 等连用。',
+    examples:[
+      { sentence:'I have lived here for ten years.', zh:'我在这里住了十年了。', hl:'have lived' },
+      { sentence:'She has just finished her homework.', zh:'她刚刚完成作业。', hl:'has just finished' },
+      { sentence:'We have never been to Japan.', zh:'我们从没去过日本。', hl:'have never been' },
+    ],
+    exercises:[
+      { text:'She ___ in Beijing since 2010.', opts:['has lived','lived','is living','live'], answer:'has lived' },
+      { text:'I ___ my work already.', opts:['have finished','finished','finish','am finishing'], answer:'have finished' },
+      { text:'They ___ each other for years.', opts:['have known','knew','know','are knowing'], answer:'have known' },
+    ],
+  };
+  WEEK_TREND = [4,7,3,8,5,9,6];
+  WEEK_LABELS = ['一','二','三','四','五','六','日'];
+
+  // ---------- nav helpers ----------
+  go(s){ this.setState({ screen:s }); if(typeof window!=='undefined') window.scrollTo(0,0); }
+
+  renderVals(){
+    const st = this.state;
+    const PINK='#e34e98', ORANGE='#ec6a2b', BLUE='#2f7fd6', INK='#1a1817', CREAM='#f2ecda', YELLOW='#f3c44b';
+    const screen = st.screen;
+    const showFlowers = this.props.showFlowers !== false;
+    const primary = this.props.primaryAccent || 'orange';
+
+    const navMap = { articles:'read', article:'read', dict:'dict', vocab:'vocab', review:'vocab', grammar:'grammar', grammarDetail:'grammar', checkin:'checkin', stats:'stats' };
+    const activeKey = navMap[screen] || '';
+    const navDef = [
+      ['read','阅读','articles'],['dict','词典','dict'],['vocab','生词本','vocab'],
+      ['grammar','语法','grammar'],['checkin','打卡','checkin'],['stats','统计','stats'],
+    ];
+    const navItems = navDef.map(([k,cn,target])=>({ key:k, cn, active:activeKey===k, onClick:()=>this.go(target) }));
+
+    // ---- articles ----
+    const filteredArticles = this.ARTICLES.filter(a=>(!st.diff||a.difficulty===st.diff)&&(!st.cat||a.cat===st.cat)).map(a=>({
+      ...a, catLabel:this.CAT_LABELS[a.cat], onClick:()=>{ this.setState({ articleId:a.id, screen:'article', quizPick:{}, quizSubmitted:false, selWordKey:null }); if(typeof window!=='undefined') window.scrollTo(0,0); },
+    }));
+    const chipBase=(active,color)=>({ bg: active?color:'#fffdf6', fg: active? (color===YELLOW?INK:'#fff') : INK });
+    const diffChips = [{label:'全部',v:''}].concat(this.DIFFS.map(d=>({label:d,v:d}))).map(c=>{
+      const active=st.diff===c.v; const cc=chipBase(active,BLUE); return { label:c.label, bg:cc.bg, fg:cc.fg, onClick:()=>this.setState({diff:c.v}) };
+    });
+    const catChips = [{label:'全部',v:''}].concat(this.CATS.map(c=>({label:this.CAT_LABELS[c].split(' ')[0],v:c}))).map(c=>{
+      const active=st.cat===c.v; const cc=chipBase(active,PINK); return { label:c.label, bg:cc.bg, fg:cc.fg, onClick:()=>this.setState({cat:c.v}) };
+    });
+
+    // ---- current article / reading ----
+    const ca = this.ARTICLES.find(a=>a.id===st.articleId) || this.ARTICLES[0];
+    const curArticle = { ...ca, catLabel:this.CAT_LABELS[ca.cat] };
+    const curParagraphs = this.PARAS.map((para,pi)=>({
+      sentences: para.map((s,si)=>{
+        const key='p'+pi+'s'+si;
+        return {
+          hl: st.hoverSent===key ? '#fdeecb' : 'transparent',
+          onEnter:()=>this.setState({hoverSent:key}),
+          onLeave:()=>this.setState({hoverSent:null}),
+          showZh: st.sentenceTrans,
+          zh: s.zh,
+          segs: s.segs.map((g,gi)=>{
+            const isV=g[1]===1; const w=isV?g[0].toLowerCase().replace(/[^a-z]/g,''):'';
+            return { t:g[0], v:isV, plain:!isV, onClick:isV?(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.setState({selWordKey:w}); }:null };
+          }),
+        };
+      }),
+    }));
+    const selDef = st.selWordKey ? this.WORD_DEFS[st.selWordKey] : null;
+    const selWord = selDef ? { word:st.selWordKey, phon:selDef.phon, def:selDef.def } : {};
+
+    // ---- quiz ----
+    const quizQuestions = this.QUIZ.map((q,qi)=>({
+      n:qi+1, text:q.text,
+      opts:q.opts.map(o=>{
+        let bg='#fffdf6', fg=INK;
+        const picked=st.quizPick[qi]===o;
+        if(st.quizSubmitted){
+          if(o===q.answer){ bg='#1f9d5c'; fg='#fff'; }
+          else if(picked){ bg='#d94646'; fg='#fff'; }
+        } else if(picked){ bg=INK; fg='#fffdf6'; }
+        return { label:o, bg, fg, onClick:()=>{ if(!st.quizSubmitted) this.setState({quizPick:{...st.quizPick,[qi]:o}}); } };
+      }),
+    }));
+    const correct = this.QUIZ.filter((q,qi)=>st.quizPick[qi]===q.answer).length;
+    const quizScore = Math.round(correct/this.QUIZ.length*100);
+    const quizMsg = quizScore>=67 ? '太棒了！已自动打卡 ✓' : '再读一遍，试试看 →';
+
+    // ---- vocab ----
+    const vfCounts = { all:this.VOCAB.length, learning:this.VOCAB.filter(v=>v.mastery==='learning').length, review:this.VOCAB.filter(v=>v.mastery==='review').length, mastered:this.VOCAB.filter(v=>v.mastery==='mastered').length };
+    const masteryColor = { learning:ORANGE, review:BLUE, mastered:'#1f9d5c' };
+    const masteryLabel = { learning:'学习中', review:'复习', mastered:'已掌握' };
+    const vfDef=[['all','全部'],['learning','学习中'],['review','复习'],['mastered','已掌握']];
+    const vocabTabs = vfDef.map(([k,l])=>({ label:l+' '+vfCounts[k], active:st.vocabFilter===k, bg: st.vocabFilter===k?INK:'#fffdf6', fg: st.vocabFilter===k?'#fffdf6':INK, onClick:()=>this.setState({vocabFilter:k}) }));
+    const filteredVocab = this.VOCAB.filter(v=>st.vocabFilter==='all'||v.mastery===st.vocabFilter).map(v=>({
+      ...v, mColor:masteryColor[v.mastery], mLabel:masteryLabel[v.mastery], dueLabel: v.due?'待复习':'已安排',
+    }));
+    const dueCount = this.VOCAB.filter(v=>v.due).length;
+
+    // ---- review (flashcard) ----
+    const reviewDue = this.VOCAB.filter(v=>v.due);
+    const rTotal = reviewDue.length;
+    const rIdx = Math.min(st.reviewIndex, Math.max(0,rTotal-1));
+    const rDone = st.reviewIndex>=rTotal;
+    const rCard = reviewDue[rIdx] || reviewDue[0] || {word:'',phon:'',def:''};
+    const reviewProgress = rTotal? Math.round(Math.min(st.reviewIndex,rTotal)/rTotal*100):0;
+    const rateCard=(q)=>{ this.setState(s=>({ reviewIndex:s.reviewIndex+1, reviewFlipped:false })); };
+
+    // ---- grammar ----
+    const filteredGrammar = this.GRAMMARS.filter(g=>(!st.gLevel||g.level===st.gLevel)&&(!st.gCat||g.cat===st.gCat)).map(g=>({
+      ...g, catLabel:this.GCAT_LABELS[g.cat], onClick:()=>{ this.setState({grammarId:g.id,screen:'grammarDetail',gPick:{},gSubmitted:false}); if(typeof window!=='undefined') window.scrollTo(0,0); },
+    }));
+    const gLevelChips=[{label:'全部',v:''}].concat(this.GLEVELS.map(l=>({label:l,v:l}))).map(c=>{
+      const active=st.gLevel===c.v; return { label:c.label, bg:active?ORANGE:'#fffdf6', fg:active?'#fff':INK, onClick:()=>this.setState({gLevel:c.v}) };
+    });
+    const cg = this.GRAMMARS.find(g=>g.id===st.grammarId) || this.GRAMMARS[0];
+    const curGrammar = { ...cg, catLabel:this.GCAT_LABELS[cg.cat] };
+    const gExamples = this.GRAMMAR_DETAIL.examples;
+    const gExercises = this.GRAMMAR_DETAIL.exercises.map((q,qi)=>({
+      n:qi+1, text:q.text,
+      opts:q.opts.map(o=>{
+        let bg='#fffdf6',fg=INK; const picked=st.gPick[qi]===o;
+        if(st.gSubmitted){ if(o===q.answer){bg='#1f9d5c';fg='#fff';} else if(picked){bg='#d94646';fg='#fff';} }
+        else if(picked){bg=INK;fg='#fffdf6';}
+        return { label:o, bg, fg, onClick:()=>{ if(!st.gSubmitted) this.setState({gPick:{...st.gPick,[qi]:o}}); } };
+      }),
+    }));
+    const gCorrect=this.GRAMMAR_DETAIL.exercises.filter((q,qi)=>st.gPick[qi]===q.answer).length;
+    const gScore=Math.round(gCorrect/this.GRAMMAR_DETAIL.exercises.length*100);
+
+    // ---- checkin calendar ----
+    const cal=[]; const today=new Date();
+    const doneSet = new Set([1,2,3,4,5,8,9,10,11,12,15,16,17,18,19,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41]);
+    for(let i=41;i>=0;i--){ const idx=41-i; cal.push({ done: doneSet.has(idx) || (idx>=36 && st.checkedIn) , isToday:i===0 }); }
+    const checkinCal = cal.map(c=>({ bg: c.done? (c.isToday?ORANGE:PINK) : '#e9e1c8', border: c.isToday?'2.5px solid #1a1817':'2px solid #d8cfb4', dot: c.isToday }));
+    const streak=12;
+
+    // ---- stats ----
+    const maxTrend=Math.max(...this.WEEK_TREND);
+    const weekBars=this.WEEK_TREND.map((v,i)=>({ h: Math.round(v/maxTrend*100), val:v, label:this.WEEK_LABELS[i], color: i%2?BLUE:PINK }));
+    const statCards=[
+      { k:'生词总量', v:'142', sub:'个单词', color:PINK },
+      { k:'已掌握', v:'58', sub:'词 · 41%', color:'#1f9d5c' },
+      { k:'读完文章', v:'23', sub:'篇', color:ORANGE },
+      { k:'平均正确率', v:'84%', sub:'读后测验', color:BLUE },
+    ];
+
+    // ---- skill radar ----
+    const dims = [
+      { label:'阅读', val:78, color:PINK },
+      { label:'词汇', val:88, color:BLUE },
+      { label:'语法', val:64, color:ORANGE },
+      { label:'坚持', val:92, color:'#1f9d5c' },
+      { label:'准确', val:84, color:YELLOW },
+    ];
+    const cx=190, cy=150, R=104, LR=130;
+    const ang=i=>(-90+72*i)*Math.PI/180;
+    const pt=(i,rad)=>[cx+rad*Math.cos(ang(i)), cy+rad*Math.sin(ang(i))];
+    const fmt=p=>p[0].toFixed(1)+','+p[1].toFixed(1);
+    const radarRings = [0.25,0.5,0.75,1].map(f=>({ points: dims.map((d,i)=>fmt(pt(i,R*f))).join(' ') }));
+    const radarAxes = dims.map((d,i)=>{
+      const e=pt(i,R), l=pt(i,LR);
+      let anchor='middle'; if(l[0]<cx-4) anchor='end'; else if(l[0]>cx+4) anchor='start';
+      return { x:e[0].toFixed(1), y:e[1].toFixed(1), lx:l[0].toFixed(1), ly:(l[1]+5).toFixed(1), label:d.label, anchor };
+    });
+    const radarDataPts = dims.map((d,i)=>{ const p=pt(i,R*d.val/100); return { x:p[0].toFixed(1), y:p[1].toFixed(1), color:d.color }; });
+    const radarData = radarDataPts.map(p=>p.x+','+p.y).join(' ');
+    const radarLegend = dims.map(d=>({ label:d.label, val:d.val, color:d.color }));
+    const radarAvg = Math.round(dims.reduce((s,d)=>s+d.val,0)/dims.length);
+
+    // ---- ai ----
+    const aiTabs=[['summarize','📝 摘要'],['translate','🈯 翻译'],['quiz','❓ 测验'],['history','📊 学习分析']].map(([k,l])=>({ label:l, active:st.aiTask===k, bg:st.aiTask===k?INK:'#fffdf6', fg:st.aiTask===k?'#fffdf6':INK, onClick:()=>this.setState({aiTask:k,aiRun:false}) }));
+    const aiResults={
+      summarize:{ title:'全文摘要', body:'本文描述了柑橘从休眠的种子到散发芬芳的果实的生命历程，强调其表皮坚韧、香气持久。This article traces the citrus from dormant seed to fragrant fruit, highlighting its resilient skin and lingering scent.' },
+      translate:{ title:'整篇翻译', body:'柑橘是一种奇特的小水果。一年中大部分时间，它的种子在土壤里休眠。当春天来临，一缕淡淡的芳香飘过果园……' },
+      quiz:{ title:'AI 生成测验', body:'1. What stage comes before the fruit ripens?  2. Which word means "to stay or remain"?  3. True or False: the skin is fragile.' },
+      history:{ title:'你的学习分析', body:'最近 7 天你新增 42 个生词，复习正确率 84%，连续打卡 12 天。建议：加强 B2 级别长难句精读，并把 "linger / resilient" 列入今日重点复习。' },
+    };
+    const aiResult = aiResults[st.aiTask];
+    const aiArticleOptions = this.ARTICLES.map(a=>({ id:a.id, label:a.difficulty+' · '+a.title }));
+    const aiSelArticle = this.ARTICLES.find(a=>String(a.id)===String(st.aiArticleId)) || null;
+
+    return {
+      // chrome
+      showFlowers, showNav: screen!=='login',
+      navItems, goHome:()=>this.go('articles'), goAi:()=>this.go('ai'), goSettings:()=>this.go('settings'),
+      // screen flags
+      isLogin:screen==='login', isArticles:screen==='articles', isArticle:screen==='article',
+      isDict:screen==='dict', isVocab:screen==='vocab', isReview:screen==='review',
+      isGrammar:screen==='grammar', isGrammarDetail:screen==='grammarDetail',
+      isCheckin:screen==='checkin', isStats:screen==='stats', isAi:screen==='ai', isSettings:screen==='settings',
+      // auth
+      isRegister:st.authMode==='register',
+      setAuthLogin:()=>this.setState({authMode:'login'}), setAuthRegister:()=>this.setState({authMode:'register'}),
+      doLogin:()=>this.go('articles'), authCta: st.authMode==='register'?'注册并登录':'登录',
+      loginTabBg: st.authMode==='login'?INK:'#fffdf6', loginTabFg: st.authMode==='login'?'#fffdf6':INK,
+      regTabBg: st.authMode==='register'?INK:'#fffdf6', regTabFg: st.authMode==='register'?'#fffdf6':INK,
+      // articles
+      filteredArticles, diffChips, catChips,
+      // reading
+      curArticle, curParagraphs,
+      toggleSentenceTrans:()=>this.setState({sentenceTrans:!st.sentenceTrans}),
+      stState: st.sentenceTrans?'ON':'OFF', stBg: st.sentenceTrans?BLUE:'#fffdf6', stFg: st.sentenceTrans?'#fff':INK,
+      hasSelectedWord:!!selDef, noSelectedWord:!selDef, selWord, closeWord:()=>this.setState({selWordKey:null}), addSelWord:()=>this.setState({selWordKey:null}),
+      quizQuestions, submitQuiz:()=>this.setState({quizSubmitted:true}), quizSubmitted:st.quizSubmitted, quizNotSubmitted:!st.quizSubmitted, quizScore, quizMsg,
+      // dict
+      dictResultShown: st.dictShown, dictSearch:()=>this.setState({dictShown:true}),
+      // vocab
+      vocabTabs, filteredVocab, vTotal:vfCounts.all, vMastered:vfCounts.mastered, vDue:dueCount,
+      goReview:()=>this.go('review'),
+      // review
+      rCard, rTotal, reviewProgress, reviewDone:rDone, reviewActive:!rDone && rTotal>0,
+      reviewFlipped:st.reviewFlipped, reviewNotFlipped:!st.reviewFlipped, flipCard:()=>this.setState({reviewFlipped:!st.reviewFlipped}),
+      rateAgain:()=>rateCard(1), rateHard:()=>rateCard(3), rateGood:()=>rateCard(4), rateEasy:()=>rateCard(5),
+      resetReview:()=>this.setState({reviewIndex:0,reviewFlipped:false}),
+      reviewIndexLabel:Math.min(st.reviewIndex+1,rTotal),
+      // grammar
+      filteredGrammar, gLevelChips, curGrammar, gExplanation:this.GRAMMAR_DETAIL.explanation, gExamples, gExercises,
+      submitGrammar:()=>this.setState({gSubmitted:true}), gSubmitted:st.gSubmitted, gNotSubmitted:!st.gSubmitted, gScore,
+      goGrammar:()=>this.go('grammar'),
+      // checkin
+      checkinCal, streak, checkedIn:st.checkedIn, notCheckedIn:!st.checkedIn, doCheckin:()=>this.setState({checkedIn:true}),
+      // stats
+      weekBars, statCards,
+      radarRings, radarAxes, radarData, radarDataPts, radarLegend, radarAvg,
+      // ai
+      aiTabs, aiResult, aiRun:st.aiRun, runAi:()=>this.setState({aiRun:true}), aiNotRun:!st.aiRun,
+      aiArticleOptions, selectAiArticle:(e)=>this.setState({ aiArticleId:e.target.value, aiRun:false }),
+      aiHasArticle:!!aiSelArticle, aiArticleTitle: aiSelArticle ? aiSelArticle.title : '',
+      // settings
+      setSentence:st.setSentence, toggleSentence:()=>this.setState({setSentence:!st.setSentence}),
+      setReminder:st.setReminder, toggleReminder:()=>this.setState({setReminder:!st.setReminder}),
+      setGoal:st.setGoal, goalMinus:()=>this.setState({setGoal:Math.max(10,st.setGoal-10)}), goalPlus:()=>this.setState({setGoal:Math.min(120,st.setGoal+10)}),
+      sentenceTrackBg: st.setSentence?'#1f9d5c':'#cfc7ad', sentenceKnobX: st.setSentence?'24px':'2px',
+      reminderTrackBg: st.setReminder?'#1f9d5c':'#cfc7ad', reminderKnobX: st.setReminder?'24px':'2px',
+      logout:()=>this.go('login'),
+    };
+  }
+}
+</script>
+</body>
+</html>
