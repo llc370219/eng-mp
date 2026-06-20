@@ -41,12 +41,39 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user',
   },
+  // 新增字段
+  emailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  loginAttempts: {
+    type: Number,
+    default: 0,
+  },
+  lockUntil: {
+    type: Date,
+    default: null,
+  },
+  lastLoginAt: {
+    type: Date,
+    default: null,
+  },
+  lastLoginIp: {
+    type: String,
+    default: '',
+  },
+  preferences: {
+    dailyGoalMin: { type: Number, default: 30 },
+    reminderTime: { type: String, default: '09:00' },
+  },
 }, { timestamps: true });
 
 // 隐藏密码哈希
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.passwordHash;
+  delete obj.loginAttempts;
+  delete obj.lockUntil;
   return obj;
 };
 
@@ -55,9 +82,33 @@ userSchema.methods.comparePassword = async function (password) {
   return bcrypt.compare(password, this.passwordHash);
 };
 
-// 注册时哈希密码（静态方法）
+// 注册时哈希密码
 userSchema.statics.hashPassword = async function (password) {
   return bcrypt.hash(password, 10);
+};
+
+// 检查账户是否被锁定
+userSchema.methods.isLocked = function () {
+  return this.lockUntil && this.lockUntil > Date.now();
+};
+
+// 记录登录失败
+userSchema.methods.incrementLoginAttempts = async function () {
+  const MAX_ATTEMPTS = 5;
+  const LOCK_TIME = 15 * 60 * 1000; // 15分钟
+
+  this.loginAttempts += 1;
+  if (this.loginAttempts >= MAX_ATTEMPTS) {
+    this.lockUntil = new Date(Date.now() + LOCK_TIME);
+  }
+  return this.save();
+};
+
+// 重置登录失败次数
+userSchema.methods.resetLoginAttempts = async function () {
+  this.loginAttempts = 0;
+  this.lockUntil = null;
+  return this.save();
 };
 
 module.exports = mongoose.model('User', userSchema);

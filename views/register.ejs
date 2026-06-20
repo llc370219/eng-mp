@@ -1,25 +1,40 @@
 <%- include("header") %>
-<div style="max-width:360px;margin:40px auto">
+<div style="max-width:400px;margin:40px auto">
   <div class="card">
-    <h2>注册</h2>
-    <% if (msg) { %>
-      <div class="msg msg-err"><%= msg %></div>
+    <h2>📧 邮箱注册</h2>
+    <% if (typeof msg !== 'undefined' && msg) { %>
+      <div class="msg <%= msg.includes('成功') || msg.includes('已发送') ? 'msg-ok' : 'msg-err' %>"><%= msg %></div>
     <% } %>
-    <form method="POST" action="/demo/register">
+
+    <!-- 第一步：发送验证码 -->
+    <form method="POST" action="/demo/send-code" id="sendCodeForm">
       <div class="form-row">
-        <label>邮箱</label>
-        <input type="email" name="email" required>
+        <label>邮箱地址</label>
+        <div style="display:flex;gap:8px">
+          <input type="email" name="email" value="<%= typeof email !== 'undefined' && email ? email : '' %>" required placeholder="your@email.com" style="flex:1">
+          <button type="submit" class="btn btn-primary" style="white-space:nowrap">发送验证码</button>
+        </div>
+      </div>
+    </form>
+
+    <!-- 第二步：输入验证码和密码 -->
+    <form method="POST" action="/demo/register" style="margin-top:16px;border-top:1px solid #E5E7EB;padding-top:16px">
+      <input type="hidden" name="email" value="<%= typeof email !== 'undefined' && email ? email : '' %>">
+      <div class="form-row">
+        <label>验证码</label>
+        <input type="text" name="code" placeholder="6位数字验证码" maxlength="6" required>
       </div>
       <div class="form-row">
         <label>密码</label>
-        <input type="password" name="password" required>
+        <input type="password" name="password" placeholder="至少6位" required>
       </div>
       <div class="form-row">
         <label>昵称</label>
-        <input type="text" name="nickname">
+        <input type="text" name="nickname" placeholder="可选">
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%">注册</button>
     </form>
+
     <div style="text-align:center;margin-top:12px;font-size:13px;color:#6B7280">
       已有账号？<a href="/demo/login">登录</a>
     </div>

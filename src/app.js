@@ -21,6 +21,7 @@ const exerciseRoutes = require('./routes/exercises');
 const dictRoutes = require('./routes/dictionary');
 const grammarRoutes = require('./routes/grammar');
 const aiRoutes = require('./routes/ai');
+const studyRoutes = require('./routes/study');
 const docsRoutes = require('./routes/docs');
 const demoRoutes = require('./routes/demo');
 
@@ -79,6 +80,7 @@ app.use('/api', exerciseRoutes);
 app.use('/api/dict', dictRoutes);
 app.use('/api/grammar', grammarRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/study', studyRoutes);
 app.use('/api/docs', docsRoutes);
 
 // ===== 服务端渲染 Demo =====

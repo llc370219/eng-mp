@@ -5,11 +5,15 @@ const User = require('../models/User');
 const Article = require('../models/Article');
 const Exercise = require('../models/Exercise');
 const Vocab = require('../models/Vocab');
+const VocabProgress = require('../models/VocabProgress');
 const Dictionary = require('../models/Dictionary');
 const Grammar = require('../models/Grammar');
-const ReadingLog = require('../models/ReadingLog');
+const ReadingProgress = require('../models/ReadingProgress');
+const StudySession = require('../models/StudySession');
+const VerificationCode = require('../models/VerificationCode');
 const WrongAnswer = require('../models/WrongAnswer');
 const { calculateNextReview } = require('../services/spaced-repetition');
+const { generateCode, sendVerificationCode } = require('../services/email');
 
 const router = Router();
 
@@ -36,20 +40,72 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password))) return res.render('login', { msg: '邮箱或密码错误', type: 'err', page: 'login', user: null });
+    if (!user) return res.render('login', { msg: '邮箱或密码错误', type: 'err', page: 'login', user: null });
+    if (user.isLocked()) return res.render('login', { msg: '账户已锁定，请15分钟后再试', type: 'err', page: 'login', user: null });
+    if (!(await user.comparePassword(password))) {
+      await user.incrementLoginAttempts();
+      return res.render('login', { msg: '邮箱或密码错误', type: 'err', page: 'login', user: null });
+    }
+    await user.resetLoginAttempts();
+    user.lastLoginAt = new Date();
+    await user.save();
     const token = jwt.sign({ userId: user._id }, config.jwt.secret, { expiresIn: '7d' });
     res.cookie('token', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
     res.redirect('/demo/');
   } catch (e) { res.render('login', { msg: '登录失败: ' + e.message, type: 'err', page: 'login', user: null }); }
 });
 
+// ===== 注册（验证码） =====
 router.get('/register', (req, res) => res.render('register', { msg: null, page: 'register', user: null }));
 
-router.post('/register', async (req, res) => {
-  const { email, password, nickname } = req.body;
+// 发送验证码
+router.post('/send-code', async (req, res) => {
+  const { email } = req.body;
   try {
+    const existing = await User.findOne({ email });
+    if (existing) return res.render('register', { msg: '该邮箱已注册', page: 'register', user: null });
+
+    const recent = await VerificationCode.findOne({
+      email, type: 'register', used: false,
+      createdAt: { $gte: new Date(Date.now() - 60000) },
+    });
+    if (recent) return res.render('register', { msg: '验证码已发送，请60秒后再试', page: 'register', user: null });
+
+    const code = generateCode();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    await VerificationCode.create({ email, code, type: 'register', expiresAt });
+    await sendVerificationCode(email, code, 'register');
+
+    res.render('register', { msg: '验证码已发送到您的邮箱', page: 'register', user: null, email });
+  } catch (e) { res.render('register', { msg: '发送失败: ' + e.message, page: 'register', user: null }); }
+});
+
+// 验证码注册
+router.post('/register', async (req, res) => {
+  const { email, code, password, nickname } = req.body;
+  try {
+    const existing = await User.findOne({ email });
+    if (existing) return res.render('register', { msg: '该邮箱已注册', page: 'register', user: null });
+
+    const record = await VerificationCode.findOne({
+      email, type: 'register', used: false,
+    }).sort({ createdAt: -1 });
+
+    if (!record) return res.render('register', { msg: '请先获取验证码', page: 'register', user: null });
+    if (record.expiresAt < new Date()) return res.render('register', { msg: '验证码已过期，请重新获取', page: 'register', user: null, email });
+    if (record.attempts >= 5) return res.render('register', { msg: '验证码尝试次数过多，请重新获取', page: 'register', user: null });
+    if (record.code !== code) {
+      record.attempts += 1;
+      await record.save();
+      return res.render('register', { msg: '验证码错误', page: 'register', user: null, email });
+    }
+
+    record.used = true;
+    await record.save();
+
     const passwordHash = await User.hashPassword(password);
-    await User.create({ email, passwordHash, nickname: nickname || '' });
+    await User.create({ email, passwordHash, nickname: nickname || '', emailVerified: true });
+
     res.render('login', { msg: '注册成功，请登录', type: 'ok', page: 'login', user: null });
   } catch (e) { res.render('register', { msg: '注册失败: ' + e.message, page: 'register', user: null }); }
 });
@@ -76,6 +132,14 @@ router.get('/article/:id', requireAuth, async (req, res) => {
   const article = await Article.findById(req.params.id);
   if (!article) return res.redirect('/demo/');
   const exercise = await Exercise.findOne({ articleId: article._id });
+
+  // 记录阅读进度
+  await ReadingProgress.findOneAndUpdate(
+    { userId: res.locals.user._id, articleId: article._id },
+    { $setOnInsert: { startTime: new Date(), status: 'reading', wordCount: article.wordCount } },
+    { upsert: true }
+  );
+
   render(res, 'article', { article, exercise, results: null, score: null, aiResult: null });
 });
 
@@ -94,6 +158,13 @@ router.post('/article/:id/submit', requireAuth, async (req, res) => {
     return { question: q.text, options: q.options, userAnswer, correctAnswer: q.answer, isCorrect, explanation: q.explanation };
   });
   const score = exercise.questions.length > 0 ? Math.round((correct / exercise.questions.length) * 100) : 0;
+
+  // 更新阅读进度
+  await ReadingProgress.findOneAndUpdate(
+    { userId: res.locals.user._id, articleId: article._id },
+    { exerciseScore: score, exerciseResults: results, status: 'completed', endTime: new Date() }
+  );
+
   render(res, 'article', { article, exercise, results, score, aiResult: null });
 });
 
@@ -148,22 +219,28 @@ router.get('/dict', requireAuth, async (req, res) => {
 router.post('/vocab/add', requireAuth, async (req, res) => {
   const { word, definition, phonetic } = req.body;
   try {
-    const existing = await Vocab.findOne({ userId: res.locals.user._id, word: word.toLowerCase() });
-    if (!existing) await Vocab.create({ userId: res.locals.user._id, word: word.toLowerCase(), definition: definition || '', phonetic: phonetic || '' });
+    const existing = await VocabProgress.findOne({ userId: res.locals.user._id, word: word.toLowerCase() });
+    if (!existing) {
+      await VocabProgress.create({
+        userId: res.locals.user._id,
+        word: word.toLowerCase(),
+        definition: definition || '',
+        phonetic: phonetic || '',
+        source: 'dict',
+      });
+    }
   } catch {}
   res.redirect('/demo/vocab');
 });
 
 // ===== 生词本 =====
 router.get('/vocab', requireAuth, async (req, res) => {
-  const vocabs = await Vocab.find({ userId: res.locals.user._id }).sort({ createdAt: -1 });
-  // 统计数据
+  const vocabs = await VocabProgress.find({ userId: res.locals.user._id }).sort({ createdAt: -1 });
   const totalCount = vocabs.length;
-  const masteredCount = vocabs.filter(v => v.repetition >= 3).length;
+  const masteredCount = vocabs.filter(v => v.masteryLevel === 'mastered').length;
   const reviewCount = vocabs.filter(v => v.nextReview <= new Date()).length;
-  // 最近30天添加趋势
   const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const dailyAdd = await Vocab.aggregate([
+  const dailyAdd = await VocabProgress.aggregate([
     { $match: { userId: res.locals.user._id, createdAt: { $gte: thirtyDaysAgo } } },
     { $group: { _id: { $dateToString: { format: '%m-%d', date: '$createdAt' } }, count: { $sum: 1 } } },
     { $sort: { _id: 1 } }
@@ -173,19 +250,29 @@ router.get('/vocab', requireAuth, async (req, res) => {
 
 // ===== 复习 =====
 router.get('/vocab/review', requireAuth, async (req, res) => {
-  const vocabs = await Vocab.find({ userId: res.locals.user._id, nextReview: { $lte: new Date() } }).sort({ nextReview: 1 });
+  const vocabs = await VocabProgress.find({ userId: res.locals.user._id, nextReview: { $lte: new Date() } }).sort({ nextReview: 1 });
   render(res, 'review', { vocabs, msg: vocabs.length ? null : '今天没有需要复习的单词 🎉' });
 });
 
 router.post('/vocab/review/:id', requireAuth, async (req, res) => {
   const quality = parseInt(req.body.quality);
-  const vocab = await Vocab.findOne({ _id: req.params.id, userId: res.locals.user._id });
-  if (vocab) { const r = calculateNextReview(vocab, quality); Object.assign(vocab, r, { lastReview: new Date() }); await vocab.save(); }
+  const vocab = await VocabProgress.findOne({ _id: req.params.id, userId: res.locals.user._id });
+  if (vocab) {
+    const r = calculateNextReview(vocab, quality);
+    Object.assign(vocab, r, { lastReview: new Date(), totalReviews: vocab.totalReviews + 1 });
+    if (quality >= 3) vocab.correctReviews += 1;
+    vocab.lastScore = quality;
+    // 更新掌握等级
+    if (vocab.repetition >= 5 && vocab.easeFactor >= 2.3) vocab.masteryLevel = 'mastered';
+    else if (vocab.repetition >= 2) vocab.masteryLevel = 'review';
+    else if (vocab.repetition >= 1) vocab.masteryLevel = 'learning';
+    await vocab.save();
+  }
   res.redirect('/demo/vocab/review');
 });
 
 router.post('/vocab/delete/:id', requireAuth, async (req, res) => {
-  await Vocab.findOneAndDelete({ _id: req.params.id, userId: res.locals.user._id });
+  await VocabProgress.findOneAndDelete({ _id: req.params.id, userId: res.locals.user._id });
   res.redirect('/demo/vocab');
 });
 
@@ -223,40 +310,66 @@ router.post('/grammar/:id/submit', requireAuth, async (req, res) => {
 // ===== 统计 =====
 router.get('/stats', requireAuth, async (req, res) => {
   const userId = res.locals.user._id;
-  const [vocabTotal, vocabMastered, reviewCount, wrongTotal, wrongUnmastered] = await Promise.all([
-    Vocab.countDocuments({ userId }),
-    Vocab.countDocuments({ userId, repetition: { $gte: 3 } }),
-    Vocab.countDocuments({ userId, nextReview: { $lte: new Date() } }),
+
+  const [
+    vocabTotal, vocabMastered, reviewCount, wrongTotal, wrongUnmastered,
+    readingCompleted, readingStats, sessionStats
+  ] = await Promise.all([
+    VocabProgress.countDocuments({ userId }),
+    VocabProgress.countDocuments({ userId, masteryLevel: 'mastered' }),
+    VocabProgress.countDocuments({ userId, nextReview: { $lte: new Date() } }),
     WrongAnswer.countDocuments({ userId }),
     WrongAnswer.countDocuments({ userId, mastered: false }),
+    ReadingProgress.countDocuments({ userId, status: 'completed' }),
+    ReadingProgress.aggregate([
+      { $match: { userId, exerciseScore: { $ne: null } } },
+      { $group: { _id: null, avg: { $avg: '$exerciseScore' }, total: { $sum: '$wordCount' } } },
+    ]),
+    StudySession.aggregate([
+      { $match: { userId } },
+      { $group: { _id: null, totalMin: { $sum: '$durationMin' }, count: { $sum: 1 } } },
+    ]),
   ]);
+
   // 连续学习天数
-  const vocabDates = await Vocab.aggregate([
-    { $match: { userId } },
-    { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } } },
-    { $sort: { _id: -1 } }
+  const [vocabDates, readingDates, sessionDates] = await Promise.all([
+    VocabProgress.aggregate([{ $match: { userId } }, { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } } }]),
+    ReadingProgress.aggregate([{ $match: { userId } }, { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } } }]),
+    StudySession.aggregate([{ $match: { userId } }, { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } } }]),
   ]);
+  const allDates = new Set();
+  [...vocabDates, ...readingDates, ...sessionDates].forEach(d => allDates.add(d._id));
+  const sortedDates = [...allDates].sort().reverse();
   let streak = 0;
-  if (vocabDates.length) {
+  if (sortedDates.length) {
     const today = new Date(); today.setHours(0,0,0,0);
     let check = new Date(today);
-    for (const d of vocabDates) {
-      const dd = new Date(d._id + 'T00:00:00');
-      const diff = Math.round((check - dd) / 86400000);
-      if (diff === 0 || (streak === 0 && diff === 1)) { streak++; check = new Date(dd); check.setDate(check.getDate() - 1); }
+    for (const ds of sortedDates) {
+      const d = new Date(ds + 'T00:00:00');
+      const diff = Math.round((check - d) / 86400000);
+      if (diff === 0 || (streak === 0 && diff === 1)) { streak++; check = new Date(d); check.setDate(check.getDate() - 1); }
       else if (diff > 1) break;
     }
   }
-  // 最近7天添加趋势
+
+  // 7天趋势
   const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const weekTrend = await Vocab.aggregate([
+  const weekTrend = await VocabProgress.aggregate([
     { $match: { userId, createdAt: { $gte: sevenDaysAgo } } },
     { $group: { _id: { $dateToString: { format: '%m-%d', date: '$createdAt' } }, count: { $sum: 1 } } },
     { $sort: { _id: 1 } }
   ]);
-  // 语法统计
+
   const grammarTotal = await Grammar.countDocuments({});
-  render(res, 'stats', { vocabTotal, vocabMastered, reviewCount, wrongTotal, wrongUnmastered, streak, weekTrend, grammarTotal });
+
+  render(res, 'stats', {
+    vocabTotal, vocabMastered, reviewCount, wrongTotal, wrongUnmastered,
+    streak, weekTrend, grammarTotal,
+    readingCompleted, totalWordsRead: readingStats[0]?.total || 0,
+    avgScore: readingStats[0]?.avg ? Math.round(readingStats[0].avg) : null,
+    totalStudyMin: sessionStats[0]?.totalMin || 0,
+    totalSessions: sessionStats[0]?.count || 0,
+  });
 });
 
 // ===== AI =====
@@ -304,10 +417,11 @@ router.post('/ai/quiz', requireAuth, async (req, res) => {
 router.post('/ai/history', requireAuth, async (req, res) => {
   const userId = res.locals.user._id;
   const articles = await Article.find({ isPublished: true }).select('title difficulty').sort({ difficulty: 1 });
-  const vocabs = await Vocab.find({ userId }).sort({ createdAt: -1 }).limit(10);
+  const vocabs = await VocabProgress.find({ userId }).sort({ createdAt: -1 }).limit(10);
   const wrongAnswers = await WrongAnswer.find({ userId }).sort({ createdAt: -1 }).limit(10);
+  const readProgress = await ReadingProgress.find({ userId }).sort({ updatedAt: -1 }).limit(5).populate('articleId', 'title difficulty');
   const ai = require('../services/ai');
-  const summary = `用户学习数据:\n- 生词总数: ${vocabs.length}\n- 最近生词: ${vocabs.map(v=>v.word).join(', ')}\n- 错题数: ${wrongAnswers.length}\n- 最近错题: ${wrongAnswers.map(w=>w.questionText).join('; ')}`;
+  const summary = `用户学习数据:\n- 生词总数: ${vocabs.length}\n- 最近生词: ${vocabs.map(v=>v.word).join(', ')}\n- 错题数: ${wrongAnswers.length}\n- 最近阅读: ${readProgress.map(p=>p.articleId?.title||'').join(', ')}\n- 阅读完成: ${readProgress.filter(p=>p.status==='completed').length}篇`;
   try {
     const r = await ai.chat('你是一个英语学习顾问。根据用户的学习数据，给出个性化的学习建议和分析。用中文回复。', summary);
     render(res, 'ai', { result: { type: 'history', data: { analysis: r } }, task: 'history', articles, selectedArticle: null });
