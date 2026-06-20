@@ -3,6 +3,7 @@ const Article = require('../models/Article');
 const Exercise = require('../models/Exercise');
 const ReadingLog = require('../models/ReadingLog');
 const { analyzeDifficulty } = require('../services/difficulty-analyzer');
+const { getDailyRecommendations } = require('../services/recommendation');
 const validate = require('../middlewares/validator');
 
 // 文章列表
@@ -65,18 +66,19 @@ const detail = async (req, res, next) => {
 const daily = async (req, res, next) => {
   try {
     const userLevel = req.user?.level || 'B1';
-    const levels = getNearbyLevels(userLevel);
+    const limit = Number(req.query.limit) || 5;
 
-    const article = await Article.findOne({
-      isPublished: true,
-      difficulty: { $in: levels },
-    }).sort({ createdAt: -1 });
+    const result = await getDailyRecommendations(
+      req.user?._id,
+      userLevel,
+      limit
+    );
 
-    if (!article) {
+    if (result.articles.length === 0) {
       return res.status(404).json({ error: '暂无推荐文章' });
     }
 
-    res.json({ article });
+    res.json(result);
   } catch (err) {
     next(err);
   }
@@ -197,14 +199,5 @@ const remove = async (req, res, next) => {
     next(err);
   }
 };
-
-// 辅助：获取相邻难度等级
-function getNearbyLevels(level) {
-  const order = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-  const idx = order.indexOf(level);
-  const start = Math.max(0, idx - 1);
-  const end = Math.min(order.length - 1, idx + 1);
-  return order.slice(start, end + 1);
-}
 
 module.exports = { list, detail, daily, search, create, update, remove };

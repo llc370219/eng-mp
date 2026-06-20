@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const Grammar = require('../models/Grammar');
+const WrongAnswer = require('../models/WrongAnswer');
 const { body, query } = require('express-validator');
 const validate = require('../middlewares/validator');
 const auth = require('../middlewares/auth');
@@ -52,17 +53,41 @@ router.post('/:id/exercises/submit', auth, [
 
       const { answers } = req.body;
       let correct = 0;
-      const results = grammar.exercises.map((q, i) => {
-        const isCorrect = answers[i] === q.answer;
+      const results = [];
+
+      for (let i = 0; i < grammar.exercises.length; i++) {
+        const q = grammar.exercises[i];
+        const userAnswer = answers[i] || '';
+        const isCorrect = userAnswer === q.answer;
         if (isCorrect) correct++;
-        return {
+
+        results.push({
           question: q.text,
-          yourAnswer: answers[i],
+          yourAnswer: userAnswer,
           correctAnswer: q.answer,
           isCorrect,
           explanation: q.explanation,
-        };
-      });
+        });
+
+        // 记录错题
+        if (!isCorrect) {
+          await WrongAnswer.findOneAndUpdate(
+            {
+              userId: req.user._id,
+              sourceType: 'grammar',
+              sourceId: grammar._id,
+              questionIndex: i,
+            },
+            {
+              questionText: q.text,
+              yourAnswer: userAnswer,
+              correctAnswer: q.answer,
+              explanation: q.explanation,
+            },
+            { upsert: true }
+          );
+        }
+      }
 
       const score = Math.round((correct / grammar.exercises.length) * 100);
       res.json({ score, correct, total: grammar.exercises.length, results });
