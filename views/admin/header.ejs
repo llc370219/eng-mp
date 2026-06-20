@@ -52,6 +52,9 @@ h1{font-size:20px;margin-bottom:16px}
   <a href="/admin/ai" class="<%= page==='ai'?'active':'' %>">🤖 AI 管理</a>
   <a href="/admin/stats" class="<%= page==='stats'?'active':'' %>">📈 统计报表</a>
   <a href="/admin/settings" class="<%= page==='settings'?'active':'' %>">⚙️ 系统设置</a>
+  <div style="margin-top:16px;padding-top:16px;border-top:1px solid #374151">
+    <a href="/demo/" target="_blank" style="color:#60A5FA">🌐 前台用户界面 →</a>
+  </div>
   <div style="margin-top:auto;padding:16px;border-top:1px solid #374151;margin-top:200px">
     <div style="font-size:12px;color:#9CA3AF"><%= user ? user.email : '' %></div>
     <a href="/admin/logout" style="color:#F87171;font-size:12px">退出登录</a>

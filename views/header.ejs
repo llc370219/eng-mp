@@ -59,6 +59,9 @@ h2 { font-size: 16px; margin-bottom: 12px; }
   <h1>📖 英语阅读学习</h1>
   <div>
     <% if (typeof user !== 'undefined' && user) { %>
+      <% if (user.role === 'admin' || user.role === 'editor') { %>
+        <a href="/admin/" style="color:#FCD34D;margin-right:12px;font-size:12px">🔒 后台管理</a>
+      <% } %>
       <span style="font-size:13px;margin-right:12px"><%= user.nickname || user.email %></span>
       <a href="/demo/logout">退出</a>
     <% } else { %>
