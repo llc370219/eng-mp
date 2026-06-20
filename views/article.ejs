@@ -92,8 +92,9 @@
   .word-click { cursor: pointer; border-radius: 2px; transition: background 0.15s; }
   .word-click:hover { background: rgba(99,102,241,0.08); }
   .vocab-highlight { background: rgba(251,191,36,0.2) !important; border-bottom: 2px solid rgba(251,191,36,0.5); }
-  .sentence { cursor: default; }
-  .sentence:hover { background: rgba(99,102,241,0.03); border-radius: 2px; }
+  .sentence { cursor: default; transition: background 0.2s; border-radius: 3px; }
+  .sentence:hover { background: rgba(99,102,241,0.06); }
+  .sentence.selected { background: rgba(99,102,241,0.1); }
 </style>
 
 <script>
@@ -118,6 +119,7 @@ document.addEventListener('dblclick', function(e) {
   var sentence = e.target.closest('.sentence');
   if (!sentence) return;
   closeAllPopups();
+  sentence.classList.add('selected');
   currentSentence = sentence.dataset.text;
   showSentencePopup(e, currentSentence);
 });
@@ -127,6 +129,8 @@ function closeAllPopups() {
   document.getElementById('sentencePopup').style.display = 'none';
   document.getElementById('sentenceGrammar').style.display = 'none';
   document.getElementById('sentenceGrammarLoading').style.display = 'none';
+  // 移除所有句子高亮
+  document.querySelectorAll('.sentence.selected').forEach(function(el) { el.classList.remove('selected'); });
 }
 
 // 单词弹窗
