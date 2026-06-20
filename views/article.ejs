@@ -6,6 +6,7 @@
   </div>
 <% } %>
 <a href="/demo/" style="color:#4F46E5;text-decoration:none;font-size:14px">← 返回列表</a>
+
 <div class="card" style="margin-top:12px">
   <div style="font-size:18px;font-weight:600;margin-bottom:8px"><%= article.title %></div>
   <div class="meta" style="margin-bottom:16px">
@@ -13,38 +14,246 @@
     <span class="badge badge-cat"><%= article.category %></span>
     <span>⏱ <%= article.readingTimeMin %> min · <%= article.wordCount %> 词</span>
   </div>
-  <div class="content"><%= article.content %></div>
+
+  <div id="articleContent" style="line-height:2;font-size:15px;cursor:text;user-select:text;-webkit-user-select:text">
+    <%
+      // 将文章内容分句并添加下划线颜色
+      const sentences = article.content.match(/[^.!?]+[.!?]+/g) || [article.content];
+      const underlineColors = ['#4F46E5','#E11D48','#059669','#D97706','#7C3AED','#0891B2','#DC2626','#4D7C0F','#BE185D','#0369A1'];
+      const vocabSet = new Set(typeof vocabWords !== 'undefined' ? vocabWords : []);
+      const highlightOn = typeof sentenceHighlight !== 'undefined' && sentenceHighlight;
+
+      sentences.forEach((sentence, idx) => {
+        const color = underlineColors[idx % underlineColors.length];
+        const trimmed = sentence.trim();
+        if (!trimmed) return;
+
+        // 处理单词：生词高亮 + 可点击
+        const words = trimmed.split(/(\s+)/);
+        const processed = words.map(word => {
+          if (/^\s+$/.test(word)) return word;
+          // 提取纯单词（去掉标点）
+          const match = word.match(/^([^a-zA-Z]*)([a-zA-Z'-]+)([^a-zA-Z]*)$/);
+          if (!match) return word;
+          const prefix = match[1], core = match[2], suffix = match[3];
+          const lower = core.toLowerCase();
+          const isVocab = vocabSet.has(lower);
+          const vocabClass = isVocab ? 'vocab-highlight' : '';
+          return prefix + '<span class="word-click ' + vocabClass + '" data-word="' + lower + '">' + core + '</span>' + suffix;
+        }).join('');
+
+        const lineStyle = highlightOn ? 'border-bottom:2px solid ' + color + ';padding-bottom:2px;margin-bottom:4px;display:inline' : 'display:inline';
+    %>
+      <span class="sentence" data-idx="<%= idx %>" data-text="<%= trimmed.replace(/"/g, '&quot;') %>" style="<%= lineStyle %>"><%- processed %></span>
+    <% }); %>
+  </div>
 </div>
 
-<div class="card" style="border-left:4px solid #4F46E5">
-  <h2>🤖 AI 分析本文</h2>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-    <form method="POST" action="/demo/article/<%= article._id %>/ai" style="display:inline"><input type="hidden" name="task" value="summarize"><button type="submit" class="btn btn-primary btn-sm">📝 生成摘要</button></form>
-    <form method="POST" action="/demo/article/<%= article._id %>/ai" style="display:inline"><input type="hidden" name="task" value="translate"><button type="submit" class="btn btn-primary btn-sm">🌐 翻译全文</button></form>
-    <form method="POST" action="/demo/article/<%= article._id %>/ai" style="display:inline"><input type="hidden" name="task" value="quiz"><button type="submit" class="btn btn-primary btn-sm">❓ AI 出题</button></form>
-  </div>
-  <% if (aiResult) { %>
-    <div style="margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;border-left:4px solid #10B981">
-      <% if (aiResult.type === 'error') { %>
-        <div style="color:#EF4444"><%= aiResult.data.error %></div>
-      <% } else if (aiResult.type === 'summarize') { %>
-        <div><strong>中文摘要:</strong> <%= aiResult.data.summaryZh %></div>
-        <div style="margin-top:6px"><strong>English Summary:</strong> <%= aiResult.data.summaryEn %></div>
-      <% } else if (aiResult.type === 'translate') { %>
-        <div style="line-height:1.8"><%= aiResult.data.translation %></div>
-      <% } else if (aiResult.type === 'quiz') { %>
-        <% if (aiResult.data.questions) { aiResult.data.questions.forEach((q, i) => { %>
-          <div style="margin-bottom:12px">
-            <div style="font-weight:500"><%= i+1 %>. <%= q.text %></div>
-            <% if (q.options) { q.options.forEach(o => { %><div style="padding:4px 8px;margin:2px 0;font-size:13px">• <%= o %></div><% }); } %>
-            <div style="font-size:12px;color:#10B981;margin-top:4px">答案: <%= q.answer %></div>
-            <% if (q.explanation) { %><div style="font-size:12px;color:#6B7280"><%= q.explanation %></div><% } %>
-          </div>
-        <% }); } %>
-      <% } %>
+<!-- 单词点击弹窗 -->
+<div id="wordPopup" style="display:none;position:fixed;background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:1000;max-width:320px;min-width:200px">
+  <div style="display:flex;justify-content:space-between;align-items:start">
+    <div>
+      <div id="popupWord" style="font-size:20px;font-weight:700"></div>
+      <div id="popupPhonetic" style="color:#6B7280;font-size:13px"></div>
     </div>
-  <% } %>
+    <button onclick="closePopup()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9CA3AF">✕</button>
+  </div>
+  <div id="popupTranslation" style="margin-top:8px;font-size:14px;line-height:1.6"></div>
+  <div id="popupExamples" style="margin-top:8px;font-size:12px;color:#6B7280;display:none"></div>
+  <div style="display:flex;gap:6px;margin-top:12px">
+    <button onclick="addToVocab()" class="btn btn-primary btn-sm" style="flex:1">📝 加入生词本</button>
+    <button onclick="analyzeGrammar()" class="btn btn-sm" style="flex:1;background:#F59E0B;color:white">📐 语法解读</button>
+  </div>
+  <div id="popupLoading" style="display:none;text-align:center;padding:8px;color:#6B7280;font-size:12px">查询中...</div>
+  <div id="popupError" style="display:none;color:#EF4444;font-size:13px;margin-top:4px"></div>
 </div>
+
+<!-- 句子翻译弹窗 -->
+<div id="sentencePopup" style="display:none;position:fixed;background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:1000;max-width:400px;min-width:250px">
+  <div style="display:flex;justify-content:space-between;align-items:start">
+    <div style="font-size:13px;font-weight:500;color:#4F46E5">🌐 句子翻译</div>
+    <button onclick="closeSentencePopup()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9CA3AF">✕</button>
+  </div>
+  <div id="sentenceOriginal" style="margin-top:8px;font-size:13px;color:#374151;line-height:1.6;border-left:3px solid #4F46E5;padding-left:8px"></div>
+  <div id="sentenceTranslation" style="margin-top:8px;font-size:14px;line-height:1.6;padding:8px;background:#F9FAFB;border-radius:6px"></div>
+  <div id="sentenceLoading" style="display:none;text-align:center;padding:8px;color:#6B7280;font-size:12px">翻译中...</div>
+</div>
+
+<!-- 语法解读弹窗 -->
+<div id="grammarPopup" style="display:none;position:fixed;background:white;border:1px solid #E5E7EB;border-radius:12px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,0.15);z-index:1000;max-width:400px;min-width:280px;max-height:70vh;overflow-y:auto">
+  <div style="display:flex;justify-content:space-between;align-items:start">
+    <div style="font-size:13px;font-weight:500;color:#F59E0B">📐 语法解读</div>
+    <button onclick="closeGrammarPopup()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#9CA3AF">✕</button>
+  </div>
+  <div id="grammarContent" style="margin-top:8px;font-size:13px;line-height:1.8"></div>
+  <div id="grammarLoading" style="display:none;text-align:center;padding:8px;color:#6B7280;font-size:12px">分析中...</div>
+</div>
+
+<style>
+  .word-click { cursor: pointer; border-radius: 2px; transition: background 0.15s; }
+  .word-click:hover { background: #EEF2FF; }
+  .vocab-highlight { background: #FEF3C7 !important; border-bottom: 2px solid #F59E0B; }
+  .sentence { cursor: default; }
+  .sentence:hover { background: rgba(79,70,229,0.04); border-radius: 2px; }
+</style>
+
+<script>
+var currentWord = '';
+var currentSentence = '';
+
+// 单击单词
+document.addEventListener('click', function(e) {
+  var el = e.target.closest('.word-click');
+  if (!el) {
+    if (!e.target.closest('#wordPopup')) closePopup();
+    return;
+  }
+  e.preventDefault();
+  currentWord = el.dataset.word;
+  showWordPopup(el, currentWord);
+});
+
+// 双击句子翻译
+document.addEventListener('dblclick', function(e) {
+  var sentence = e.target.closest('.sentence');
+  if (!sentence) return;
+  currentSentence = sentence.dataset.text;
+  showSentencePopup(e, currentSentence);
+});
+
+// 显示单词弹窗
+function showWordPopup(el, word) {
+  var popup = document.getElementById('wordPopup');
+  var rect = el.getBoundingClientRect();
+  popup.style.display = 'block';
+  popup.style.left = Math.min(rect.left, window.innerWidth - 340) + 'px';
+  popup.style.top = (rect.bottom + 8) + 'px';
+  document.getElementById('popupWord').textContent = word;
+  document.getElementById('popupPhonetic').textContent = '';
+  document.getElementById('popupTranslation').textContent = '查询中...';
+  document.getElementById('popupExamples').style.display = 'none';
+  document.getElementById('popupError').style.display = 'none';
+
+  fetch('/api/dict/' + encodeURIComponent(word))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        document.getElementById('popupTranslation').textContent = '未找到释义';
+        return;
+      }
+      document.getElementById('popupPhonetic').textContent = data.phonetic || '';
+      document.getElementById('popupTranslation').textContent = data.translation || data.definitionEn || '无释义';
+      if (data.examples && data.examples.length) {
+        document.getElementById('popupExamples').style.display = 'block';
+        document.getElementById('popupExamples').innerHTML = '<div style="font-weight:500;margin-bottom:4px">例句:</div>' +
+          data.examples.slice(0,2).map(function(e) { return '<div style="margin-bottom:2px">• ' + e + '</div>'; }).join('');
+      }
+    })
+    .catch(function() {
+      document.getElementById('popupTranslation').textContent = '查询失败';
+    });
+}
+
+// 加入生词本
+function addToVocab() {
+  var word = document.getElementById('popupWord').textContent;
+  var def = document.getElementById('popupTranslation').textContent;
+  var phonetic = document.getElementById('popupPhonetic').textContent;
+
+  var form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/demo/vocab/add';
+  form.style.display = 'none';
+
+  var fields = { word: word, definition: def, phonetic: phonetic };
+  for (var k in fields) {
+    var input = document.createElement('input');
+    input.type = 'hidden'; input.name = k; input.value = fields[k];
+    form.appendChild(input);
+  }
+  document.body.appendChild(form);
+  form.submit();
+}
+
+// 语法解读
+function analyzeGrammar() {
+  var word = document.getElementById('popupWord').textContent;
+  var popup = document.getElementById('grammarPopup');
+  popup.style.display = 'block';
+  popup.style.left = '50%';
+  popup.style.top = '20%';
+  popup.style.transform = 'translateX(-50%)';
+  document.getElementById('grammarContent').innerHTML = '';
+  document.getElementById('grammarLoading').style.display = 'block';
+
+  fetch('/api/ai/grammar-explain', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ topic: '单词 "' + word + '" 的用法和语法' })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    document.getElementById('grammarLoading').style.display = 'none';
+    if (data.error) {
+      document.getElementById('grammarContent').innerHTML = '<div style="color:#EF4444">' + data.error + '</div>';
+      return;
+    }
+    var html = '';
+    if (data.explanation) html += '<div style="white-space:pre-line">' + data.explanation + '</div>';
+    if (data.examples && data.examples.length) {
+      html += '<div style="margin-top:8px;font-weight:500">例句:</div>';
+      data.examples.forEach(function(e) {
+        html += '<div style="padding:4px 8px;background:#FFFBEB;border-left:2px solid #F59E0B;margin:4px 0;font-size:12px"><strong>' + e.sentence + '</strong><br><span style="color:#6B7280">' + (e.translation||'') + '</span></div>';
+      });
+    }
+    if (data.memoryTip) html += '<div style="margin-top:8px;padding:6px;background:#ECFDF5;border-radius:4px;font-size:12px">💡 ' + data.memoryTip + '</div>';
+    document.getElementById('grammarContent').innerHTML = html || '<div style="color:#6B7280">暂无解读</div>';
+  })
+  .catch(function() {
+    document.getElementById('grammarLoading').style.display = 'none';
+    document.getElementById('grammarContent').innerHTML = '<div style="color:#EF4444">请求失败</div>';
+  });
+}
+
+// 显示句子翻译弹窗
+function showSentencePopup(e, text) {
+  var popup = document.getElementById('sentencePopup');
+  popup.style.display = 'block';
+  popup.style.left = Math.min(e.clientX, window.innerWidth - 420) + 'px';
+  popup.style.top = Math.min(e.clientY + 10, window.innerHeight - 200) + 'px';
+  document.getElementById('sentenceOriginal').textContent = text;
+  document.getElementById('sentenceTranslation').textContent = '';
+  document.getElementById('sentenceLoading').style.display = 'block';
+
+  fetch('/api/ai/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: text, targetLang: 'zh' })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    document.getElementById('sentenceLoading').style.display = 'none';
+    document.getElementById('sentenceTranslation').textContent = data.translation || data.error || '翻译失败';
+  })
+  .catch(function() {
+    document.getElementById('sentenceLoading').style.display = 'none';
+    document.getElementById('sentenceTranslation').textContent = '请求失败';
+  });
+}
+
+function closePopup() { document.getElementById('wordPopup').style.display = 'none'; }
+function closeSentencePopup() { document.getElementById('sentencePopup').style.display = 'none'; }
+function closeGrammarPopup() { document.getElementById('grammarPopup').style.display = 'none'; }
+
+// ESC 关闭弹窗
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closePopup();
+    closeSentencePopup();
+    closeGrammarPopup();
+  }
+});
+</script>
 
 <% if (exercise && exercise.questions.length) { %>
 <div class="card">

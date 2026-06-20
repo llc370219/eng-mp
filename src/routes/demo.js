@@ -157,7 +157,15 @@ router.get('/article/:id', requireAuth, async (req, res) => {
     { upsert: true }
   );
 
-  render(res, 'article', { article, exercise, results: null, score: null, aiResult: null });
+  // 获取用户生词本（用于高亮）
+  const userVocab = await VocabProgress.find({ userId: res.locals.user._id }).select('word');
+  const vocabWords = userVocab.map(v => v.word.toLowerCase());
+
+  // 用户设置
+  const userSettings = res.locals.user.preferences || {};
+  const sentenceHighlight = userSettings.sentenceHighlight !== false; // 默认开启
+
+  render(res, 'article', { article, exercise, results: null, score: null, aiResult: null, vocabWords, sentenceHighlight });
 });
 
 // ===== 提交练习 =====
@@ -466,6 +474,21 @@ router.post('/ai/history', requireAuth, async (req, res) => {
     const r = await ai.chat('你是一个英语学习顾问。根据用户的学习数据，给出个性化的学习建议和分析。用中文回复。', summary);
     render(res, 'ai', { result: { type: 'history', data: { analysis: r } }, task: 'history', articles, selectedArticle: null });
   } catch (e) { render(res, 'ai', { result: { type: 'error', data: { error: e.message } }, task: 'history', articles, selectedArticle: null }); }
+});
+
+// ===== 用户设置 =====
+router.get('/settings', requireAuth, async (req, res) => {
+  render(res, 'settings', { msg: null });
+});
+
+router.post('/settings', requireAuth, async (req, res) => {
+  const { sentenceHighlight, dailyGoalMin } = req.body;
+  const user = res.locals.user;
+  user.preferences = user.preferences || {};
+  user.preferences.sentenceHighlight = sentenceHighlight === 'on';
+  user.preferences.dailyGoalMin = parseInt(dailyGoalMin) || 30;
+  await user.save();
+  render(res, 'settings', { msg: '设置已保存' });
 });
 
 module.exports = router;

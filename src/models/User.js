@@ -65,6 +65,7 @@ const userSchema = new mongoose.Schema({
   preferences: {
     dailyGoalMin: { type: Number, default: 30 },
     reminderTime: { type: String, default: '09:00' },
+    sentenceHighlight: { type: Boolean, default: true },
   },
 }, { timestamps: true });
 

@@ -63,6 +63,7 @@ h2 { font-size: 16px; margin-bottom: 12px; }
         <a href="/admin/" style="color:#FCD34D;margin-right:12px;font-size:12px">🔒 后台管理</a>
       <% } %>
       <span style="font-size:13px;margin-right:12px"><%= user.nickname || user.email %></span>
+      <a href="/demo/settings" style="margin-right:8px;font-size:12px">⚙️</a>
       <a href="/demo/logout">退出</a>
     <% } else { %>
       <a href="/demo/login">登录</a>
