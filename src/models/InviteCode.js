@@ -47,7 +47,7 @@ inviteCodeSchema.index({ isActive: 1, expiresAt: 1 });
 inviteCodeSchema.statics.generateCode = function () {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 去掉易混淆字符
   let code = '';
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 6; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;

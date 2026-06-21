@@ -68,7 +68,7 @@ const sendCode = [
 // 验证码注册（必须有邀请码）
 const register = [
   body('email').isEmail().withMessage('请输入有效的邮箱'),
-  body('code').isLength({ min: 8, max: 8 }).withMessage('验证码为8位数字'),
+  body('code').isLength({ min: 6, max: 6 }).withMessage('验证码为6位数字'),
   body('password').isLength({ min: 6 }).withMessage('密码至少6位'),
   body('inviteCode').notEmpty().withMessage('请输入邀请码'),
   body('nickname').optional().trim(),
@@ -177,7 +177,7 @@ const login = [
 // 重置密码
 const resetPassword = [
   body('email').isEmail().withMessage('请输入有效的邮箱'),
-  body('code').isLength({ min: 8, max: 8 }).withMessage('验证码为8位数字'),
+  body('code').isLength({ min: 6, max: 6 }).withMessage('验证码为6位数字'),
   body('newPassword').isLength({ min: 6 }).withMessage('密码至少6位'),
   validate,
   async (req, res, next) => {

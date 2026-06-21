@@ -24,9 +24,9 @@ function getTransporter() {
   return transporter;
 }
 
-// 生成 8 位验证码
+// 生成 6 位验证码
 function generateCode() {
-  return Math.random().toString().slice(2, 10).padStart(8, '0');
+  return Math.random().toString().slice(2, 8).padStart(6, '0');
 }
 
 // 发送验证码邮件

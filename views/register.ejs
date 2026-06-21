@@ -40,11 +40,11 @@
       <input type="hidden" name="email" value="<%= typeof email !== 'undefined' && email ? email : '' %>">
       <div class="form-row">
         <label>邀请码</label>
-        <input type="text" name="inviteCode" placeholder="8位邀请码" maxlength="8" required value="<%= typeof inviteCode !== 'undefined' ? inviteCode : '' %>">
+        <input type="text" name="inviteCode" placeholder="6位邀请码" maxlength="6" required value="<%= typeof inviteCode !== 'undefined' ? inviteCode : '' %>">
       </div>
       <div class="form-row">
         <label>验证码</label>
-        <input type="text" name="code" placeholder="8位数字验证码" maxlength="8" required inputmode="numeric">
+        <input type="text" name="code" placeholder="6位数字验证码" maxlength="6" required inputmode="numeric">
       </div>
       <div class="form-row">
         <label>密码</label>
