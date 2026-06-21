@@ -119,7 +119,7 @@
               <input value="{{ email }}" onChange="{{ onEmail }}" placeholder="you@example.com" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
               <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex;gap:10px;margin-bottom:16px">
-                  <input value="{{ verCode }}" onChange="{{ onVerCode }}" placeholder="邮箱验证码" style="flex:1;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;background:#fffdf6;outline:none">
+                  <input value="{{ verCode }}" onChange="{{ onVerCode }}" placeholder="8位邮箱验证码" style="flex:1;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;background:#fffdf6;outline:none">
                   <button onClick="{{ sendCode }}" style="white-space:nowrap;padding:0 14px;border:2.5px solid #1a1817;border-radius:12px;background:{{ codeBtnBg }};color:{{ codeBtnFg }};font-family:'Space Grotesk';font-weight:700;font-size:13px;cursor:{{ codeBtnCursor }}">{{ codeLabel }}</button>
                 </div>
               </sc-if>
