@@ -116,15 +116,15 @@
                 <button onClick="{{ setAuthRegister }}" style="flex:1;padding:10px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:15px;background:{{ regTabBg }};color:{{ regTabFg }}">注册</button>
               </div>
               <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block">邮箱 Email</label>
-              <input placeholder="you@example.com" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
+              <input value="{{ email }}" onChange="{{ onEmail }}" placeholder="you@example.com" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
               <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
                 <div style="display:flex;gap:10px;margin-bottom:16px">
-                  <input placeholder="邮箱验证码" style="flex:1;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;background:#fffdf6;outline:none">
+                  <input value="{{ verCode }}" onChange="{{ onVerCode }}" placeholder="邮箱验证码" style="flex:1;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;background:#fffdf6;outline:none">
                   <button onClick="{{ sendCode }}" style="white-space:nowrap;padding:0 14px;border:2.5px solid #1a1817;border-radius:12px;background:{{ codeBtnBg }};color:{{ codeBtnFg }};font-family:'Space Grotesk';font-weight:700;font-size:13px;cursor:{{ codeBtnCursor }}">{{ codeLabel }}</button>
                 </div>
               </sc-if>
               <label style="font-weight:600;font-size:13px;margin-bottom:6px;display:block">密码 Password</label>
-              <input type="password" placeholder="••••••••" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
+              <input value="{{ password }}" onChange="{{ onPassword }}" type="password" placeholder="••••••••" style="width:100%;padding:12px 14px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:16px;background:#fffdf6;outline:none">
               <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
                 <input value="{{ inviteCode }}" onChange="{{ onInvite }}" placeholder="邀请码 Invite code · 必填" style="width:100%;padding:12px 14px;border:2.5px solid {{ inviteBorder }};border-radius:12px;font-family:'Space Grotesk';font-size:15px;margin-bottom:{{ inviteMb }};background:#fffdf6;outline:none">
               </sc-if>
@@ -962,6 +962,7 @@ class Component extends DCLogic {
     aiArticleId: '',
     inviteCode: '', robot: false, codeCountdown: 0, codeSent: false, authError: '', inviteError: '',
     showPrivacyNote: false,
+    email: '', password: '', verCode: '',
   };
 
   tokenize(text){
@@ -973,25 +974,112 @@ class Component extends DCLogic {
   }
   doSendCode(){
     if(this.state.codeCountdown>0) return;
-    this.setState({ codeSent:true, codeCountdown:60 });
-    this._codeTimer = setInterval(()=>{
-      this.setState(s=>{
-        if(s.codeCountdown<=1){ clearInterval(this._codeTimer); return { codeCountdown:0 }; }
-        return { codeCountdown:s.codeCountdown-1 };
-      });
-    }, 1000);
+    const email = this.state.email;
+    if(!email){
+      this.setState({ authError:'请先填写邮箱', inviteError:'' });
+      return;
+    }
+    // 调用后端发送验证码
+    fetch('/api/auth/send-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, type: 'register' })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if(data.error){
+        this.setState({ authError: data.error });
+      } else {
+        this.setState({ codeSent:true, codeCountdown:60, authError:'验证码已发送' });
+        this._codeTimer = setInterval(()=>{
+          this.setState(s=>{
+            if(s.codeCountdown<=1){ clearInterval(this._codeTimer); return { codeCountdown:0, authError:'' }; }
+            return { codeCountdown:s.codeCountdown-1 };
+          });
+        }, 1000);
+      }
+    })
+    .catch(err => {
+      this.setState({ authError:'发送失败，请重试' });
+    });
+  }
+  componentDidMount(){
+    // 从 URL 读取邀请码参数
+    if(typeof window!=='undefined'){
+      const params = new URLSearchParams(window.location.search);
+      const invite = params.get('invite');
+      if(invite){
+        this.setState({ inviteCode: invite.toUpperCase(), authMode: 'register' });
+      }
+      // 检查是否已登录
+      const token = localStorage.getItem('token');
+      if(token){
+        this.setState({ screen: 'articles' });
+      }
+    }
   }
   componentWillUnmount(){ if(this._codeTimer) clearInterval(this._codeTimer); }
   submitAuth(){
     const st = this.state;
+    const email = st.email;
+    const password = st.password;
+
+    if(!email || !password){
+      this.setState({ authError:'请填写邮箱和密码', inviteError:'' });
+      return;
+    }
+
     if(st.authMode==='register'){
       if(!st.robot){ this.setState({ authError:'请先完成人机验证', inviteError:'' }); return; }
       if(!st.inviteCode.trim()){ this.setState({ inviteError:'邀请码为必填项', authError:'' }); return; }
-      if(st.inviteCode.trim().toUpperCase()!==this.INVITE_CODE){ this.setState({ inviteError:'邀请码不正确，请检查后重试', authError:'' }); return; }
+
+      // 调用注册 API
+      fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          inviteCode: st.inviteCode.trim().toUpperCase(),
+          nickname: email.split('@')[0]
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if(data.error){
+          this.setState({ authError: data.error, inviteError: '' });
+        } else {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('refreshToken', data.refreshToken);
+          this.setState({ authError:'', inviteError:'', showPrivacyNote:true, screen:'articles', email:'', password:'', verCode:'' });
+          if(typeof window!=='undefined'){ clearTimeout(this._noteTimer); this._noteTimer=setTimeout(()=>this.setState({ showPrivacyNote:false }), 6000); }
+        }
+      })
+      .catch(err => {
+        this.setState({ authError:'注册失败，请重试', inviteError:'' });
+      });
+    } else {
+      // 调用登录 API
+      fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if(data.error){
+          this.setState({ authError: data.error, inviteError: '' });
+        } else {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('refreshToken', data.refreshToken);
+          this.setState({ authError:'', inviteError:'', showPrivacyNote:true, screen:'articles', email:'', password:'' });
+          if(typeof window!=='undefined'){ clearTimeout(this._noteTimer); this._noteTimer=setTimeout(()=>this.setState({ showPrivacyNote:false }), 6000); }
+        }
+      })
+      .catch(err => {
+        this.setState({ authError:'登录失败，请重试', inviteError:'' });
+      });
     }
-    this.setState({ authError:'', inviteError:'', showPrivacyNote:true });
-    this.go('articles');
-    if(typeof window!=='undefined'){ clearTimeout(this._noteTimer); this._noteTimer=setTimeout(()=>this.setState({ showPrivacyNote:false }), 6000); }
   }
 
   // AI 随机灵感
@@ -1038,7 +1126,7 @@ class Component extends DCLogic {
   DIFFS = ['初中','高中','CET-4','CET-6','雅思'];
   CATS = ['science','life','literature','business','tech','news'];
   PAGE_SIZE = 6;
-  INVITE_CODE = 'TANGERINE';
+  INVITE_CODE = ''; // 邀请码由后端验证
 
   // ========== 多文章数据 ==========
   // 获取当前文章的 PARAS / WORD_DEFS / KEY_POINTS / QUIZ
@@ -1451,6 +1539,9 @@ class Component extends DCLogic {
       codeLabel: st.codeCountdown>0 ? (st.codeCountdown+' s 后重发') : (st.codeSent?'重新发送':'获取验证码'),
       codeBtnBg: st.codeCountdown>0?'#d8d2bf':'#f3c44b', codeBtnFg: st.codeCountdown>0?'#8a8472':INK, codeBtnCursor: st.codeCountdown>0?'not-allowed':'pointer',
       inviteCode:st.inviteCode, onInvite:(e)=>this.setState({inviteCode:e.target.value, inviteError:''}),
+      email:st.email, onEmail:(e)=>this.setState({email:e.target.value, authError:''}),
+      password:st.password, onPassword:(e)=>this.setState({password:e.target.value, authError:''}),
+      verCode:st.verCode, onVerCode:(e)=>this.setState({verCode:e.target.value, authError:''}),
       inviteErr:st.inviteError, inviteBorder: st.inviteError?'#d94646':'#1a1817', inviteMb: st.inviteError?'8px':'16px',
       toggleRobot:()=>this.setState({robot:!st.robot, authError:''}),
       robotBoxBg: st.robot?'#1f9d5c':'transparent', robotCheck: st.robot?'✓':'',
@@ -1522,7 +1613,7 @@ class Component extends DCLogic {
       setGoal:st.setGoal, goalMinus:()=>this.setState({setGoal:Math.max(10,st.setGoal-10)}), goalPlus:()=>this.setState({setGoal:Math.min(120,st.setGoal+10)}),
       sentenceTrackBg: st.setSentence?'#1f9d5c':'#cfc7ad', sentenceKnobX: st.setSentence?'24px':'2px',
       reminderTrackBg: st.setReminder?'#1f9d5c':'#cfc7ad', reminderKnobX: st.setReminder?'24px':'2px',
-      logout:()=>this.go('login'),
+      logout:()=>{ localStorage.removeItem('token'); localStorage.removeItem('refreshToken'); this.go('login'); },
     };
   }
 }

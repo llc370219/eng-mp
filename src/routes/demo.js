@@ -36,7 +36,10 @@ router.use(async (req, res, next) => {
 });
 
 // ===== 登录 =====
-router.get('/login', (req, res) => res.render('login', { msg: req.query.msg, type: req.query.type || 'ok', page: 'login', user: null }));
+router.get('/login', (req, res) => {
+  // 重定向到 Lull 前端设计稿
+  res.redirect('/Lull-Reading.dc.html');
+});
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -59,9 +62,9 @@ router.post('/login', async (req, res) => {
 
 // ===== 注册（验证码） =====
 router.get('/register', (req, res) => {
-  const captcha = generateCaptcha();
-  const inviteCode = req.query.invite || '';
-  res.render('register', { msg: null, page: 'register', user: null, captchaSvg: captcha.svg, captchaToken: captcha.token, inviteCode });
+  const invite = req.query.invite || '';
+  // 重定向到 Lull 前端设计稿
+  res.redirect(`/Lull-Reading.dc.html${invite ? '?invite=' + invite : ''}`);
 });
 
 // 获取新验证码（AJAX）
