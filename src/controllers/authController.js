@@ -55,13 +55,12 @@ const sendCode = [
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10分钟
       await VerificationCode.create({ email, code, type, expiresAt });
 
-      // 发送邮件（如果 SMTP 未配置，返回验证码给前端兜底）
-      const emailConfig = require('../config').email;
+      // 发送邮件
       const sent = await sendVerificationCode(email, code, type);
 
       res.json({
         message: '验证码已发送',
-        ...(emailConfig.host ? {} : { code, hint: 'SMTP 未配置，验证码直接返回用于测试' }),
+        ...(!sent ? { code, hint: '邮件发送失败，验证码直接返回' } : {}),
       });
     } catch (err) {
       next(err);
