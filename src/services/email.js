@@ -4,17 +4,7 @@ const config = require('../config');
 let transporter = null;
 let resendClient = null;
 
-// ===== Resend 客户端 =====
-function getResendClient() {
-  if (resendClient) return resendClient;
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  const { Resend } = require('resend');
-  resendClient = new Resend(key);
-  return resendClient;
-}
-
-// ===== SMTP 客户端（备用） =====
+// ===== SMTP 客户端（首选） =====
 function getTransporter() {
   if (transporter) return transporter;
   if (!config.email.host) return null;
@@ -25,6 +15,16 @@ function getTransporter() {
     auth: { user: config.email.user, pass: config.email.pass },
   });
   return transporter;
+}
+
+// ===== Resend 客户端（备用） =====
+function getResendClient() {
+  if (resendClient) return resendClient;
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  const { Resend } = require('resend');
+  resendClient = new Resend(key);
+  return resendClient;
 }
 
 // 生成 6 位验证码
@@ -45,25 +45,7 @@ async function sendVerificationCode(email, code, type) {
     </div>
   `;
 
-  // 方式 1：Resend（推荐，免费 3000 封/月）
-  const resend = getResendClient();
-  if (resend) {
-    try {
-      await resend.emails.send({
-        from: 'Lull 听简 <onboarding@resend.dev>',
-        to: email,
-        subject,
-        html,
-      });
-      console.log(`📧 Resend 验证码已发送: ${email}`);
-      return true;
-    } catch (err) {
-      console.error('Resend 发送失败:', err.message);
-      // 降级尝试 SMTP
-    }
-  }
-
-  // 方式 2：SMTP
+  // 方式 1：SMTP（首选，投递率高）
   const transport = getTransporter();
   if (transport) {
     try {
@@ -77,6 +59,24 @@ async function sendVerificationCode(email, code, type) {
       return true;
     } catch (err) {
       console.error('SMTP 发送失败:', err.message);
+      // 降级尝试 Resend
+    }
+  }
+
+  // 方式 2：Resend（备用）
+  const resend = getResendClient();
+  if (resend) {
+    try {
+      await resend.emails.send({
+        from: 'Lull 听简 <onboarding@resend.dev>',
+        to: email,
+        subject,
+        html,
+      });
+      console.log(`📧 Resend 验证码已发送: ${email}`);
+      return true;
+    } catch (err) {
+      console.error('Resend 发送失败:', err.message);
     }
   }
 
