@@ -6,6 +6,7 @@ const LoginLog = require('../models/LoginLog');
 const config = require('../config');
 const validate = require('../middlewares/validator');
 const { generateCode, sendVerificationCode } = require('../services/email');
+const { verifyCaptcha } = require('../utils/captcha');
 
 // 生成 token 对
 function generateTokens(userId) {
@@ -18,10 +19,17 @@ function generateTokens(userId) {
 const sendCode = [
   body('email').isEmail().withMessage('请输入有效的邮箱'),
   body('type').isIn(['register', 'resetPassword']).withMessage('类型无效'),
+  body('captchaToken').notEmpty().withMessage('请完成人机验证'),
+  body('captchaAnswer').notEmpty().withMessage('请输入验证码计算结果'),
   validate,
   async (req, res, next) => {
     try {
-      const { email, type } = req.body;
+      const { email, type, captchaToken, captchaAnswer } = req.body;
+
+      // 人机验证
+      if (!verifyCaptcha(captchaToken, captchaAnswer)) {
+        return res.status(400).json({ error: '人机验证失败，请重新输入' });
+      }
 
       // 检查是否已注册（注册时）
       if (type === 'register') {

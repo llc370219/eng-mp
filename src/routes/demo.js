@@ -15,6 +15,7 @@ const VerificationCode = require('../models/VerificationCode');
 const WrongAnswer = require('../models/WrongAnswer');
 const { calculateNextReview } = require('../services/spaced-repetition');
 const { generateCode, sendVerificationCode } = require('../services/email');
+const { generateCaptcha, verifyCaptcha } = require('../utils/captcha');
 
 const router = Router();
 
@@ -57,57 +58,90 @@ router.post('/login', async (req, res) => {
 });
 
 // ===== 注册（验证码） =====
-router.get('/register', (req, res) => res.render('register', { msg: null, page: 'register', user: null }));
+router.get('/register', (req, res) => {
+  const captcha = generateCaptcha();
+  res.render('register', { msg: null, page: 'register', user: null, captchaSvg: captcha.svg, captchaToken: captcha.token });
+});
+
+// 获取新验证码（AJAX）
+router.get('/captcha', (req, res) => {
+  const captcha = generateCaptcha();
+  res.json({ token: captcha.token, svg: captcha.svg });
+});
 
 // 发送验证码
 router.post('/send-code', async (req, res) => {
-  const { email } = req.body;
+  const { email, captchaToken, captchaAnswer } = req.body;
+
+  // 人机验证
+  if (!verifyCaptcha(captchaToken, captchaAnswer)) {
+    const captcha = generateCaptcha();
+    return res.render('register', { msg: '验证码错误，请重新输入', page: 'register', user: null, email, captchaSvg: captcha.svg, captchaToken: captcha.token });
+  }
+
   try {
     const existing = await User.findOne({ email });
-    if (existing) return res.render('register', { msg: '该邮箱已注册', page: 'register', user: null });
+    if (existing) {
+      const captcha = generateCaptcha();
+      return res.render('register', { msg: '该邮箱已注册', page: 'register', user: null, captchaSvg: captcha.svg, captchaToken: captcha.token });
+    }
 
     const recent = await VerificationCode.findOne({
       email, type: 'register', used: false,
       createdAt: { $gte: new Date(Date.now() - 60000) },
     });
-    if (recent) return res.render('register', { msg: '验证码已发送，请60秒后再试', page: 'register', user: null });
+    if (recent) {
+      const captcha = generateCaptcha();
+      return res.render('register', { msg: '验证码已发送，请60秒后再试', page: 'register', user: null, email, captchaSvg: captcha.svg, captchaToken: captcha.token });
+    }
 
     const code = generateCode();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
     await VerificationCode.create({ email, code, type: 'register', expiresAt });
     await sendVerificationCode(email, code, 'register');
 
-    res.render('register', { msg: '验证码已发送到您的邮箱', page: 'register', user: null, email });
-  } catch (e) { res.render('register', { msg: '发送失败: ' + e.message, page: 'register', user: null }); }
+    const captcha = generateCaptcha();
+    res.render('register', { msg: '验证码已发送到您的邮箱', page: 'register', user: null, email, captchaSvg: captcha.svg, captchaToken: captcha.token, codeSent: true });
+  } catch (e) {
+    const captcha = generateCaptcha();
+    res.render('register', { msg: '发送失败: ' + e.message, page: 'register', user: null, captchaSvg: captcha.svg, captchaToken: captcha.token });
+  }
 });
 
 // 验证码注册
 router.post('/register', async (req, res) => {
   const { email, code, password, nickname, inviteCode } = req.body;
+
+  // 辅助函数：重新渲染注册页（带新验证码）
+  const renderWithCaptcha = (msg, extra = {}) => {
+    const captcha = generateCaptcha();
+    return res.render('register', { msg, page: 'register', user: null, email, captchaSvg: captcha.svg, captchaToken: captcha.token, ...extra });
+  };
+
   try {
     const existing = await User.findOne({ email });
-    if (existing) return res.render('register', { msg: '该邮箱已注册', page: 'register', user: null });
+    if (existing) return renderWithCaptcha('该邮箱已注册');
 
     // 验证邀请码（必须）
-    if (!inviteCode) return res.render('register', { msg: '请输入邀请码', page: 'register', user: null, email });
+    if (!inviteCode) return renderWithCaptcha('请输入邀请码');
     const InviteCode = require('../models/InviteCode');
     const invite = await InviteCode.findOne({ code: inviteCode.toUpperCase(), isActive: true });
-    if (!invite) return res.render('register', { msg: '邀请码无效', page: 'register', user: null, email });
-    if (invite.expiresAt && invite.expiresAt < new Date()) return res.render('register', { msg: '邀请码已过期', page: 'register', user: null, email });
-    if (invite.usedCount >= invite.maxUses) return res.render('register', { msg: '邀请码已用完', page: 'register', user: null, email });
+    if (!invite) return renderWithCaptcha('邀请码无效');
+    if (invite.expiresAt && invite.expiresAt < new Date()) return renderWithCaptcha('邀请码已过期');
+    if (invite.usedCount >= invite.maxUses) return renderWithCaptcha('邀请码已用完');
     req._inviteCode = invite;
 
     const record = await VerificationCode.findOne({
       email, type: 'register', used: false,
     }).sort({ createdAt: -1 });
 
-    if (!record) return res.render('register', { msg: '请先获取验证码', page: 'register', user: null });
-    if (record.expiresAt < new Date()) return res.render('register', { msg: '验证码已过期，请重新获取', page: 'register', user: null, email });
-    if (record.attempts >= 5) return res.render('register', { msg: '验证码尝试次数过多，请重新获取', page: 'register', user: null });
+    if (!record) return renderWithCaptcha('请先获取验证码');
+    if (record.expiresAt < new Date()) return renderWithCaptcha('验证码已过期，请重新获取');
+    if (record.attempts >= 5) return renderWithCaptcha('验证码尝试次数过多，请重新获取');
     if (record.code !== code) {
       record.attempts += 1;
       await record.save();
-      return res.render('register', { msg: '验证码错误', page: 'register', user: null, email });
+      return renderWithCaptcha('验证码错误');
     }
 
     record.used = true;
@@ -124,7 +158,7 @@ router.post('/register', async (req, res) => {
     }
 
     res.render('login', { msg: '注册成功，请登录', type: 'ok', page: 'login', user: null });
-  } catch (e) { res.render('register', { msg: '注册失败: ' + e.message, page: 'register', user: null }); }
+  } catch (e) { renderWithCaptcha('注册失败: ' + e.message); }
 });
 
 router.get('/logout', (req, res) => { res.clearCookie('token'); res.redirect('/demo/login'); });

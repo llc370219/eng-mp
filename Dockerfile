@@ -6,8 +6,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-# 复制源码
+# 复制所有必要文件
 COPY src/ ./src/
+COPY views/ ./views/
+COPY public/ ./public/
+COPY frontend/ ./frontend/
 
 # 环境变量
 ENV NODE_ENV=production

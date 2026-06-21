@@ -1,4 +1,5 @@
 const config = require('../config');
+const SystemSetting = require('../models/SystemSetting');
 
 // ===== Provider 注册表 =====
 // 大部分国产模型使用 OpenAI 兼容格式
@@ -46,59 +47,87 @@ const PROVIDERS = {
   },
 };
 
-// 客户端缓存
+// 客户端缓存：{ providerName: { client, apiKey } }
 const clients = {};
 
-// 获取 OpenAI 兼容客户端
-function getOpenAIClient(providerName) {
-  if (clients[providerName]) return clients[providerName];
+// 从数据库读取 AI 配置，DB 值优先，.env 作为 fallback
+async function getAIConfig() {
+  const providerNames = Object.keys(PROVIDERS);
+  const allKeys = ['aiProvider', 'aiModel', 'aiMaxTokens', ...providerNames.map(n => `aiApiKey_${n}`)];
 
-  const provider = PROVIDERS[providerName];
-  const apiKey = config.ai.keys[providerName];
+  // 一次性读取所有配置项
+  const values = await Promise.all(allKeys.map(k => SystemSetting.get(k)));
+  const settings = {};
+  allKeys.forEach((k, i) => { settings[k] = values[i]; });
+
+  const provider = settings.aiProvider || config.ai.provider;
+  const model = settings.aiModel || config.ai.model || '';
+  const maxTokens = settings.aiMaxTokens || config.ai.maxTokens;
+
+  // 读取各 provider 的 API key（DB 优先，.env fallback）
+  const keys = {};
+  for (const name of providerNames) {
+    const dbKey = settings[`aiApiKey_${name}`];
+    keys[name] = dbKey || config.ai.keys[name] || '';
+  }
+
+  return { provider, model, maxTokens, keys };
+}
+
+// 获取 OpenAI 兼容客户端（支持动态 key，key 变化时自动重建）
+function getOpenAIClient(providerName, apiKey) {
+  const cached = clients[providerName];
+  if (cached && cached.apiKey === apiKey) return cached.client;
 
   if (!apiKey) {
-    throw new Error(`${provider.name} API Key 未配置，请在 .env 中设置对应的 Key`);
+    throw new Error(`${PROVIDERS[providerName].name} API Key 未配置，请在系统设置中配置`);
   }
 
   const { OpenAI } = require('openai');
-  clients[providerName] = new OpenAI({
+  const client = new OpenAI({
     apiKey,
-    baseURL: provider.baseURL,
+    baseURL: PROVIDERS[providerName].baseURL,
   });
 
-  return clients[providerName];
+  clients[providerName] = { client, apiKey };
+  return client;
 }
 
-// 获取 Anthropic 客户端
-function getAnthropicClient() {
-  if (clients.claude) return clients.claude;
+// 获取 Anthropic 客户端（支持动态 key）
+function getAnthropicClient(apiKey) {
+  const cached = clients.claude;
+  if (cached && cached.apiKey === apiKey) return cached.client;
 
-  const apiKey = config.ai.keys.claude;
   if (!apiKey) {
-    throw new Error('Claude API Key 未配置，请在 .env 中设置 CLAUDE_API_KEY');
+    throw new Error('Claude API Key 未配置，请在系统设置中配置');
   }
 
   const Anthropic = require('@anthropic-ai/sdk');
-  clients.claude = new Anthropic({ apiKey });
+  const client = new Anthropic({ apiKey });
 
-  return clients.claude;
+  clients.claude = { client, apiKey };
+  return client;
 }
 
 // ===== 统一调用接口 =====
 async function chat(systemPrompt, userPrompt, options = {}) {
-  const providerName = options.provider || config.ai.provider;
+  // 从 DB 读取配置（带 fallback 到 .env）
+  const aiConfig = await getAIConfig();
+
+  const providerName = options.provider || aiConfig.provider;
   const provider = PROVIDERS[providerName];
 
   if (!provider) {
     throw new Error(`不支持的 AI 提供商: ${providerName}。支持的提供商: ${Object.keys(PROVIDERS).join(', ')}`);
   }
 
-  const model = options.model || config.ai.model || provider.defaultModel;
-  const maxTokens = options.maxTokens || config.ai.maxTokens;
+  const model = options.model || aiConfig.model || provider.defaultModel;
+  const maxTokens = options.maxTokens || aiConfig.maxTokens;
+  const apiKey = aiConfig.keys[providerName];
 
   if (provider.sdk === 'anthropic') {
     // Claude API
-    const client = getAnthropicClient();
+    const client = getAnthropicClient(apiKey);
     const response = await client.messages.create({
       model,
       max_tokens: maxTokens,
@@ -108,7 +137,7 @@ async function chat(systemPrompt, userPrompt, options = {}) {
     return response.content[0].text;
   } else {
     // OpenAI 兼容 API（DeepSeek, MiMo, Moonshot, 智谱, 千问等）
-    const client = getOpenAIClient(providerName);
+    const client = getOpenAIClient(providerName, apiKey);
     const response = await client.chat.completions.create({
       model,
       max_tokens: maxTokens,
@@ -250,68 +279,118 @@ async function grammarExplain(topic, options = {}) {
 }
 
 /**
- * AI 生成英语文章
+ * AI 生成英语文章（增强版）
+ * 根据用户生词本掌握程度智能选词，生成完整的文章及配套学习内容
+ *
  * @param {string} prompt - 用户主题提示
  * @param {string} level - 难度等级 (初中/高中/CET4/CET6/雅思)
- * @param {object} options - {provider, model, vocabWords}
+ * @param {object} options - 配置项
+ * @param {string[]} options.vocabWords - 生词本单词列表
+ * @param {object[]} options.vocabDetails - 生词本详情 [{word, masteryLevel, definition, phonetic}]
+ * @param {string} options.category - 文章分类
+ * @param {number} options.minVocabCount - 最少使用生词数，默认 3
+ * @param {string} options.extraRequirements - 用户额外要求
+ * @param {string} options.provider - AI 提供商
+ * @param {string} options.model - AI 模型
  */
 async function generateArticle(prompt, level = '高中', options = {}) {
   const levelGuide = {
-    '初中': '使用简单句型，词汇量 1000 以内，句式以主谓宾为主，时态限一般现在/过去/将来。300-500 词。',
-    '高中': '使用复合句，词汇量 2500 以内，可使用定语从句、状语从句。400-600 词。',
-    'CET4': '使用较复杂句式，词汇量 4500 以内，可使用虚拟语气、倒装等。500-700 词。',
-    'CET6': '使用高级句式和学术词汇，词汇量 6000 以内。600-800 词。',
-    '雅思': '使用学术英语，复杂句式，高级词汇，接近 native 水平。700-1000 词。',
+    '初中': { desc: '简单句为主（主谓宾），词汇量 ≤1000，时态限一般现在/过去/将来', words: '300-500' },
+    '高中': { desc: '复合句（定语从句、状语从句），词汇量 ≤2500，常见时态+被动语态', words: '400-600' },
+    'CET4': { desc: '较复杂句式，词汇量 ≤4500，可使用虚拟语气、倒装、强调句', words: '500-700' },
+    'CET6': { desc: '高级句式+学术词汇，词汇量 ≤6000', words: '600-800' },
+    '雅思': { desc: '学术英语，复杂句式，高级词汇，接近 native 水平', words: '700-1000' },
   };
 
   const guide = levelGuide[level] || levelGuide['高中'];
-  const vocabHint = options.vocabWords && options.vocabWords.length > 0
-    ? `\n用户生词本中的单词（请尽量在文章中自然使用这些词）：${options.vocabWords.join(', ')}`
-    : '';
+  const category = options.category || 'life';
+  const minVocab = options.minVocabCount || 3;
 
-  const systemPrompt = `你是一个英语教学专家和文章创作者。请根据用户提供的主题，生成一篇适合该难度等级的英语阅读文章。
+  // 按掌握程度分组生词
+  const vocabMasteryMap = { new: [], learning: [], review: [], mastered: [] };
+  if (options.vocabDetails && options.vocabDetails.length > 0) {
+    options.vocabDetails.forEach(v => {
+      const lvl = v.masteryLevel || 'new';
+      if (vocabMasteryMap[lvl]) vocabMasteryMap[lvl].push(v.word);
+    });
+  }
 
-难度要求（${level}）：${guide}${vocabHint}
+  // 构建掌握详情文本
+  const levelLabels = { new: '未学习', learning: '学习中', review: '复习中', mastered: '已掌握' };
+  const masteryDetail = Object.entries(vocabMasteryMap)
+    .filter(([, words]) => words.length > 0)
+    .map(([lvl, words]) => `- ${lvl}（${levelLabels[lvl]}）: ${words.join(', ')}`)
+    .join('\n');
 
-返回严格的 JSON 格式（不要包含任何其他文字）：
+  const vocabListStr = (options.vocabWords || []).join(', ');
+
+  const systemPrompt = `你是一个专业的英语教学专家和文章创作者。你的任务是根据用户提供的信息，生成一篇高质量的英语阅读文章及完整的配套学习内容。
+
+## 核心原则
+1. 难度精准 — 严格遵守指定等级的词汇量、句式复杂度、语法范围
+2. 生词融合 — 将用户生词本中的单词自然融入文章，不生硬堆砌
+3. 内容优质 — 文章要有教育意义、趣味性、贴近生活或有知识价值
+4. 输出规范 — 严格返回指定 JSON 格式，不包含任何多余文字
+
+## 难度要求（${level}）
+${guide.desc}。目标词数：${guide.words} 词。
+
+## 分类可选值
+tech（科技）、life（生活）、news（新闻）、literature（文学）、science（科学）、business（商业）
+
+## 题型可选值
+multiple-choice（选择题4选1）、true-false（判断题）、fill-blank（填空题）、short-answer（简答题）
+
+返回严格的 JSON 格式（不要包含任何其他文字，不要用 \`\`\`json 包裹）：
 {
-  "title": "英文标题",
-  "content": "英文正文（段落间用 \\n\\n 分隔，句子间用句号分隔）",
+  "title": "英文标题（5-15个单词，简洁有吸引力）",
+  "content": "英文正文（段落间用 \\n\\n 分隔）",
   "summaryZh": "中文摘要（50字以内）",
-  "tags": ["标签1", "标签2", "标签3"],
-  "category": "tech/life/news/literature/science/business",
+  "category": "从6个分类中选最匹配的一个",
+  "tags": ["英文标签1", "英文标签2", "英文标签3"],
   "highlightedVocab": [
-    {"word": "重点单词", "definition": "中文释义", "phonetic": "/音标/"}
+    {"word": "单词原形", "definition": "中文释义", "phonetic": "/国际音标/"}
   ],
   "sentenceTranslations": [
-    {"en": "英文句子", "zh": "中文翻译"}
+    {"en": "英文句子（与正文逐句完全一致）", "zh": "中文翻译"}
   ],
   "grammarPoints": [
-    {"title": "语法点名称", "explanation": "简要说明", "example": "文中例句"}
+    {"title": "语法点名称（中文）", "explanation": "简要讲解（中文100字以内）", "example": "文中例句（英文原文）"}
   ],
   "questions": [
     {
       "type": "multiple-choice",
-      "text": "题目英文",
-      "options": ["A选项", "B选项", "C选项", "D选项"],
-      "answer": "正确选项文本",
+      "text": "英文题目",
+      "options": ["选项A", "选项B", "选项C", "选项D"],
+      "answer": "正确选项的完整文本",
       "explanation": "中文解析"
     }
   ]
 }
 
-要求：
-1. 文章内容要有趣、有教育意义，贴近生活
-2. tags 生成 3-5 个英文标签（主题相关）
-3. category 从 6 个分类中选最匹配的一个
-4. highlightedVocab 列出 5-10 个该难度等级的重点词汇，附音标和中文释义
-5. sentenceTranslations 为每个句子提供中文翻译
-6. grammarPoints 列出文章中出现的 2-3 个语法点
-7. questions 生成 3-5 道阅读理解题（至少 2 道选择题，1 道判断题）
-8. 所有内容必须是英文，解析和翻译用中文`;
+## 要求
+1. tags: 3-5 个英文标签，与主题相关
+2. highlightedVocab: 5-10 个重点词汇，优先从用户生词本选取，附音标和中文释义
+3. sentenceTranslations: 必须覆盖文章所有句子，en 与正文句子完全一致
+4. grammarPoints: 2-3 个文中实际出现的语法点
+5. questions: 3-5 道题，至少 2 道选择题 + 1 道判断题，answer 必须正确
+6. 所有内容英文，解析和翻译用中文`;
+
+  const userPrompt = `请为我生成一篇英语阅读文章：
+
+## 基本要求
+- **难度等级:** ${level}
+- **主题方向:** ${prompt}
+- **分类:** ${category}
+
+${vocabListStr ? `## 我的生词本\n以下是我正在学习的单词，请尽量在文章中自然使用这些词（至少使用 ${minVocab} 个）：\n${vocabListStr}` : ''}
+
+${masteryDetail ? `## 生词本掌握情况\n${masteryDetail}\n\n使用策略：new 和 learning 的词优先使用放在显眼位置，review 的词适度使用，mastered 的词少用。` : ''}
+
+${options.extraRequirements ? `## 额外要求\n${options.extraRequirements}` : ''}`;
 
   try {
-    const result = await chat(systemPrompt, `主题：${prompt}`, { ...options, maxTokens: 8192 });
+    const result = await chat(systemPrompt, userPrompt, { ...options, maxTokens: 8192 });
     let jsonStr = result;
     const jsonMatch = result.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) jsonStr = jsonMatch[1];
@@ -327,7 +406,7 @@ async function generateArticle(prompt, level = '高中', options = {}) {
       content: parsed.content || '',
       summaryZh: parsed.summaryZh || '',
       difficulty: level,
-      category: parsed.category || 'life',
+      category: parsed.category || category,
       tags: parsed.tags || [],
       wordCount,
       readingTimeMin,
@@ -350,5 +429,6 @@ module.exports = {
   analyzeWord,
   grammarExplain,
   generateArticle,
+  getAIConfig,
   PROVIDERS,
 };

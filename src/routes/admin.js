@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
+const ai = require('../services/ai');
 const User = require('../models/User');
 const Article = require('../models/Article');
 const Exercise = require('../models/Exercise');
@@ -283,6 +284,8 @@ router.get('/settings', adminAuth, async (req, res) => {
 router.post('/settings', adminAuth, async (req, res) => {
   const updates = req.body;
   for (const [key, value] of Object.entries(updates)) {
+    // API key 字段：留空表示不修改（避免误清空已有 key）
+    if (key.startsWith('aiApiKey_') && value === '') continue;
     let parsed = value;
     if (value === 'true') parsed = true;
     else if (value === 'false') parsed = false;
@@ -290,6 +293,18 @@ router.post('/settings', adminAuth, async (req, res) => {
     await SystemSetting.set(key, parsed);
   }
   res.redirect('/admin/settings');
+});
+
+// 测试 AI 连接
+router.post('/settings/test-ai', adminAuth, async (req, res) => {
+  try {
+    const { provider } = req.body;
+    if (!provider) return res.json({ ok: false, message: '请指定提供商' });
+    const result = await ai.chat('请用一句话回复"连接成功"', '测试', { provider, maxTokens: 50 });
+    res.json({ ok: true, message: result.slice(0, 200) });
+  } catch (err) {
+    res.json({ ok: false, message: err.message });
+  }
 });
 
 // ===== 统计报表 =====

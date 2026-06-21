@@ -10,10 +10,28 @@
     <form method="POST" action="/demo/send-code" id="sendCodeForm">
       <div class="form-row">
         <label>邮箱地址</label>
-        <div style="display:flex;gap:8px">
-          <input type="email" name="email" value="<%= typeof email !== 'undefined' && email ? email : '' %>" required placeholder="your@email.com" style="flex:1">
-          <button type="submit" class="btn btn-primary" style="white-space:nowrap">发送验证码</button>
+        <input type="email" name="email" value="<%= typeof email !== 'undefined' && email ? email : '' %>" required placeholder="your@email.com">
+      </div>
+
+      <!-- 人机验证 -->
+      <div class="form-row">
+        <label>人机验证</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div id="captchaBox" style="flex-shrink:0;cursor:pointer;border-radius:6px;overflow:hidden;border:1px solid #E5E7EB" title="点击刷新验证码">
+            <%- captchaSvg %>
+          </div>
+          <input type="text" name="captchaAnswer" placeholder="计算结果" required style="flex:1" autocomplete="off" inputmode="numeric">
         </div>
+        <input type="hidden" name="captchaToken" value="<%= captchaToken %>">
+        <div style="font-size:11px;color:#9CA3AF;margin-top:4px">点击图片可刷新验证码</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%" id="sendCodeBtn"
+        <%= typeof codeSent !== 'undefined' && codeSent ? 'disabled' : '' %>>
+        <%= typeof codeSent !== 'undefined' && codeSent ? '已发送 ✓' : '发送验证码' %>
+      </button>
+      <div id="countdown" style="text-align:center;font-size:12px;color:#6B7280;margin-top:6px;display:none">
+        <span id="countdownNum">60</span> 秒后可重新发送
       </div>
     </form>
 
@@ -26,7 +44,7 @@
       </div>
       <div class="form-row">
         <label>验证码</label>
-        <input type="text" name="code" placeholder="6位数字验证码" maxlength="6" required>
+        <input type="text" name="code" placeholder="6位数字验证码" maxlength="6" required inputmode="numeric">
       </div>
       <div class="form-row">
         <label>密码</label>
@@ -44,4 +62,52 @@
     </div>
   </div>
 </div>
+
+<script>
+(function() {
+  // === 验证码图片点击刷新 ===
+  var captchaBox = document.getElementById('captchaBox');
+  var captchaToken = document.querySelector('input[name="captchaToken"]');
+  captchaBox.addEventListener('click', function() {
+    fetch('/demo/captcha')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        captchaBox.innerHTML = data.svg;
+        captchaToken.value = data.token;
+      });
+  });
+
+  // === 60 秒倒计时 ===
+  var btn = document.getElementById('sendCodeBtn');
+  var countdown = document.getElementById('countdown');
+  var countdownNum = document.getElementById('countdownNum');
+
+  <% if (typeof codeSent !== 'undefined' && codeSent) { %>
+  startCountdown();
+  <% } %>
+
+  function startCountdown() {
+    btn.disabled = true;
+    btn.textContent = '已发送 ✓';
+    countdown.style.display = 'block';
+    var seconds = 60;
+    countdownNum.textContent = seconds;
+    var timer = setInterval(function() {
+      seconds--;
+      countdownNum.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(timer);
+        btn.disabled = false;
+        btn.textContent = '发送验证码';
+        countdown.style.display = 'none';
+      }
+    }, 1000);
+  }
+
+  // 表单提交后如果页面刷新且有 codeSent，自动启动倒计时
+  document.getElementById('sendCodeForm').addEventListener('submit', function() {
+    // 由服务端返回 codeSent 控制，此处不重复启动
+  });
+})();
+</script>
 <%- include("footer") %>
