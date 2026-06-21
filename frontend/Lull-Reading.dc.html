@@ -1774,11 +1774,11 @@ class Component extends DCLogic {
     });
 
     // ---- current article / reading (per-article data) ----
-    const ca = ALL_ARTICLES.find(a=>a.id===st.articleId) || this.ARTICLES[0];
-    const curArticle = { ...ca, catLabel:this.CAT_LABELS[ca.cat] };
+    const ca = ALL_ARTICLES.find(a=>a.id===st.articleId) || this.ARTICLES[0] || null;
+    const curArticle = ca ? { ...ca, catLabel:this.CAT_LABELS[ca.cat]||ca.cat||'' } : { id:null, title:'暂无文章', difficulty:'', cat:'', catLabel:'', summaryZh:'请先到管理后台发布文章', wordCount:0 };
     // 优先用后端真实详情；demo 文章（数字 id）用内置静态数据；真实文章详情未到时显示加载占位
     const hasDetail = st.articleDetail && st.articleDetail.reqId === st.articleId && st.articleDetail.article;
-    const isDemoArticle = typeof ca.id === 'number';
+    const isDemoArticle = ca && typeof ca.id === 'number';
     const articleData = hasDetail ? this.buildArticleData(st.articleDetail)
       : (isDemoArticle ? this.getArticleData(ca.id)
         : { PARAS:[], WORD_DEFS:{}, KEY_POINTS:{ note: st.articleLoading?'加载中…':'暂无内容', words:[], sentences:[] }, QUIZ:[] });
