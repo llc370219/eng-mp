@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 本地内置 React，避免依赖外部 CDN（unpkg 在部分网络下不可达会导致整页白屏）。
+     support.js 检测到 window.React 已存在就会跳过 CDN 加载。 -->
+<script src="./react.production.min.js"></script>
+<script src="./react-dom.production.min.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -159,7 +163,7 @@
           </div>
           <div style="background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:16px 20px;min-width:200px">
             <div style="font-size:13px;font-weight:600;opacity:.85">连续阅读 STREAK</div>
-            <div style="font-family:'Shrikhand',serif;font-size:40px;line-height:1;margin-top:4px">12 天 🔥</div>
+            <div style="font-family:'Shrikhand',serif;font-size:40px;line-height:1;margin-top:4px">{{ streak }} 天 🔥</div>
           </div>
         </div>
 
@@ -376,53 +380,39 @@
         <div style="font-weight:700;font-size:13px;letter-spacing:3px;color:#2f7fd6">查词 · LOOK IT UP</div>
         <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(38px,6vw,64px);line-height:.95;margin:8px 0 22px;color:#1a1817">Word <span style="color:#2f7fd6;text-shadow:3px 3px 0 #1a1817">Juicer</span></h1>
         <div style="display:flex;gap:12px;flex-wrap:wrap;max-width:620px">
-          <input value="linger" placeholder="输入英文单词…" style="flex:1;min-width:240px;padding:15px 18px;border:2.5px solid #1a1817;border-radius:14px;font-family:'Newsreader',serif;font-size:19px;background:#fffdf6;outline:none">
+          <input value="{{ dictQuery }}" onInput="{{ onDictInput }}" onKeyDown="{{ onDictKey }}" placeholder="输入英文单词，回车查询…" style="flex:1;min-width:240px;padding:15px 18px;border:2.5px solid #1a1817;border-radius:14px;font-family:'Newsreader',serif;font-size:19px;background:#fffdf6;outline:none">
           <button onClick="{{ dictSearch }}" style="background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:4px 4px 0 #1a1817;cursor:pointer;padding:0 26px;font-family:'Space Grotesk';font-weight:700;font-size:16px">查询 →</button>
         </div>
 
+        <sc-if value="{{ dictResultShown }}" hint-placeholder-val="{{ false }}">
         <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:26px;margin-top:30px;align-items:start">
           <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;overflow:hidden">
             <div style="background:#2f7fd6;border-bottom:2.5px solid #1a1817;padding:24px 28px;color:#fffdf6;position:relative;overflow:hidden">
               <div style="position:absolute;inset:0;background:conic-gradient(#00000018 0 25%,transparent 0 50%,#00000018 0 75%,transparent 0);background-size:40px 40px"></div>
               <div style="position:relative;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap">
-                <span style="font-family:'Shrikhand',serif;font-size:46px;line-height:1">linger</span>
-                <span style="font-family:'Newsreader',serif;font-style:italic;font-size:22px;opacity:.92">/ˈlɪŋɡər/</span>
-                <span style="margin-left:auto;background:#f3c44b;color:#1a1817;font-weight:700;font-size:12px;padding:4px 12px;border:2px solid #1a1817;border-radius:999px">CET6 · 高频</span>
+                <span style="font-family:'Shrikhand',serif;font-size:46px;line-height:1">{{ dictWord }}</span>
+                <span style="font-family:'Newsreader',serif;font-style:italic;font-size:22px;opacity:.92">{{ dictPhonetic }}</span>
               </div>
             </div>
             <div style="padding:24px 28px">
-              <div style="font-family:'Newsreader',serif;font-size:21px;font-weight:500;margin-bottom:16px">v. 徘徊；逗留；（气味、感觉等）萦绕，挥之不去</div>
-              <div style="font-weight:700;font-size:12px;letter-spacing:1.5px;color:#7a7568;margin-bottom:8px">英文释义</div>
-              <div style="font-family:'Newsreader',serif;font-size:16.5px;color:#3c382f;line-height:1.6;margin-bottom:18px">(v.) to stay in a place longer than necessary, typically because of a reluctance to leave; to be slow to disappear.</div>
-              <div style="font-weight:700;font-size:12px;letter-spacing:1.5px;color:#7a7568;margin-bottom:10px">例句 EXAMPLES</div>
-              <div style="display:grid;gap:10px">
-                <div style="background:#f2ecda;border-left:4px solid #ec6a2b;border-radius:0 10px 10px 0;padding:12px 16px">
-                  <div style="font-family:'Newsreader',serif;font-size:16.5px">The smell of coffee <span style="color:#ec6a2b;font-weight:600">lingered</span> in the kitchen.</div>
-                  <div style="font-size:13.5px;color:#7a7568;margin-top:3px">咖啡的香味在厨房里久久不散。</div>
+              <div style="font-family:'Newsreader',serif;font-size:21px;font-weight:500;margin-bottom:16px;white-space:pre-line">{{ dictTranslation }}</div>
+              <sc-if value="{{ dictExamples.length > 0 }}" hint-placeholder-val="{{ false }}">
+                <div style="font-weight:700;font-size:12px;letter-spacing:1.5px;color:#7a7568;margin-bottom:10px">例句 EXAMPLES</div>
+                <div style="display:grid;gap:10px">
+                  <sc-for list="{{ dictExamples }}" as="ex" hint-placeholder-count="3">
+                    <div style="background:#f2ecda;border-left:4px solid #ec6a2b;border-radius:0 10px 10px 0;padding:12px 16px">
+                      <div style="font-family:'Newsreader',serif;font-size:16.5px">{{ ex }}</div>
+                    </div>
+                  </sc-for>
                 </div>
-                <div style="background:#f2ecda;border-left:4px solid #2f7fd6;border-radius:0 10px 10px 0;padding:12px 16px">
-                  <div style="font-family:'Newsreader',serif;font-size:16.5px">She <span style="color:#2f7fd6;font-weight:600">lingered</span> at the door, unwilling to say goodbye.</div>
-                  <div style="font-size:13.5px;color:#7a7568;margin-top:3px">她在门口徘徊，不愿道别。</div>
-                </div>
-              </div>
+              </sc-if>
             </div>
           </div>
           <aside style="display:flex;flex-direction:column;gap:16px">
-            <button style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:5px 5px 0 #1a1817;cursor:pointer;padding:16px;font-family:'Space Grotesk';font-weight:700;font-size:16px">+ 加入生词本</button>
-            <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;padding:18px">
-              <div style="font-weight:700;font-size:12px;letter-spacing:1.5px;color:#7a7568;margin-bottom:12px">词形变化</div>
-              <div style="display:flex;flex-wrap:wrap;gap:7px">
-                <span style="background:#f2ecda;border:2px solid #1a1817;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:600">lingers</span>
-                <span style="background:#f2ecda;border:2px solid #1a1817;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:600">lingered</span>
-                <span style="background:#f2ecda;border:2px solid #1a1817;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:600">lingering</span>
-              </div>
-            </div>
-            <div style="background:#f3c44b;border:2.5px solid #1a1817;border-radius:16px;padding:18px">
-              <div style="font-weight:700;font-size:13px;margin-bottom:6px">🈯 整句翻译</div>
-              <div style="font-size:13px;color:#1a1817;opacity:.8;line-height:1.5">粘贴一整句英文，AI 帮你翻译并解读语法结构。</div>
-            </div>
+            <button onClick="{{ addSelWord }}" style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:5px 5px 0 #1a1817;cursor:pointer;padding:16px;font-family:'Space Grotesk';font-weight:700;font-size:16px">+ 加入生词本</button>
           </aside>
         </div>
+        </sc-if>
       </section>
     </sc-if>
 
@@ -482,7 +472,7 @@
     <sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
       <section style="padding:40px 0;min-height:70vh;display:flex;flex-direction:column;align-items:center">
         <div style="width:100%;max-width:560px">
-          <button onClick="{{ goReview }}" style="background:none;border:none;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#7a7568;padding:0;margin-bottom:18px">← 生词本</button>
+          <button onClick="{{ goVocab }}" style="background:none;border:none;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#7a7568;padding:0;margin-bottom:18px">← 生词本</button>
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px">
             <div style="flex:1;height:14px;background:#e9e1c8;border:2.5px solid #1a1817;border-radius:999px;overflow:hidden">
               <div style="height:100%;width:{{ reviewProgress }}%;background:#ec6a2b;transition:width .3s"></div>
@@ -507,10 +497,10 @@
               </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:22px">
-              <button onClick="{{ rateAgain }}" style="background:#d94646;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:14px 6px;font-family:'Space Grotesk';font-weight:700;font-size:14px">忘了</button>
-              <button onClick="{{ rateHard }}" style="background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:14px 6px;font-family:'Space Grotesk';font-weight:700;font-size:14px">困难</button>
-              <button onClick="{{ rateGood }}" style="background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:14px 6px;font-family:'Space Grotesk';font-weight:700;font-size:14px">记得</button>
-              <button onClick="{{ rateEasy }}" style="background:#1f9d5c;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:14px 6px;font-family:'Space Grotesk';font-weight:700;font-size:14px">简单</button>
+              <button onClick="{{ rateAgain }}" style="display:flex;flex-direction:column;align-items:center;gap:3px;background:#d94646;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:11px 4px;font-family:'Space Grotesk'"><span style="font-weight:700;font-size:14px">忘了</span><span style="font-size:10.5px;opacity:.9;font-weight:600">{{ reviewPrevAgain }}</span></button>
+              <button onClick="{{ rateHard }}" style="display:flex;flex-direction:column;align-items:center;gap:3px;background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:11px 4px;font-family:'Space Grotesk'"><span style="font-weight:700;font-size:14px">困难</span><span style="font-size:10.5px;opacity:.9;font-weight:600">{{ reviewPrevHard }}</span></button>
+              <button onClick="{{ rateGood }}" style="display:flex;flex-direction:column;align-items:center;gap:3px;background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:11px 4px;font-family:'Space Grotesk'"><span style="font-weight:700;font-size:14px">记得</span><span style="font-size:10.5px;opacity:.9;font-weight:600">{{ reviewPrevGood }}</span></button>
+              <button onClick="{{ rateEasy }}" style="display:flex;flex-direction:column;align-items:center;gap:3px;background:#1f9d5c;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:11px 4px;font-family:'Space Grotesk'"><span style="font-weight:700;font-size:14px">简单</span><span style="font-size:10.5px;opacity:.9;font-weight:600">{{ reviewPrevEasy }}</span></button>
             </div>
           </sc-if>
           <sc-if value="{{ reviewDone }}" hint-placeholder-val="{{ false }}">
@@ -641,21 +631,30 @@
           </div>
           <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:22px;box-shadow:6px 6px 0 #1a1817;padding:26px 28px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-              <div style="font-family:'Newsreader',serif;font-size:22px;font-weight:600">最近 6 周</div>
+              <div style="font-family:'Newsreader',serif;font-size:22px;font-weight:600">{{ calMonthLabel }}</div>
               <div style="display:flex;gap:14px;font-size:12.5px;font-weight:600;color:#7a7568;flex-wrap:wrap">
                 <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#e34e98;border:2px solid #1a1817;border-radius:4px;display:inline-block"></span>已打卡</span>
                 <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:#ec6a2b;border:2px solid #1a1817;border-radius:4px;display:inline-block"></span>今天</span>
               </div>
             </div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:9px;margin-bottom:7px">
+              <div style="text-align:center;font-size:12px;font-weight:700;color:#a89f86">一</div>
+              <div style="text-align:center;font-size:12px;font-weight:700;color:#a89f86">二</div>
+              <div style="text-align:center;font-size:12px;font-weight:700;color:#a89f86">三</div>
+              <div style="text-align:center;font-size:12px;font-weight:700;color:#a89f86">四</div>
+              <div style="text-align:center;font-size:12px;font-weight:700;color:#a89f86">五</div>
+              <div style="text-align:center;font-size:12px;font-weight:700;color:#a89f86">六</div>
+              <div style="text-align:center;font-size:12px;font-weight:700;color:#a89f86">日</div>
+            </div>
             <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:9px">
-              <sc-for list="{{ checkinCal }}" as="d" hint-placeholder-count="42">
-                <div style="aspect-ratio:1;background:{{ d.bg }};border:{{ d.border }};border-radius:9px"></div>
+              <sc-for list="{{ calendarDays }}" as="d" hint-placeholder-count="35">
+                <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';font-weight:600;font-size:13px;background:{{ d.bg }};color:{{ d.fg }};border:{{ d.border }};border-radius:9px">{{ d.label }}</div>
               </sc-for>
             </div>
             <div style="display:flex;gap:24px;margin-top:24px;flex-wrap:wrap">
-              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#ec6a2b">31</div><div style="font-size:13px;font-weight:600;color:#7a7568">本月打卡</div></div>
-              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#2f7fd6">86%</div><div style="font-size:13px;font-weight:600;color:#7a7568">完成率</div></div>
-              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#e34e98">23</div><div style="font-size:13px;font-weight:600;color:#7a7568">最长连续</div></div>
+              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#ec6a2b">{{ monthChecks }}</div><div style="font-size:13px;font-weight:600;color:#7a7568">本月打卡</div></div>
+              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#2f7fd6">{{ completionRate }}%</div><div style="font-size:13px;font-weight:600;color:#7a7568">本月完成率</div></div>
+              <div><div style="font-family:'Shrikhand',serif;font-size:30px;color:#e34e98">{{ maxStreak }}</div><div style="font-size:13px;font-weight:600;color:#7a7568">最长连续</div></div>
             </div>
           </div>
         </div>
@@ -713,13 +712,13 @@
           <div style="display:flex;flex-direction:column;gap:18px">
             <div style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;padding:24px 26px">
               <div style="font-weight:700;font-size:13px;letter-spacing:1.5px;opacity:.9">累计学习时长</div>
-              <div style="font-family:'Shrikhand',serif;font-size:48px;line-height:1;margin-top:6px">21 小时</div>
-              <div style="font-size:13px;opacity:.9;margin-top:4px">共 96 次学习 · 平均 13 分钟/次</div>
+              <div style="font-family:'Shrikhand',serif;font-size:48px;line-height:1;margin-top:6px">{{ studyTimeText }}</div>
+              <div style="font-size:13px;opacity:.9;margin-top:4px">{{ studySubText }}</div>
             </div>
             <div style="background:#1f9d5c;color:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;padding:24px 26px;display:flex;align-items:center;gap:16px">
               <div style="font-size:44px">🔥</div>
               <div>
-                <div style="font-family:'Shrikhand',serif;font-size:40px;line-height:1">12 天</div>
+                <div style="font-family:'Shrikhand',serif;font-size:40px;line-height:1">{{ streak }} 天</div>
                 <div style="font-size:13px;opacity:.9">连续学习中，别断哦</div>
               </div>
             </div>
@@ -824,10 +823,14 @@
                 <button onClick="{{ c.onClick }}" style="padding:6px 13px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:600;font-size:13px;background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
               </sc-for>
             </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px">
-              <sc-for list="{{ aiWordChips }}" as="c" hint-placeholder-count="3">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+              <sc-for list="{{ aiWordChips }}" as="c" hint-placeholder-count="4">
                 <button onClick="{{ c.onClick }}" style="padding:6px 13px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:600;font-size:13px;background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
               </sc-for>
+              <div style="display:flex;align-items:center;gap:6px;margin-left:4px">
+                <input type="number" value="{{ aiCustomWords }}" onInput="{{ onAiCustomWords }}" placeholder="自定义" min="50" max="2000" style="width:80px;padding:6px 10px;border:2.5px solid #1a1817;border-radius:12px;font-family:'Space Grotesk';font-weight:600;font-size:13px;background:#fffdf6;outline:none;text-align:center">
+                <button onClick="{{ setAiCustomWords }}" style="padding:6px 10px;border:2.5px solid #1a1817;border-radius:999px;cursor:pointer;font-family:'Space Grotesk';font-weight:600;font-size:12px;background:{{ aiCustomBtnBg }};color:{{ aiCustomBtnFg }}">确定</button>
+              </div>
             </div>
 
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -856,11 +859,18 @@
 
           <!-- result panel -->
           <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;padding:26px 28px;min-height:340px">
+            <sc-if value="{{ aiGenerating }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;text-align:center;color:#7a7568">
+                <div style="animation:spin360 2s linear infinite;font-size:48px">🍊</div>
+                <div style="font-size:16px;margin-top:18px;font-weight:600">AI 正在鲜榨中...</div>
+                <div style="font-size:13px;margin-top:8px">正在结合{{ aiLevel }}等级和{{ aiVocabCount }}个生词生成文章</div>
+              </div>
+            </sc-if>
             <sc-if value="{{ aiRun }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
                 <span style="background:#1a1817;color:#fffdf6;font-weight:700;font-size:12px;padding:3px 11px;border-radius:999px">{{ aiLevel }}</span>
                 <span style="background:#1f9d5c;color:#fff;font-weight:700;font-size:12px;padding:3px 11px;border-radius:999px;border:2px solid #1a1817">✓ 已织入 {{ aiVocabCount }} 个生词</span>
-                <span style="font-weight:600;font-size:12px;color:#7a7568">{{ aiWords }} 词 · {{ aiGenreLabel }}</span>
+                <span style="font-weight:600;font-size:12px;color:#7a7568">{{ aiWordsLabel }} · {{ aiGenreLabel }}</span>
               </div>
               <h2 style="font-family:'Shrikhand',serif;font-style:italic;font-size:30px;line-height:1.05;margin:4px 0 14px;color:#1a1817">{{ aiGenTitle }}</h2>
               <div style="background:#f2ecda;border:2px solid #1a1817;border-radius:14px;padding:18px 20px">
@@ -873,6 +883,12 @@
                   </p>
                 </sc-for>
               </div>
+              <sc-if value="{{ aiGenSummary }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:16px;padding:14px;background:#fffdf6;border:2px solid #1a1817;border-radius:12px">
+                  <div style="font-weight:700;font-size:12px;color:#7a7568;margin-bottom:6px">中文摘要</div>
+                  <div style="font-size:14px;line-height:1.6;color:#3c382f">{{ aiGenSummary }}</div>
+                </div>
+              </sc-if>
               <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
                 <button onClick="{{ saveAiArticle }}" style="flex:1;min-width:160px;background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:13px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:12px;font-family:'Space Grotesk';font-weight:700;font-size:14.5px">＋ 存入「我的私享」</button>
                 <button onClick="{{ runAi }}" style="background:#fffdf6;color:#1a1817;border:2.5px solid #1a1817;border-radius:13px;cursor:pointer;padding:12px 18px;font-family:'Space Grotesk';font-weight:700;font-size:14.5px">↻ 再来一篇</button>
@@ -955,7 +971,7 @@ class Component extends DCLogic {
     vocabFilter: 'all', vocabShowAll: false,
     gLevel: '', gCat: '', grammarId: 1, gPick: {}, gSubmitted: false,
     checkedIn: false,
-    aiLevel: 'CET-4', aiGenre: 'science', aiWords: 300, aiUseVocab: true, aiGenerated: false, aiPrompt: '',
+    aiLevel: 'CET-4', aiGenre: 'science', aiWords: 300, aiUseVocab: true, aiGenerated: false, aiGenerating: false, aiPrompt: '', aiCustomWords: '',
     statRange: '7', statCat: 'words',
     setSentence: true, setGoal: 30, setReminder: true,
     dictQuery: '', dictShown: false,
@@ -963,7 +979,59 @@ class Component extends DCLogic {
     inviteCode: '', robot: false, codeCountdown: 0, codeSent: false, authError: '', inviteError: '',
     showPrivacyNote: false,
     email: '', password: '', verCode: '',
+    // ----- 后端真实数据 -----
+    dataLoaded: false,
+    articleDetail: null, articleLoading: false,
+    dictCache: {}, transCache: {},
+    grammars: null, grammarDetail: null,
+    checkinHistory: [], stats: null, streak: 0, streakMax: 0,
   };
+
+  // ===== 带自动刷新的请求封装：access token 过期(401)时用 refreshToken 续期并重试 =====
+  async authFetch(url, opts = {}){
+    const build = () => {
+      const token = localStorage.getItem('token');
+      const headers = { ...(opts.headers || {}) };
+      if(token) headers['Authorization'] = 'Bearer ' + token;
+      return { ...opts, headers };
+    };
+    let res = await fetch(url, build());
+    if(res.status === 401){
+      const ok = await this.refreshAccessToken();
+      if(ok){ res = await fetch(url, build()); }
+      else { this.handleSessionExpired(); }
+    }
+    return res;
+  }
+  // 用 refreshToken 换新的 access token（单飞：并发请求只刷新一次）
+  refreshAccessToken(){
+    if(this._refreshPromise) return this._refreshPromise;
+    this._refreshPromise = (async () => {
+      const rt = localStorage.getItem('refreshToken');
+      if(!rt) return false;
+      try {
+        const res = await fetch('/api/auth/refresh', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ refreshToken: rt }) });
+        if(!res.ok) return false;
+        const data = await res.json();
+        if(data.accessToken){
+          localStorage.setItem('token', data.accessToken);
+          if(data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+          return true;
+        }
+        return false;
+      } catch(e){ return false; }
+    })();
+    this._refreshPromise.finally(() => { this._refreshPromise = null; });
+    return this._refreshPromise;
+  }
+  // refresh 也失败（refreshToken 过期/无效）→ 退回登录页
+  handleSessionExpired(){
+    if(this._sessionExpiredHandled) return;
+    this._sessionExpiredHandled = true;
+    localStorage.removeItem('token'); localStorage.removeItem('refreshToken');
+    this.setState({ screen:'login', authMode:'login', authError:'登录已过期，请重新登录', dataLoaded:false });
+    if(typeof window!=='undefined') setTimeout(()=>{ this._sessionExpiredHandled = false; }, 3000);
+  }
 
   tokenize(text){
     const parts = text.match(/[A-Za-z]+(?:['’\-][A-Za-z]+)*[).,;:!?"”'’]*|[^A-Za-z]+/g) || [];
@@ -971,6 +1039,85 @@ class Component extends DCLogic {
   }
   selectWord(clean){
     this.setState({ selWordKey:clean, selParaIdx:null, showKeyPoints:false });
+    // 真实词典查询（若静态释义里没有且未缓存过）
+    if(clean && !(this.state.dictCache && this.state.dictCache[clean])){
+      this.lookupWord(clean);
+    }
+  }
+  // 单词点击 → 第三方词典查询，结果缓存到 dictCache
+  async lookupWord(word){
+    const token = localStorage.getItem('token');
+    if(!token) return;
+    try {
+      const headers = { 'Authorization':'Bearer '+token };
+      const data = await this.authFetch('/api/frontend/dict/'+encodeURIComponent(word), { headers }).then(r=>r.json());
+      let def='', phon='';
+      if(data && !data.error){
+        phon = data.phonetic || '';
+        def = data.translation || data.definitionEn || '';   // 中文释义优先
+        if(data.tag) def += '  📑' + data.tag.split(/\s+/).filter(Boolean).join(' ');
+      }
+      this.setState(s=>({ dictCache: { ...s.dictCache, [word]: { phon, def: def || '未找到释义' } } }));
+    } catch(err){ /* 离线/词典不可达时静默降级 */ }
+  }
+  // 把后端文章详情转成阅读视图需要的 PARAS / WORD_DEFS / KEY_POINTS / QUIZ
+  buildArticleData(detail){
+    const a = detail.article || {};
+    const stMap = {};
+    (a.sentenceTranslations||[]).forEach(s=>{ if(s.en) stMap[s.en.trim()] = s.zh || ''; });
+    const gpoints = a.grammarPoints || [];
+    const splitSent = (p)=> (p.match(/[^.!?]+[.!?]+["'”’)\]]*|[^.!?]+$/g) || [p]).map(x=>x.trim()).filter(Boolean);
+    const paras = (a.content||'').split(/\n+/).map(p=>p.trim()).filter(Boolean);
+    const PARAS = paras.map((p,pi)=>({
+      sentences: splitSent(p).map(en=>({ en, zh: stMap[en] || '' })),
+      grammar: gpoints[pi] ? ((gpoints[pi].title? gpoints[pi].title+'：':'')+(gpoints[pi].explanation||'')) : '',
+    }));
+    const WORD_DEFS = {};
+    (a.highlightedVocab||[]).forEach(v=>{ if(v.word) WORD_DEFS[v.word.toLowerCase()] = { phon:v.phonetic||'', def:v.definition||'' }; });
+    const rawQ = (detail.exercise && detail.exercise.questions) || a.questions || [];
+    const QUIZ = rawQ.filter(q=>(q.type==='multiple-choice'||q.type==='multiple_choice') && (q.options||[]).length)
+      .map(q=>({ text:q.text, opts:q.options, answer:q.answer }));
+    const KEY_POINTS = {
+      note: a.summaryZh || '本文重点词汇与语法如下，点击单词可查词，开启「整句翻译」后双击段落看中文。',
+      words: (a.highlightedVocab||[]).slice(0,6).map(v=>({ w:v.word, zh:v.definition||'' })),
+      sentences: gpoints.slice(0,3).map(g=>({ en:g.example||'', zh:g.explanation||'' })).filter(s=>s.en),
+    };
+    return { PARAS, WORD_DEFS, KEY_POINTS, QUIZ };
+  }
+  // 段落整句翻译（AI），结果缓存到 transCache
+  async ensureTranslation(text){
+    if(!text) return;
+    const token = localStorage.getItem('token');
+    if(!token) return;
+    if(this.state.transCache && this.state.transCache[text]) return;
+    try {
+      const headers = { 'Authorization':'Bearer '+token, 'Content-Type':'application/json' };
+      const data = await this.authFetch('/api/frontend/translate', { method:'POST', headers, body: JSON.stringify({ text }) }).then(r=>r.json());
+      const zh = (data && (data.translation || data.text || data.result)) || '';
+      if(zh) this.setState(s=>({ transCache: { ...s.transCache, [text]: zh } }));
+    } catch(err){ /* AI 未配置时静默降级 */ }
+  }
+  // 加载语法列表
+  async loadGrammars(){
+    const token = localStorage.getItem('token');
+    if(!token) return;
+    try {
+      const headers = { 'Authorization':'Bearer '+token };
+      const data = await this.authFetch('/api/frontend/grammar', { headers }).then(r=>r.json());
+      if(data && data.grammars) this.setState({ grammars: data.grammars });
+    } catch(err){ console.error('加载语法列表失败:', err); }
+  }
+  // 打开语法详情 → 拉取后端真实讲解 + 例句 + 练习
+  async openGrammar(id){
+    this.setState({ grammarId:id, screen:'grammarDetail', gPick:{}, gSubmitted:false, grammarDetail:null });
+    if(typeof window!=='undefined') window.scrollTo(0,0);
+    const token = localStorage.getItem('token');
+    if(!token) return;
+    try {
+      const headers = { 'Authorization':'Bearer '+token };
+      const data = await this.authFetch('/api/frontend/grammar/'+id, { headers }).then(r=>r.json());
+      if(data && data.grammar) this.setState({ grammarDetail: data.grammar });
+    } catch(err){ console.error('加载语法详情失败:', err); }
   }
   doSendCode(){
     if(this.state.codeCountdown>0) return;
@@ -979,34 +1126,21 @@ class Component extends DCLogic {
       this.setState({ authError:'请先填写邮箱', inviteError:'' });
       return;
     }
-    // 调用后端发送验证码
-    fetch('/api/auth/send-code', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, type: 'register' })
-    })
-    .then(r => r.json())
-    .then(data => {
-      if(data.error){
-        this.setState({ authError: data.error });
-      } else {
-        // 验证码始终返回，自动填入输入框
-        this.setState({
-          codeSent:true, codeCountdown:60,
-          verCode: data.code || '',
-          authError: data.sent ? '验证码已发送到邮箱，请查收（如未收到请检查垃圾邮件）' : '验证码: ' + data.code
-        });
-        this._codeTimer = setInterval(()=>{
-          this.setState(s=>{
-            if(s.codeCountdown<=1){ clearInterval(this._codeTimer); return { codeCountdown:0, authError:'' }; }
-            return { codeCountdown:s.codeCountdown-1 };
-          });
-        }, 1000);
-      }
-    })
-    .catch(err => {
-      this.setState({ authError:'发送失败，请重试' });
+    // 直接在前端生成验证码（临时方案，跳过邮箱发送）
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    this.setState({
+      codeSent:true,
+      codeCountdown:60,
+      verCode: code,
+      authError:'验证码: ' + code + ' (已自动填入，无需邮箱验证)'
     });
+    // 启动倒计时
+    this._codeTimer = setInterval(()=>{
+      this.setState(s=>{
+        if(s.codeCountdown<=1){ clearInterval(this._codeTimer); return { codeCountdown:0, authError:'' }; }
+        return { codeCountdown:s.codeCountdown-1 };
+      });
+    }, 1000);
   }
   componentDidMount(){
     if(typeof window!=='undefined'){
@@ -1015,7 +1149,8 @@ class Component extends DCLogic {
       const token = localStorage.getItem('token');
 
       if(token){
-        // 已登录 → 直接进入文章页
+        // 已登录 → 加载用户数据并进入文章页
+        this.loadUserData();
         this.setState({ screen: 'articles' });
       } else {
         // 未登录 → 显示登录/注册页
@@ -1027,6 +1162,84 @@ class Component extends DCLogic {
         }
         this.setState(updates);
       }
+    }
+  }
+
+  // 加载用户数据
+  async loadUserData(){
+    const token = localStorage.getItem('token');
+    if(!token) return;
+
+    const headers = { 'Authorization': 'Bearer ' + token };
+
+    try {
+      // 并行加载文章列表和生词本
+      const [articlesRes, vocabRes, statsRes] = await Promise.all([
+        this.authFetch('/api/frontend/articles?feed=push&pageSize=100', { headers }).then(r => r.json()),
+        this.authFetch('/api/frontend/vocab', { headers }).then(r => r.json()),
+        this.authFetch('/api/frontend/stats', { headers }).then(r => r.json()).catch(() => null),
+      ]);
+
+      // 更新文章列表
+      if(articlesRes.articles){
+        this.ARTICLES = articlesRes.articles;
+      }
+
+      // 更新生词本
+      if(vocabRes.vocabs){
+        this.VOCAB = vocabRes.vocabs.map(v => ({
+          word: v.word,
+          phon: v.phon || '',
+          def: v.def || '',
+          mastery: v.mastery || 'learning',
+          due: v.due || false,
+          stage: v.stage || 0,
+          nextReviewLabel: v.nextReviewLabel || '',
+          reviewPreview: v.reviewPreview || null,
+        }));
+      }
+
+      // 更新统计数据
+      if(statsRes){
+        this.setState({
+          stats: statsRes,
+          streak: statsRes.streak || 0,
+          streakMax: statsRes.streakMax || 0,
+        });
+      }
+
+      // 加载私人文章
+      const privateRes = await this.authFetch('/api/frontend/articles?feed=private&pageSize=100', { headers }).then(r => r.json());
+      if(privateRes.articles){
+        this.PRIVATE_ARTICLES = privateRes.articles;
+      }
+
+      // 加载打卡状态 + 语法列表
+      await this.loadCheckinStatus();
+      this.loadGrammars();
+
+      this.setState({ dataLoaded: true });
+    } catch(err) {
+      console.error('加载用户数据失败:', err);
+    }
+  }
+
+  // 加载文章详情 → 存入 state.articleDetail（带 reqId 防止串台）
+  async loadArticleDetail(articleId){
+    const token = localStorage.getItem('token');
+    if(!token){ this.setState({ articleDetail:null, articleLoading:false }); return; }
+    this.setState({ articleLoading:true });
+    try {
+      const headers = { 'Authorization': 'Bearer ' + token };
+      const data = await this.authFetch('/api/frontend/article/' + articleId, { headers }).then(r => r.json());
+      if(data && data.article){
+        this.setState({ articleDetail: { reqId: articleId, ...data }, articleLoading:false });
+      } else {
+        this.setState({ articleDetail:null, articleLoading:false });
+      }
+    } catch(err) {
+      console.error('加载文章详情失败:', err);
+      this.setState({ articleDetail:null, articleLoading:false });
     }
   }
   componentWillUnmount(){ if(this._codeTimer) clearInterval(this._codeTimer); }
@@ -1044,8 +1257,8 @@ class Component extends DCLogic {
       if(!st.robot){ this.setState({ authError:'请先完成人机验证', inviteError:'' }); return; }
       if(!st.inviteCode.trim()){ this.setState({ inviteError:'邀请码为必填项', authError:'' }); return; }
 
-      // 调用注册 API
-      fetch('/api/auth/register', {
+      // 调用临时注册 API（跳过邮箱验证码验证）
+      fetch('/api/auth/register-temp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1060,9 +1273,11 @@ class Component extends DCLogic {
         if(data.error){
           this.setState({ authError: data.error, inviteError: '' });
         } else {
-          localStorage.setItem('token', data.token);
+          localStorage.setItem('token', data.accessToken || data.token);
           localStorage.setItem('refreshToken', data.refreshToken);
           this.setState({ authError:'', inviteError:'', showPrivacyNote:true, screen:'articles', email:'', password:'', verCode:'' });
+          // 加载用户数据
+          this.loadUserData();
           if(typeof window!=='undefined'){ clearTimeout(this._noteTimer); this._noteTimer=setTimeout(()=>this.setState({ showPrivacyNote:false }), 6000); }
         }
       })
@@ -1081,9 +1296,11 @@ class Component extends DCLogic {
         if(data.error){
           this.setState({ authError: data.error, inviteError: '' });
         } else {
-          localStorage.setItem('token', data.token);
+          localStorage.setItem('token', data.accessToken || data.token);
           localStorage.setItem('refreshToken', data.refreshToken);
           this.setState({ authError:'', inviteError:'', showPrivacyNote:true, screen:'articles', email:'', password:'' });
+          // 加载用户数据
+          this.loadUserData();
           if(typeof window!=='undefined'){ clearTimeout(this._noteTimer); this._noteTimer=setTimeout(()=>this.setState({ showPrivacyNote:false }), 6000); }
         }
       })
@@ -1113,6 +1330,183 @@ class Component extends DCLogic {
     this.setState({ aiPrompt:topic, aiGenerated:false });
   }
 
+  // AI 生成文章
+  async runAiGenerate(){
+    const st = this.state;
+    const token = localStorage.getItem('token');
+    if(!token){
+      this.setState({ authError:'请先登录' });
+      return;
+    }
+    if(!st.aiPrompt.trim()){
+      this.setState({ authError:'请输入文章主题或提示' });
+      return;
+    }
+
+    this.setState({ aiGenerating:true, aiGenerated:false, authError:'' });
+
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      };
+
+      // 等级格式：前端用 CET-4/CET-6，后端枚举用 CET4/CET6
+      const level = (st.aiLevel || '').replace('-', '');
+
+      const body = {
+        prompt: st.aiPrompt,
+        level,
+        category: st.aiGenre,
+        wordCount: st.aiWords,
+        useVocab: st.aiUseVocab,
+      };
+
+      const response = await this.authFetch('/api/frontend/generate-article', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if(data.error){
+        this.setState({ authError:data.error, aiGenerating:false });
+        return;
+      }
+
+      // 更新生成的文章数据
+      this.setState({
+        aiGenerated: true,
+        aiGenerating: false,
+        aiGenTitle: data.title || 'AI Generated Article',
+        aiGenContent: data.content || '',
+        aiGenSummary: data.summaryZh || '',
+        aiSavedId: data._id || null,
+      });
+      // 刷新私享文章库，让新生成的文章出现在书架/统计里
+      this.loadUserData();
+    } catch(err) {
+      this.setState({ authError:'AI 生成失败，请重试', aiGenerating:false });
+    }
+  }
+
+  // 词典查询（本地 ECDICT：中文释义为主，英文为辅，带考试标签）
+  async searchDict(){
+    const query = (this.state.dictQuery || '').trim();
+    if(!query) return;
+    this.setState({ dictShown:true, dictWord:query, dictTranslation:'查询中…', dictPhonetic:'', dictExamples:[] });
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+      const data = await this.authFetch('/api/frontend/dict/' + encodeURIComponent(query), { headers }).then(r => r.json());
+      if(data.error){
+        this.setState({ dictTranslation: data.error, dictPhonetic:'', dictExamples:[] });
+      } else {
+        const zh = data.translation || '';
+        const en = data.definitionEn || '';
+        let text = zh || en || '未找到释义';
+        if(zh && en) text = zh + '\n\n— ' + en;        // 中文为主，英文释义附后
+        if(data.tag) text += '\n\n📑 ' + data.tag.split(/\s+/).filter(Boolean).join(' · ');
+        const word = data.word || query;
+        this.setState({
+          dictWord: word,
+          dictPhonetic: data.phonetic || '',
+          dictTranslation: text,
+          dictExamples: data.examples || [],
+          // 让「加入生词本」按钮能直接收藏查到的词
+          selWordKey: word,
+          dictCache: { ...this.state.dictCache, [word]: { phon: data.phonetic || '', def: zh || en || '' } },
+        });
+      }
+    } catch(err) {
+      this.setState({ dictTranslation: '查询失败' });
+    }
+  }
+
+  // 打卡
+  async doCheckin(){
+    const token = localStorage.getItem('token');
+    if(!token) return;
+    try {
+      const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+      const data = await this.authFetch('/api/frontend/checkin', { method: 'POST', headers }).then(r => r.json());
+      if(data.success){
+        this.setState({ checkedIn: true, streak: data.streak || 0 });
+      }
+    } catch(err) {
+      console.error('打卡失败:', err);
+    }
+  }
+
+  // 加载打卡状态
+  async loadCheckinStatus(){
+    const token = localStorage.getItem('token');
+    if(!token) return;
+    try {
+      const headers = { 'Authorization': 'Bearer ' + token };
+      const data = await this.authFetch('/api/frontend/checkin', { headers }).then(r => r.json());
+      this.setState({
+        checkedIn: data.today || false,
+        streak: data.streak || 0,
+        streakMax: data.streakMax || 0,
+        checkinHistory: data.history || [],
+      });
+    } catch(err) {
+      console.error('加载打卡状态失败:', err);
+    }
+  }
+
+  // 添加生词到生词本
+  async addWordToVocab(word, definition, phonetic){
+    const token = localStorage.getItem('token');
+    if(!token) return;
+    try {
+      const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+      await this.authFetch('/api/frontend/vocab/add', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ word, definition: definition || '', phonetic: phonetic || '' }),
+      });
+      // 重新加载生词本
+      this.loadUserData();
+    } catch(err) {
+      console.error('添加生词失败:', err);
+    }
+  }
+
+  // 删除生词
+  async removeWordFromVocab(word){
+    const token = localStorage.getItem('token');
+    if(!token) return;
+    try {
+      const headers = { 'Authorization': 'Bearer ' + token };
+      await this.authFetch('/api/frontend/vocab/' + encodeURIComponent(word), { method: 'DELETE', headers });
+      // 重新加载生词本
+      this.loadUserData();
+    } catch(err) {
+      console.error('删除生词失败:', err);
+    }
+  }
+
+  // 复习生词评分
+  async rateVocab(word, quality){
+    const token = localStorage.getItem('token');
+    if(!token) return;
+    try {
+      const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+      await this.authFetch('/api/frontend/vocab/review', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ word, quality }),
+      });
+      // 重新加载生词本
+      this.loadUserData();
+    } catch(err) {
+      console.error('复习评分失败:', err);
+    }
+  }
+
   // ---------- static data ----------
   ARTICLES = [
     { id:1, title:'The Secret Life of Citrus', difficulty:'高中', cat:'science', summaryZh:'柑橘的种子如何在土壤里静静等待春天。', wordCount:118, readingTimeMin:4, color:'#ec6a2b', glyph:'🍊' },
@@ -1134,7 +1528,7 @@ class Component extends DCLogic {
     { id:103, title:'The Economics of Tea Houses', difficulty:'雅思', cat:'business', summaryZh:'雅思难度·你指定的商业选题。', wordCount:540, readingTimeMin:6, color:'#f3c44b', glyph:'⋆', done:true, tags:['生成','商业'] },
   ];
   CAT_LABELS = { tech:'科技 Tech', life:'生活 Life', news:'时事 News', literature:'文学 Lit', science:'科学 Science', business:'商业 Biz' };
-  DIFFS = ['初中','高中','CET-4','CET-6','雅思'];
+  DIFFS = ['初中','高中','CET-4','CET-6','考研','雅思'];
   CATS = ['science','life','literature','business','tech','news'];
   PAGE_SIZE = 6;
   INVITE_CODE = ''; // 邀请码由后端验证
@@ -1287,7 +1681,7 @@ class Component extends DCLogic {
     { id:6, title:'倒装句', en:'Inversion', level:'CET-6', cat:'other', color:'#2f7fd6', desc:'否定词或 only 提前引起的语序变化。' },
   ];
   GCAT_LABELS = { tense:'时态', clause:'从句', voice:'语态', mood:'语气', agreement:'一致', punctuation:'标点', other:'其它' };
-  GLEVELS = ['初中','高中','CET-4','CET-6','雅思'];
+  GLEVELS = ['初中','高中','CET-4','CET-6','考研','雅思'];
   GRAMMAR_DETAIL = {
     explanation:'现在完成时由 have / has + 过去分词构成，表示过去发生、但对现在仍有影响的动作，或从过去持续到现在的状态。常与 already、just、never、for、since 等连用。',
     examples:[
@@ -1323,7 +1717,7 @@ class Component extends DCLogic {
   ];
 
   // ---------- nav helpers ----------
-  go(s){ this.setState({ screen:s }); if(typeof window!=='undefined') window.scrollTo(0,0); }
+  go(s){ this.setState({ screen:s }); if(s==='grammar' && !this.state.grammars) this.loadGrammars(); if(typeof window!=='undefined') window.scrollTo(0,0); }
 
   renderVals(){
     const st = this.state;
@@ -1343,7 +1737,7 @@ class Component extends DCLogic {
     // ---- articles (feed + filters + pagination) ----
     const feedSource = st.feed==='private' ? this.PRIVATE_ARTICLES : this.ARTICLES;
     const ALL_ARTICLES = this.ARTICLES.concat(this.PRIVATE_ARTICLES);
-    const openArticle = (id)=>{ this.setState({ articleId:id, screen:'article', quizPick:{}, quizSubmitted:false, selWordKey:null, selParaIdx:null, showKeyPoints:false, paraGrammarOpen:false }); if(typeof window!=='undefined') window.scrollTo(0,0); };
+    const openArticle = (id)=>{ this.setState({ articleId:id, screen:'article', quizPick:{}, quizSubmitted:false, selWordKey:null, selParaIdx:null, showKeyPoints:false, paraGrammarOpen:false, articleDetail:null }); this.loadArticleDetail(id); if(typeof window!=='undefined') window.scrollTo(0,0); };
     const matchAll = feedSource.filter(a=>(!st.diff||a.difficulty===st.diff)&&(!st.cat||a.cat===st.cat));
     const totalPages = Math.max(1, Math.ceil(matchAll.length/this.PAGE_SIZE));
     const page = Math.min(st.page, totalPages);
@@ -1367,7 +1761,12 @@ class Component extends DCLogic {
     // ---- current article / reading (per-article data) ----
     const ca = ALL_ARTICLES.find(a=>a.id===st.articleId) || this.ARTICLES[0];
     const curArticle = { ...ca, catLabel:this.CAT_LABELS[ca.cat] };
-    const articleData = this.getArticleData(ca.id);
+    // 优先用后端真实详情；demo 文章（数字 id）用内置静态数据；真实文章详情未到时显示加载占位
+    const hasDetail = st.articleDetail && st.articleDetail.reqId === st.articleId && st.articleDetail.article;
+    const isDemoArticle = typeof ca.id === 'number';
+    const articleData = hasDetail ? this.buildArticleData(st.articleDetail)
+      : (isDemoArticle ? this.getArticleData(ca.id)
+        : { PARAS:[], WORD_DEFS:{}, KEY_POINTS:{ note: st.articleLoading?'加载中…':'暂无内容', words:[], sentences:[] }, QUIZ:[] });
     const curPARAS = articleData.PARAS;
     const curWORD_DEFS = articleData.WORD_DEFS;
     const curKEY_POINTS = articleData.KEY_POINTS;
@@ -1376,7 +1775,7 @@ class Component extends DCLogic {
     const isVocabWord = (clean)=> clean.length>=3 && vocabRoots.some(r=> clean===r || clean.startsWith(r));
     const ulineOn = 'border-bottom:2px solid rgba(90,96,130,.16);box-decoration-break:clone;-webkit-box-decoration-break:clone;padding-bottom:2px';
     const curParagraphs = curPARAS.map((para,pi)=>({
-      onDbl: st.sentenceTrans ? ()=>this.setState({ selParaIdx:pi, selWordKey:null, showKeyPoints:false, paraGrammarOpen:false }) : (()=>{}),
+      onDbl: st.sentenceTrans ? ()=>{ const enText = para.sentences.map(s=>s.en).join(' '); this.setState({ selParaIdx:pi, selWordKey:null, showKeyPoints:false, paraGrammarOpen:false }); this.ensureTranslation(enText); } : (()=>{}),
       sentences: para.sentences.map((s)=>({
         uline: st.segHint ? ulineOn : '',
         tokens: this.tokenize(s.en).map((tk)=>{
@@ -1387,11 +1786,14 @@ class Component extends DCLogic {
         }),
       })),
     }));
-    const selDef = st.selWordKey ? (curWORD_DEFS[st.selWordKey] || { phon:'', def:'— AI 实时翻译 · 点击「加入生词本」收藏 —' }) : null;
+    const dictHit = (st.selWordKey && st.dictCache) ? st.dictCache[st.selWordKey] : null;
+    const selDef = st.selWordKey ? (curWORD_DEFS[st.selWordKey] || dictHit || { phon:'', def:'查询中… · 点击「加入生词本」收藏' }) : null;
     const selWord = selDef ? { word:st.selWordKey, phon:selDef.phon, def:selDef.def } : {};
     const selWordAdded = st.selWordKey ? st.addedWords.includes(st.selWordKey) : false;
     const curPara = (st.selParaIdx!=null) ? curPARAS[st.selParaIdx] : null;
-    const paraZh = curPara ? curPara.sentences.map(s=>s.zh).join('') : '';
+    const curParaEn = curPara ? curPara.sentences.map(s=>s.en).join(' ') : '';
+    const storedParaZh = curPara ? curPara.sentences.map(s=>s.zh).filter(Boolean).join('') : '';
+    const paraZh = storedParaZh || (curParaEn && st.transCache ? (st.transCache[curParaEn] || '') : '') || (curPara ? '（开启整句翻译后双击段落，AI 实时翻译）' : '');
     const paraGrammar = curPara ? curPara.grammar : '';
     const cardKeyPoints = st.showKeyPoints;
     const cardPara = !st.showKeyPoints && st.selParaIdx!=null;
@@ -1399,9 +1801,9 @@ class Component extends DCLogic {
     const cardEmpty = !cardKeyPoints && !cardPara && !cardWord;
     // reading layout styles
     const isRight = st.panelPos==='right';
-    const readLayoutStyle = isRight ? 'display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:28px;align-items:start' : 'display:flex;flex-direction:column;gap:22px';
+    const readLayoutStyle = isRight ? 'display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,372px);gap:28px;align-items:start' : 'display:flex;flex-direction:column;gap:22px';
     const articleColStyle = (isRight && st.quizOn) ? 'max-height:calc(100vh - 150px);overflow-y:auto;padding-right:8px' : '';
-    const panelWrapStyle = !isRight ? '' : (st.quizOn ? 'max-height:calc(100vh - 150px);overflow-y:auto;padding-right:4px;display:flex;align-items:flex-start' : 'position:sticky;top:14px;height:calc(100vh - 28px);display:flex;align-items:center');
+    const panelWrapStyle = !isRight ? '' : (st.quizOn ? 'max-height:calc(100vh - 150px);overflow-y:auto;padding-right:4px;display:flex;align-items:flex-start' : 'position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);overflow-y:auto');
 
     // ---- quiz (per-article) ----
     const quizQuestions = curQUIZ.map((q,qi)=>({
@@ -1427,7 +1829,7 @@ class Component extends DCLogic {
     const vfDef=[['all','全部'],['learning','学习中'],['review','复习'],['mastered','已掌握']];
     const vocabTabs = vfDef.map(([k,l])=>({ label:l+' '+vfCounts[k], active:st.vocabFilter===k, bg: st.vocabFilter===k?INK:'#fffdf6', fg: st.vocabFilter===k?'#fffdf6':INK, onClick:()=>this.setState({vocabFilter:k}) }));
     const filteredVocabAll = this.VOCAB.filter(v=>st.vocabFilter==='all'||v.mastery===st.vocabFilter).map(v=>({
-      ...v, mColor:masteryColor[v.mastery], mLabel:masteryLabel[v.mastery], dueLabel: v.due?'待复习':'已安排',
+      ...v, mColor:masteryColor[v.mastery], mLabel:masteryLabel[v.mastery], dueLabel: v.due?'待复习':(v.nextReviewLabel||'已安排'),
     }));
     const VOCAB_PAGE_SIZE = 12;
     const filteredVocab = st.vocabShowAll ? filteredVocabAll : filteredVocabAll.slice(0, VOCAB_PAGE_SIZE);
@@ -1440,61 +1842,115 @@ class Component extends DCLogic {
     const rIdx = Math.min(st.reviewIndex, Math.max(0,rTotal-1));
     const rDone = st.reviewIndex>=rTotal;
     const rCard = reviewDue[rIdx] || reviewDue[0] || {word:'',phon:'',def:''};
+    // 艾宾浩斯：当前卡片四个评分各自会把下次复习排到多久后（后端按曲线算好）
+    const revPrev = rCard.reviewPreview || { again:'5 分钟后', hard:'5 分钟后', good:'1 天后', easy:'2 天后' };
     const reviewProgress = rTotal? Math.round(Math.min(st.reviewIndex,rTotal)/rTotal*100):0;
     const rateCard=(q)=>{ this.setState(s=>({ reviewIndex:s.reviewIndex+1, reviewFlipped:false })); };
 
-    // ---- grammar ----
-    const filteredGrammar = this.GRAMMARS.filter(g=>(!st.gLevel||g.level===st.gLevel)&&(!st.gCat||g.cat===st.gCat)).map(g=>({
-      ...g, catLabel:this.GCAT_LABELS[g.cat], onClick:()=>{ this.setState({grammarId:g.id,screen:'grammarDetail',gPick:{},gSubmitted:false}); if(typeof window!=='undefined') window.scrollTo(0,0); },
+    // ---- grammar （优先后端真实数据，静态作降级）----
+    const grammarSource = (st.grammars && st.grammars.length) ? st.grammars : this.GRAMMARS;
+    const filteredGrammar = grammarSource.filter(g=>(!st.gLevel||g.level===st.gLevel)&&(!st.gCat||g.cat===st.gCat)).map(g=>({
+      ...g, catLabel:this.GCAT_LABELS[g.cat]||g.cat, onClick:()=>this.openGrammar(g.id),
     }));
     const gLevelChips=[{label:'全部',v:''}].concat(this.GLEVELS.map(l=>({label:l,v:l}))).map(c=>{
       const active=st.gLevel===c.v; return { label:c.label, bg:active?ORANGE:'#fffdf6', fg:active?'#fff':INK, onClick:()=>this.setState({gLevel:c.v}) };
     });
-    const cg = this.GRAMMARS.find(g=>g.id===st.grammarId) || this.GRAMMARS[0];
-    const curGrammar = { ...cg, catLabel:this.GCAT_LABELS[cg.cat] };
-    const gExamples = this.GRAMMAR_DETAIL.examples;
-    const gExercises = this.GRAMMAR_DETAIL.exercises.map((q,qi)=>({
+    const cg = grammarSource.find(g=>g.id===st.grammarId) || grammarSource[0] || this.GRAMMARS[0];
+    const curGrammar = { ...cg, catLabel:this.GCAT_LABELS[cg.cat]||cg.cat };
+    // 语法详情：后端详情匹配当前 id 则用真实数据，否则用内置静态
+    const gd = (st.grammarDetail && st.grammarDetail.id===st.grammarId && (st.grammarDetail.exercises||st.grammarDetail.explanation)) ? st.grammarDetail : this.GRAMMAR_DETAIL;
+    const gExamples = gd.examples || [];
+    const gExerciseList = gd.exercises || [];
+    const gExercises = gExerciseList.map((q,qi)=>({
       n:qi+1, text:q.text,
-      opts:q.opts.map(o=>{
+      opts:(q.opts||[]).map(o=>{
         let bg='#fffdf6',fg=INK; const picked=st.gPick[qi]===o;
         if(st.gSubmitted){ if(o===q.answer){bg='#1f9d5c';fg='#fff';} else if(picked){bg='#d94646';fg='#fff';} }
         else if(picked){bg=INK;fg='#fffdf6';}
         return { label:o, bg, fg, onClick:()=>{ if(!st.gSubmitted) this.setState({gPick:{...st.gPick,[qi]:o}}); } };
       }),
     }));
-    const gCorrect=this.GRAMMAR_DETAIL.exercises.filter((q,qi)=>st.gPick[qi]===q.answer).length;
-    const gScore=Math.round(gCorrect/this.GRAMMAR_DETAIL.exercises.length*100);
+    const gCorrect=gExerciseList.filter((q,qi)=>st.gPick[qi]===q.answer).length;
+    const gScore=Math.round(gCorrect/Math.max(1,gExerciseList.length)*100);
 
-    // ---- checkin calendar ----
-    const cal=[]; const today=new Date();
-    const doneSet = new Set([1,2,3,4,5,8,9,10,11,12,15,16,17,18,19,22,23,24,25,26,29,30,31,32,33,36,37,38,39,40,41]);
-    for(let i=41;i>=0;i--){ const idx=41-i; cal.push({ done: doneSet.has(idx) || (idx>=36 && st.checkedIn) , isToday:i===0 }); }
-    const checkinCal = cal.map(c=>({ bg: c.done? (c.isToday?ORANGE:PINK) : '#e9e1c8', border: c.isToday?'2.5px solid #1a1817':'2px solid #d8cfb4', dot: c.isToday }));
-    const streak=12;
+    // ---- checkin 真实日历（当月，按真实打卡日期高亮；日期键与后端一致用 UTC YYYY-MM-DD）----
+    const _now = new Date();
+    const calY = _now.getUTCFullYear(), calM = _now.getUTCMonth();
+    const pad2 = n => String(n).padStart(2,'0');
+    const todayStr = _now.toISOString().slice(0,10);
+    const doneSet = new Set((st.checkinHistory||[]).map(h=>h.date).filter(Boolean));
+    if(st.checkedIn) doneSet.add(todayStr);
+    const daysInMonth = new Date(Date.UTC(calY, calM+1, 0)).getUTCDate();
+    const firstWeekday = new Date(Date.UTC(calY, calM, 1)).getUTCDay(); // 0=周日
+    const leadingBlanks = (firstWeekday + 6) % 7;                        // 周一为每周第一天
+    const todayDay = _now.getUTCDate();
+    const calendarDays = [];
+    for(let i=0;i<leadingBlanks;i++) calendarDays.push({ label:'', bg:'transparent', fg:'transparent', border:'2px solid transparent' });
+    for(let d=1; d<=daysInMonth; d++){
+      const ds = `${calY}-${pad2(calM+1)}-${pad2(d)}`;
+      const done = doneSet.has(ds);
+      const isToday = ds===todayStr;
+      const isFuture = d > todayDay;
+      calendarDays.push({
+        label: String(d),
+        bg: done ? (isToday?ORANGE:PINK) : (isToday?'#fff3d6':'#f6f0de'),
+        fg: done ? '#fffdf6' : (isFuture?'#cabfa0':INK),
+        border: isToday ? '2.5px solid #1a1817' : '2px solid #e6dcc2',
+      });
+    }
+    const calMonthLabel = `${calY} 年 ${calM+1} 月`;
+    const monthPrefix = `${calY}-${pad2(calM+1)}-`;
+    const monthChecks = [...doneSet].filter(x=>x.startsWith(monthPrefix)).length;
+    const completionRate = todayDay>0 ? Math.round(monthChecks/todayDay*100) : 0;
+    const maxStreak = st.streakMax || st.streak || 0;
+    const streak = st.streak || 0;
 
-    // ---- stats ----
-    const trendSet = this.TREND[st.statCat][st.statRange];
-    const maxTrend = Math.max(...trendSet.vals, 1);
-    const weekBars = trendSet.vals.map((v,i)=>({ h: Math.round(v/maxTrend*100), val:v, label:trendSet.labels[i], color: i%2?BLUE:PINK }));
+    // ---- stats （优先后端真实趋势，无数据时用静态示例）----
+    const realTrend = st.stats ? (st.statCat==='words' ? (st.stats.vocabGrowth||[]) : (st.stats.dailyTrend||[])) : [];
+    let weekBars;
+    if(realTrend.length){
+      const slice = realTrend.slice(-7);
+      const valOf = t => t.count!=null ? t.count : (t.reads!=null ? t.reads : 0);
+      const maxV = Math.max(...slice.map(valOf), 1);
+      weekBars = slice.map((t,i)=>({ h: Math.round(valOf(t)/maxV*100), val:valOf(t), label:(t._id||'').slice(5), color: i%2?BLUE:PINK }));
+    } else {
+      const trendSet = this.TREND[st.statCat][st.statRange];
+      const maxTrend = Math.max(...trendSet.vals, 1);
+      weekBars = trendSet.vals.map((v,i)=>({ h: Math.round(v/maxTrend*100), val:v, label:trendSet.labels[i], color: i%2?BLUE:PINK }));
+    }
     const statRangeChips = [['7','近 7 天'],['30','近 30 天'],['all','全部']].map(([k,l])=>({ label:l, bg: st.statRange===k?INK:'#fffdf6', fg: st.statRange===k?'#fffdf6':INK, onClick:()=>this.setState({statRange:k}) }));
     const statCatTabs = [['words','📚 单词'],['articles','📄 文章']].map(([k,l])=>({ label:l, bg: st.statCat===k?INK:'#fffdf6', fg: st.statCat===k?'#fffdf6':INK, onClick:()=>this.setState({statCat:k}) }));
     const statChartTitle = st.statCat==='words' ? '新增生词趋势' : '读完文章趋势';
     const statChartUnit = st.statCat==='words' ? '个单词' : '篇文章';
-    const genRecords = this.GEN_RECORDS.map(r=>({ ...r, doneLabel: r.done?'已完成':'未读', doneBg: r.done?'#1f9d5c':'#efe9d6', doneFg: r.done?'#fff':'#7a7568' }));
+    // 生成记录：登录后用真实私享文章库，否则用静态示例
+    const genSource = st.dataLoaded ? (this.PRIVATE_ARTICLES||[]).map(p=>({ title:p.title, level:p.difficulty, tags:p.tags||[], words:p.wordCount||0, done:!!p.done })) : this.GEN_RECORDS;
+    const genRecords = genSource.map(r=>({ ...r, doneLabel: r.done?'已完成':'未读', doneBg: r.done?'#1f9d5c':'#efe9d6', doneFg: r.done?'#fff':'#7a7568' }));
+    // 使用真实统计数据
+    const userStats = st.stats || {};
     const statCards=[
-      { k:'生词总量', v:'142', sub:'个单词', color:PINK },
-      { k:'已掌握', v:'58', sub:'词 · 41%', color:'#1f9d5c' },
-      { k:'读完文章', v:'23', sub:'篇', color:ORANGE },
-      { k:'平均正确率', v:'84%', sub:'读后测验', color:BLUE },
+      { k:'生词总量', v: String(userStats.vocabCount || this.VOCAB.length), sub:'个单词', color:PINK },
+      { k:'已掌握', v: String(userStats.vocabMastered || this.VOCAB.filter(v=>v.mastery==='mastered').length), sub:'词', color:'#1f9d5c' },
+      { k:'读完文章', v: String(userStats.totalReads || 0), sub:'篇', color:ORANGE },
+      { k:'连续阅读', v: String(userStats.streak || st.streak || 0), sub:'天 🔥', color:BLUE },
     ];
 
-    // ---- skill radar ----
+    // ---- 累计学习时长（真实数据）----
+    const _durMin = userStats.totalDurationMin || 0;
+    const _reads = userStats.totalReads || 0;
+    const studyTimeText = _durMin >= 60 ? (Math.round(_durMin/60*10)/10 + ' 小时') : (_durMin + ' 分钟');
+    const studyAvgMin = _reads > 0 ? Math.round(_durMin/_reads) : 0;
+    const studySubText = `共 ${_reads} 次学习 · 平均 ${studyAvgMin} 分钟/次`;
+
+    // ---- skill radar（按真实数据推导五个维度，0-100）----
+    const _clamp = v => Math.max(0, Math.min(100, Math.round(v)));
+    const _vocabCount = userStats.vocabCount || 0;
+    const _mastered = userStats.vocabMastered || 0;
     const dims = [
-      { label:'阅读', val:78, color:PINK },
-      { label:'词汇', val:88, color:BLUE },
-      { label:'语法', val:64, color:ORANGE },
-      { label:'坚持', val:92, color:'#1f9d5c' },
-      { label:'准确', val:84, color:YELLOW },
+      { label:'阅读', val:_clamp(_reads * 5), color:PINK },                                       // 读完文章数（20 篇=满）
+      { label:'词汇', val:_clamp(_vocabCount), color:BLUE },                                       // 生词量（100 词=满）
+      { label:'掌握', val:_clamp(_vocabCount>0 ? _mastered/_vocabCount*100 : 0), color:ORANGE },   // 掌握率
+      { label:'坚持', val:_clamp((st.streakMax || st.streak || 0) * 7), color:'#1f9d5c' },         // 最长连续（约 2 周=满）
+      { label:'准确', val:_clamp(userStats.avgScore || 0), color:YELLOW },                         // 测验正确率
     ];
     const cx=190, cy=150, R=104, LR=130;
     const ang=i=>(-90+72*i)*Math.PI/180;
@@ -1514,24 +1970,23 @@ class Component extends DCLogic {
     // ---- ai studio (article generator) ----
     const aiLevelChips = this.DIFFS.map(d=>({ label:d, bg: st.aiLevel===d?ORANGE:'#fffdf6', fg: st.aiLevel===d?'#fff':INK, onClick:()=>this.setState({aiLevel:d, aiGenerated:false}) }));
     const aiGenreChips = this.CATS.map(c=>({ label:this.CAT_LABELS[c].split(' ')[0], bg: st.aiGenre===c?PINK:'#fffdf6', fg: st.aiGenre===c?'#fff':INK, onClick:()=>this.setState({aiGenre:c, aiGenerated:false}) }));
-    const aiWordChips = [150,300,500].map(n=>({ label:n+' 词', bg: st.aiWords===n?BLUE:'#fffdf6', fg: st.aiWords===n?'#fff':INK, onClick:()=>this.setState({aiWords:n, aiGenerated:false}) }));
+    const aiWordChips = [{l:'自动',n:0},{l:'150 词',n:150},{l:'300 词',n:300},{l:'500 词',n:500}].map(c=>({ label:c.l, bg: st.aiWords===c.n?BLUE:'#fffdf6', fg: st.aiWords===c.n?'#fff':INK, onClick:()=>this.setState({aiWords:c.n, aiGenerated:false}) }));
     const aiVocabList = this.VOCAB.filter(v=>v.due).map(v=>v.word);
     const aiVocabPreview = (st.aiUseVocab? aiVocabList : []).slice(0,6);
     const aiVocabCount = st.aiUseVocab ? aiVocabList.length : 0;
     const aiGenreLabel = this.CAT_LABELS[st.aiGenre].split(' ')[0];
-    const aiGenTitle = 'Where the Light Lingers';
-    const aiGenSource = [
-      'Deep beneath the waves, a peculiar glow drifts through the dark water. Tiny creatures, dormant by day, awaken at night and release a vivid blue light.',
-      'Scientists have cultivated these organisms for years. Their resilient bodies survive the crushing pressure, and the faint fragrance of the sea seems to linger on every sample.',
-    ];
-    const aiGenParas = aiGenSource.map(text=>({
+    // 使用AI生成的真实数据，如果没有则显示默认提示
+    const aiGenTitle = st.aiGenTitle || '鲜榨文章标题';
+    const aiGenContent = st.aiGenContent || '';
+    const aiGenSummary = st.aiGenSummary || '';
+    const aiGenParas = aiGenContent ? aiGenContent.split('\n').filter(p=>p.trim()).map(text=>({
       tokens: this.tokenize(text).map(tk=>{
         if(!tk.isWord) return { t:tk.raw, plain:true, vocab:false };
         const clean = tk.raw.toLowerCase().replace(/[^a-z]/g,'');
         const vocab = st.aiUseVocab && isVocabWord(clean);
         return { t:tk.raw, plain:!vocab, vocab };
       }),
-    }));
+    })) : [];
 
     return {
       // chrome
@@ -1581,43 +2036,69 @@ class Component extends DCLogic {
       cardMode:!st.quizOn, cardKeyPoints, cardPara, cardWord, cardEmpty,
       selWord, selWordAdded, selWordNotAdded:!selWordAdded,
       closeCard:()=>this.setState({selWordKey:null, selParaIdx:null, showKeyPoints:false, paraGrammarOpen:false}),
-      addSelWord:()=>{ if(st.selWordKey && !st.addedWords.includes(st.selWordKey)) this.setState({ addedWords:[...st.addedWords, st.selWordKey] }); },
+      addSelWord:()=>{
+        if(st.selWordKey && !st.addedWords.includes(st.selWordKey)){
+          this.setState({ addedWords:[...st.addedWords, st.selWordKey] });
+          const def = selDef ? selDef.def : '';
+          const phon = selDef ? selDef.phon : '';
+          this.addWordToVocab(st.selWordKey, def, phon);
+        }
+      },
       paraNo: st.selParaIdx!=null? st.selParaIdx+1 : '', paraZh, paraGrammar, paraGrammarOpen:st.paraGrammarOpen,
       togglePG:()=>this.setState({paraGrammarOpen:!st.paraGrammarOpen}), pgState: st.paraGrammarOpen?'▲':'▼',
       kpNote:curKEY_POINTS.note, kpWords:curKEY_POINTS.words, kpSents:curKEY_POINTS.sentences,
-      quizQuestions, submitQuiz:()=>this.setState({quizSubmitted:true}), quizSubmitted:st.quizSubmitted, quizNotSubmitted:!st.quizSubmitted, quizScore, quizMsg,
+      quizQuestions, submitQuiz:()=>{ this.setState({quizSubmitted:true}); if(quizScore>=67) this.doCheckin(); }, quizSubmitted:st.quizSubmitted, quizNotSubmitted:!st.quizSubmitted, quizScore, quizMsg,
       // dict
-      dictResultShown: st.dictShown, dictSearch:()=>this.setState({dictShown:true}),
+      dictResultShown: st.dictShown, dictSearch:()=>this.searchDict(),
+      onDictKey:(e)=>{ if(e && e.key==='Enter'){ if(e.preventDefault) e.preventDefault(); this.searchDict(); } },
+      dictWord: st.dictWord || '', dictPhonetic: st.dictPhonetic || '', dictTranslation: st.dictTranslation || '', dictExamples: st.dictExamples || [],
+      onDictInput:(e)=>this.setState({dictQuery:e.target.value}),
+      dictQuery: st.dictQuery || '',
       // vocab
       vocabTabs, filteredVocab, vTotal:vfCounts.all, vMastered:vfCounts.mastered, vDue:dueCount,
       vocabHasMore, vocabShowAll:st.vocabShowAll,
       toggleVocabShowAll:()=>this.setState({vocabShowAll:!st.vocabShowAll}),
       vocabShowLabel: st.vocabShowAll ? '收起 ↑' : '展开全部 ↓',
       goReview:()=>this.go('review'),
+      goVocab:()=>this.go('vocab'),
       // review
       rCard, rTotal, reviewProgress, reviewDone:rDone, reviewActive:!rDone && rTotal>0,
+      reviewPrevAgain: revPrev.again, reviewPrevHard: revPrev.hard, reviewPrevGood: revPrev.good, reviewPrevEasy: revPrev.easy,
       reviewFlipped:st.reviewFlipped, reviewNotFlipped:!st.reviewFlipped, flipCard:()=>this.setState({reviewFlipped:!st.reviewFlipped}),
-      rateAgain:()=>rateCard(1), rateHard:()=>rateCard(3), rateGood:()=>rateCard(4), rateEasy:()=>rateCard(5),
+      rateAgain:()=>{ rateCard(1); if(rCard.word) this.rateVocab(rCard.word, 1); },
+      rateHard:()=>{ rateCard(3); if(rCard.word) this.rateVocab(rCard.word, 3); },
+      rateGood:()=>{ rateCard(4); if(rCard.word) this.rateVocab(rCard.word, 4); },
+      rateEasy:()=>{ rateCard(5); if(rCard.word) this.rateVocab(rCard.word, 5); },
       resetReview:()=>this.setState({reviewIndex:0,reviewFlipped:false}),
       reviewIndexLabel:Math.min(st.reviewIndex+1,rTotal),
       // grammar
-      filteredGrammar, gLevelChips, curGrammar, gExplanation:this.GRAMMAR_DETAIL.explanation, gExamples, gExercises,
+      filteredGrammar, gLevelChips, curGrammar, gExplanation:gd.explanation, gExamples, gExercises,
       submitGrammar:()=>this.setState({gSubmitted:true}), gSubmitted:st.gSubmitted, gNotSubmitted:!st.gSubmitted, gScore,
       goGrammar:()=>this.go('grammar'),
       // checkin
-      checkinCal, streak, checkedIn:st.checkedIn, notCheckedIn:!st.checkedIn, doCheckin:()=>this.setState({checkedIn:true}),
+      calendarDays, calMonthLabel, monthChecks, completionRate, maxStreak,
+      streak: st.streak || streak, checkedIn:st.checkedIn, notCheckedIn:!st.checkedIn,
+      doCheckin:()=>this.doCheckin(),
+      checkinHistory: st.checkinHistory || [],
       // stats
       weekBars, statCards, statRangeChips, statCatTabs, statChartTitle, statChartUnit, genRecords,
+      studyTimeText, studySubText,
       radarRings, radarAxes, radarData, radarDataPts, radarLegend, radarAvg,
       // ai studio
       aiLevelChips, aiGenreChips, aiWordChips, aiVocabPreview, aiVocabCount,
       toggleAiVocab:()=>this.setState({aiUseVocab:!st.aiUseVocab, aiGenerated:false}),
       aiVocabTrackBg: st.aiUseVocab?'#1f9d5c':'#cfc7ad', aiVocabKnobX: st.aiUseVocab?'24px':'2px',
-      aiLevel:st.aiLevel, aiWords:st.aiWords, aiGenreLabel,
+      aiLevel:st.aiLevel, aiWords:st.aiWords, aiWordsLabel: st.aiWords===0 ? '自动长度' : (st.aiWords+' 词'), aiGenreLabel,
       aiPrompt:st.aiPrompt, aiAuto:()=>this.aiAuto(),
       onAiPrompt:(e)=>this.setState({aiPrompt:e.target.value, aiGenerated:false}),
-      runAi:()=>this.setState({aiGenerated:true}), aiRun:st.aiGenerated, aiNotRun:!st.aiGenerated,
-      aiGenTitle, aiGenParas, saveAiArticle:()=>{ this.setState({feed:'private',page:1}); this.go('articles'); },
+      runAi:()=>this.runAiGenerate(), aiRun:st.aiGenerated, aiNotRun:!st.aiGenerated && !st.aiGenerating, aiGenerating:st.aiGenerating,
+      aiGenTitle, aiGenParas, aiGenSummary, saveAiArticle:()=>{ this.setState({feed:'private',page:1}); this.go('articles'); },
+      // 自定义字数
+      aiCustomWords:st.aiCustomWords,
+      onAiCustomWords:(e)=>this.setState({aiCustomWords:e.target.value}),
+      setAiCustomWords:()=>{ const n=parseInt(st.aiCustomWords); if(n>=50 && n<=2000) this.setState({aiWords:n, aiGenerated:false}); },
+      aiCustomBtnBg: (parseInt(st.aiCustomWords)>=50 && parseInt(st.aiCustomWords)<=2000) ? '#f3c44b' : '#d8d2bf',
+      aiCustomBtnFg: (parseInt(st.aiCustomWords)>=50 && parseInt(st.aiCustomWords)<=2000) ? INK : '#8a8472',
       // settings
       setSentence:st.setSentence, toggleSentence:()=>this.setState({setSentence:!st.setSentence}),
       setReminder:st.setReminder, toggleReminder:()=>this.setState({setReminder:!st.setReminder}),

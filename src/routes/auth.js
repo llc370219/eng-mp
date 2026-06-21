@@ -13,6 +13,7 @@ router.get('/captcha', (req, res) => {
 
 router.post('/send-code', authController.sendCode);
 router.post('/register', authController.register);
+router.post('/register-temp', authController.registerTemp); // 临时注册（跳过验证码）
 router.post('/login', authController.login);
 router.post('/reset-password', authController.resetPassword);
 router.post('/refresh', authController.refresh);

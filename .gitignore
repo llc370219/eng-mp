@@ -20,3 +20,6 @@ npm-debug.log*
 
 # Build
 dist/
+
+# 词典数据（从 ECDICT 提取，可重新生成，不入库以保持仓库精简）
+data/ecdict-subset.csv

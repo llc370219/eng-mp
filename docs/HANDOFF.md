@@ -223,7 +223,7 @@ eng-mp/
 | **默认提供商** | DeepSeek V4 Flash |
 | **提供商 key** | deepseekv4flash |
 | **模型** | deepseek-v4-flash |
-| **API Key** | sk-fe58367779654d0084f7e5b59403a2b4 |
+| **API Key** | ⚠️已移除·请到 DeepSeek 控制台吊销旧 key 并重新生成，新 key 只存 Railway 环境变量 |
 | **Base URL** | https://api.deepseek.com/v1 |
 | **SDK** | OpenAI 兼容 |
 | **配置位置** | Railway 环境变量 `DEEPSEEK_V4_FLASH_API_KEY` + `AI_PROVIDER` |
@@ -257,7 +257,7 @@ railway variable set DEEPSEEK_V4_FLASH_API_KEY=sk-xxx --service backend
 | 配置项 | 值 |
 |--------|-----|
 | **服务** | Resend.com |
-| **API Key** | re_GC8vJoG4_NjsP2HtnFF9TqLM7d844p5uL |
+| **API Key** | ⚠️已移除·请到 Resend 控制台吊销旧 key 并重新生成，新 key 只存 Railway 环境变量 |
 | **发件人** | Lull 听简 <onboarding@resend.dev> |
 | **免费额度** | 3000 封/月 |
 | **配置位置** | Railway 环境变量 `RESEND_API_KEY` |
@@ -292,8 +292,8 @@ railway variable set SMTP_FROM=your@qq.com --service backend
 | JWT_REFRESH_SECRET | 3518c3a31079f4fba9fbb0576090b30248112aa2736cfd9c955cb8bb3e29ca30 |
 | NODE_ENV | production |
 | AI_PROVIDER | deepseekv4flash |
-| DEEPSEEK_V4_FLASH_API_KEY | sk-fe58367779654d0084f7e5b59403a2b4 |
-| RESEND_API_KEY | re_GC8vJoG4_NjsP2HtnFF9TqLM7d844p5uL |
+| DEEPSEEK_V4_FLASH_API_KEY | ⚠️已移除·请到 DeepSeek 控制台吊销旧 key 并重新生成，新 key 只存 Railway 环境变量 |
+| RESEND_API_KEY | ⚠️已移除·请到 Resend 控制台吊销旧 key 并重新生成，新 key 只存 Railway 环境变量 |
 
 ### 邀请码规则
 | 规则 | 说明 |
@@ -381,7 +381,74 @@ git push origin main     # 推送（部署前先推送）
 
 ## 📅 完整更新日志
 
-### 2026-06-21
+### 2026-06-21（生词复习 — 艾宾浩斯遗忘曲线）
+
+- ✅ 新增 `src/services/ebbinghaus.js`：经典遗忘曲线节点 **5分钟 → 30分钟 → 12小时 → 1天 → 2天 → 4天 → 7天 → 15天 → 30天 →（掌握）60天**。
+- ✅ `/api/frontend/vocab/review` 改用艾宾浩斯曲线（替换原 SM-2 简化版）：用 `repetition` 作 stage（已成功复习次数）——**记得**进一档、**简单**进两档、**困难**退一档、**忘了**清零（5分钟后重学）。`masteryLevel`：stage 0 新词 / 1–6 学习中 / 7–9 复习 / 10 已掌握。
+- ✅ `/api/frontend/vocab` 列表返回每词的 `stage`、`nextReviewLabel`（下次复习：X天后）、`reviewPreview`（四个按钮各排到多久后）。
+- ✅ 前端复习卡四个按钮显示各自间隔（类 Anki：忘了 5分钟后 / 记得 1天后…）；生词本列表显示「下次复习」时间。
+- ℹ️ 旧 `src/services/spaced-repetition.js`（SM-2）仍被 `/demo` 旧版与 `vocabController` 使用，未改动；本次只改前端用的 `/api/frontend/*`。
+- 验证：曲线推进/回退、按钮预览、空生词本兜底均通过；加词→复习→列表全链路实测正确。
+
+### 2026-06-21（词典方案 — 本地 ECDICT 中文词库）
+
+> 此前查词走在线 API `dictionary-api-7hmy.onrender.com`，**只有英文释义、无音标、Render 冷启动常超时**，对中文学习者不友好。改为本地 ECDICT 开源词库。
+
+**方案：ECDICT 本地词库（开源，离线，免费）**
+- 词典页查词 与 阅读页单词卡片 **使用同一接口** `/api/frontend/dict/:word`，走 `services/dictionary.lookupWord`：**本地 ECDICT 优先 → 在线英文兜底 → 自动缓存**。
+- 返回中文释义（主）+ 英文释义（次）+ 音标 + 考试标签（中考/高考/CET4/CET6/考研/雅思/TOEFL/GRE）。
+- **导入了 57,841 词的学习者子集**（ECDICT 中所有「考试标签 或 词频排名」的词，覆盖分级阅读几乎全部词汇），本地库约 25–40MB，**对 Atlas M0 免费层（512MB）安全**。
+- ✅ 修复词典输入框**回车查询**（原来只能点按钮）；✅ 词典页「加入生词本」现可收藏查到的词。
+
+**数据来源与再生成（ECDICT 体积大不入 git，`data/ecdict-subset.csv` 已 gitignore）**
+```bash
+# 1. 下载 ECDICT SQLite（官方 release，207MB）
+curl -L -o /tmp/ecdict.zip https://github.com/skywind3000/ECDICT/releases/download/1.0.28/ecdict-sqlite-28.zip
+cd /tmp && unzip ecdict.zip          # 得到 stardict.db
+
+# 2. 导出学习者子集（考试词+高频词，约 5.8 万）为 CSV（换行编码成 \n 供导入脚本逐行解析）
+sqlite3 -csv stardict.db "SELECT word,phonetic,
+  replace(replace(coalesce(definition,''),char(13),''),char(10),'\n'),
+  replace(replace(coalesce(translation,''),char(13),''),char(10),'\n'),
+  coalesce(pos,''),coalesce(collins,''),coalesce(oxford,''),coalesce(tag,''),
+  coalesce(bnc,''),coalesce(frq,''),
+  replace(replace(coalesce(exchange,''),char(13),''),char(10),'\n')
+  FROM stardict WHERE tag!='' OR frq>0 OR bnc>0" > ~/Documents/eng-mp/data/ecdict-subset.csv
+
+# 3. 导入（本地）
+node scripts/import-dict.js data/ecdict-subset.csv
+# 3b. 导入生产 Atlas（部署后执行一次）
+MONGODB_URI="mongodb+srv://...<atlas>.../eng-reader" node scripts/import-dict.js data/ecdict-subset.csv
+```
+> 想要全量 77 万词：去掉 `WHERE` 子句即可，但 Atlas 免费层会偏紧（约占一半），本地无所谓。
+
+### 2026-06-21（前后端集成修复 — 让前端真正用上后端数据）
+
+> 背景：此前 Lull 前端虽已部署，但大量界面仍是设计稿里写死的演示数据（文章、语法、统计、生词都是硬编码），只有约 40% 接了后端，导致「前后端内容不对应、按钮点了没反应」。本次把前端完整接到后端真实数据。
+
+**前端 `frontend/Lull-Reading.dc.html`**
+- ✅ **React 本地化**：内置 `react.production.min.js` / `react-dom.production.min.js`，`<head>` 优先加载本地 React，`support.js` 检测到 `window.React` 即跳过 unpkg CDN。修复「unpkg 不可达（如国内网络）导致整页白屏」。
+- ✅ **修复渲染崩溃**：`renderVals` 中 `this.tokenize(aiGenContent).split()` —— `tokenize` 返回数组无 `.split`，AI 生成成功后会整屏崩溃。改为 `aiGenContent.split('\n')`。
+- ✅ **阅读页接入真实文章**：点文章 → `loadArticleDetail` 拉 `/api/frontend/article/:id`，由正文切分段落/句子、习题转测验、`highlightedVocab` 转词义。此前任何文章都只显示内置第 1 篇（demo）。
+- ✅ **单词点击查真实词典** + **段落双击 AI 整句翻译**（`dictCache` / `transCache` 缓存）。
+- ✅ **语法接入后端**：列表 `/api/frontend/grammar`、详情 `/api/frontend/grammar/:id`（讲解+例句+练习），不再是「每条语法显示同一份静态详情」。
+- ✅ **统计接入真实趋势**（`stats.vocabGrowth` / `dailyTrend`）、**生成记录用真实私享库**。
+- ✅ **AI 鲜榨工坊** 改用 `/api/frontend/generate-article`（支持自定义字数 + 生词联动 + 自动入库），等级格式 `CET-4`→`CET4` 归一。
+- ✅ 书架一次加载全部文章（`pageSize=100`）；做完测验且 ≥67 分自动打卡。
+- ℹ️ 所有静态演示数据保留作降级兜底，后端无数据时不至于空白。
+
+**后端 `src/routes/frontendData.js`**
+- ✅ **难度格式归一**：文章/语法返回 `CET-4`/`CET-6`（前端筛选用连字符，后端枚举无连字符，此前筛选点不出 CET 文章）。
+- ✅ **`streak` 改返回数字**：`getStreak` 原返回 `{current,max}` 对象，前端当数字用会显示 `[object Object]`。
+- ✅ **词典响应归一**：第三方返回扁平 `{word,partOfSpeech,definition}`，统一成 `{word,phonetic,meanings:[{partOfSpeech,definitions}]}`，否则前端查词永远「未找到释义」。
+- ✅ 新增 `GET /api/frontend/grammar/:id` 语法详情；语法列表 `desc` 修正为取 `explanation`（原取了不存在的 `description`）。
+
+**测试**
+- ✅ 修复 `tests/difficulty-analyzer.test.js` 2 处过期断言（CEFR `A1/B2` → 中文等级 `初中/雅思`），`npm test` 17/17 通过。
+
+**验证方式**：后端全链路 curl 跑通（注册→登录→文章列表/详情→生词增删评分→打卡→统计→语法→词典）；前端 `renderVals()` 在 login/articles/阅读/语法/统计/AI 各状态下均无崩溃。
+
+### 2026-06-21（首次部署）
 - ✅ 创建 Railway 项目并完成首次部署
 - ✅ MongoDB Atlas 集群创建 + IP 白名单配置
 - ✅ Dockerfile 修复（添加 views/、public/、frontend/ 目录）

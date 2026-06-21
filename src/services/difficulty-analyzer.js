@@ -58,6 +58,7 @@ function analyzeDifficulty(text) {
   else if (grade <= 6) difficulty = '高中';
   else if (grade <= 9) difficulty = 'CET4';
   else if (grade <= 13) difficulty = 'CET6';
+  else if (grade <= 16) difficulty = '考研';
   else difficulty = '雅思';
 
   return {

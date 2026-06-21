@@ -26,6 +26,7 @@ const studyRoutes = require('./routes/study');
 const adminRoutes = require('./routes/admin');
 const docsRoutes = require('./routes/docs');
 const demoRoutes = require('./routes/demo');
+const frontendDataRoutes = require('./routes/frontendData');
 
 const app = express();
 
@@ -89,6 +90,7 @@ app.use('/api/grammar', grammarRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/study', studyRoutes);
 app.use('/api/docs', docsRoutes);
+app.use('/api/frontend', frontendDataRoutes);
 
 // ===== 服务端渲染 Demo =====
 app.use('/demo', demoRoutes);

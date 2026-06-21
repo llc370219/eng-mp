@@ -181,9 +181,9 @@ async function importDict(csvPath) {
   console.log(`跳过: ${skipped}`);
   console.log(`数据库实际条目: ${finalCount}`);
 
-  // 创建索引
+  // 创建索引（word 字段 schema 已声明 unique，这里确保底层索引存在）
   console.log('创建索引...');
-  await Dictionary.createIndex({ word: 1 });
+  await Dictionary.collection.createIndex({ word: 1 }, { unique: true });
 
   await mongoose.disconnect();
   console.log('完成!');

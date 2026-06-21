@@ -289,7 +289,7 @@ async function grammarExplain(topic, options = {}) {
  * 根据用户生词本掌握程度智能选词，生成完整的文章及配套学习内容
  *
  * @param {string} prompt - 用户主题提示
- * @param {string} level - 难度等级 (初中/高中/CET4/CET6/雅思)
+ * @param {string} level - 难度等级 (初中/高中/CET4/CET6/考研/雅思)
  * @param {object} options - 配置项
  * @param {string[]} options.vocabWords - 生词本单词列表
  * @param {object[]} options.vocabDetails - 生词本详情 [{word, masteryLevel, definition, phonetic}]
@@ -305,6 +305,7 @@ async function generateArticle(prompt, level = '高中', options = {}) {
     '高中': { desc: '复合句（定语从句、状语从句），词汇量 ≤2500，常见时态+被动语态', words: '400-600' },
     'CET4': { desc: '较复杂句式，词汇量 ≤4500，可使用虚拟语气、倒装、强调句', words: '500-700' },
     'CET6': { desc: '高级句式+学术词汇，词汇量 ≤6000', words: '600-800' },
+    '考研': { desc: '考研英语难度，长难句分析，学术词汇 ≤5500，逻辑严密的议论文/说明文', words: '500-800' },
     '雅思': { desc: '学术英语，复杂句式，高级词汇，接近 native 水平', words: '700-1000' },
   };
 

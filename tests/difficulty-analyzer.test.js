@@ -25,7 +25,7 @@ describe('难度分析', () => {
   test('简单文本应为低难度', () => {
     const text = 'I like cats. The cat is small. It is cute.';
     const result = analyzeDifficulty(text);
-    expect(result.difficulty).toBe('A1');
+    expect(result.difficulty).toBe('初中');
     expect(result.wordCount).toBeGreaterThan(0);
     expect(result.sentenceCount).toBeGreaterThan(0);
   });
@@ -33,7 +33,7 @@ describe('难度分析', () => {
   test('复杂文本应为高难度', () => {
     const text = 'The unprecedented acceleration of technological sophistication has fundamentally transformed the paradigmatic framework within which contemporary socioeconomic institutions operate, necessitating a comprehensive reassessment of established methodologies.';
     const result = analyzeDifficulty(text);
-    expect(['B2', 'C1', 'C2']).toContain(result.difficulty);
+    expect(['CET6', '考研', '雅思']).toContain(result.difficulty);
   });
 
   test('应返回正确的统计字段', () => {
