@@ -18,7 +18,7 @@
 | 用途 | 链接 |
 |------|------|
 | **用户端首页** | https://backend-production-4413.up.railway.app |
-| **注册分享链接（自动填充邀请码）** | https://backend-production-4413.up.railway.app/demo/register?invite=YAQ8EMM7 |
+| **注册分享链接（自动填充邀请码）** | https://backend-production-4413.up.railway.app/demo/register?invite=AQHU2Y |
 | **管理后台登录** | https://backend-production-4413.up.railway.app/admin/login |
 
 ---
@@ -35,9 +35,9 @@
 ### 邀请码
 | 项目 | 值 |
 |------|-----|
-| 邀请码 | YAQ8EMM7 |
+| 邀请码 | AQHU2Y |
 | 可用次数 | 20 次 |
-| 分享链接 | https://backend-production-4413.up.railway.app/demo/register?invite=YAQ8EMM7 |
+| 分享链接 | https://backend-production-4413.up.railway.app/demo/register?invite=AQHU2Y |
 
 ### Railway
 | 项目 | 值 |
@@ -74,7 +74,7 @@
 5. 登录后进入文章书架
 
 ### 注册分享链接
-1. 打开 https://backend-production-4413.up.railway.app/demo/register?invite=YAQ8EMM7
+1. 打开 https://backend-production-4413.up.railway.app/demo/register?invite=AQHU2Y
 2. 重定向到 Lull 前端，**自动填写邀请码**
 3. 用户只需填写邮箱、密码，点击「获取验证码」
 4. 输入验证码，完成注册并登录
