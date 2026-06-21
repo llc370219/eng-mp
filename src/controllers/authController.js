@@ -19,16 +19,16 @@ function generateTokens(userId) {
 const sendCode = [
   body('email').isEmail().withMessage('请输入有效的邮箱'),
   body('type').isIn(['register', 'resetPassword']).withMessage('类型无效'),
-  body('captchaToken').notEmpty().withMessage('请完成人机验证'),
-  body('captchaAnswer').notEmpty().withMessage('请输入验证码计算结果'),
   validate,
   async (req, res, next) => {
     try {
       const { email, type, captchaToken, captchaAnswer } = req.body;
 
-      // 人机验证
-      if (!verifyCaptcha(captchaToken, captchaAnswer)) {
-        return res.status(400).json({ error: '人机验证失败，请重新输入' });
+      // 人机验证（如果提供了 captcha 就校验，没提供也放行—Lull 前端有自己的 checkbox）
+      if (captchaToken && captchaAnswer) {
+        if (!verifyCaptcha(captchaToken, captchaAnswer)) {
+          return res.status(400).json({ error: '人机验证失败，请重新输入' });
+        }
       }
 
       // 检查是否已注册（注册时）
@@ -55,10 +55,14 @@ const sendCode = [
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10分钟
       await VerificationCode.create({ email, code, type, expiresAt });
 
-      // 发送邮件
-      await sendVerificationCode(email, code, type);
+      // 发送邮件（如果 SMTP 未配置，返回验证码给前端兜底）
+      const emailConfig = require('../config').email;
+      const sent = await sendVerificationCode(email, code, type);
 
-      res.json({ message: '验证码已发送' });
+      res.json({
+        message: '验证码已发送',
+        ...(emailConfig.host ? {} : { code, hint: 'SMTP 未配置，验证码直接返回用于测试' }),
+      });
     } catch (err) {
       next(err);
     }

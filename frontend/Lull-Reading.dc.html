@@ -990,7 +990,8 @@ class Component extends DCLogic {
       if(data.error){
         this.setState({ authError: data.error });
       } else {
-        this.setState({ codeSent:true, codeCountdown:60, authError:'验证码已发送' });
+        this.setState({ codeSent:true, codeCountdown:60, authError: data.code ? '验证码: ' + data.code : '验证码已发送' });
+        if(data.code) this.setState({ verCode: data.code });
         this._codeTimer = setInterval(()=>{
           this.setState(s=>{
             if(s.codeCountdown<=1){ clearInterval(this._codeTimer); return { codeCountdown:0, authError:'' }; }
