@@ -251,6 +251,37 @@ railway variable set DEEPSEEK_V4_FLASH_API_KEY=sk-xxx --service backend
 
 ---
 
+## 📧 邮件服务配置
+
+### 当前配置（Resend）
+| 配置项 | 值 |
+|--------|-----|
+| **服务** | Resend.com |
+| **API Key** | re_GC8vJoG4_NjsP2HtnFF9TqLM7d844p5uL |
+| **发件人** | Lull 听简 <onboarding@resend.dev> |
+| **免费额度** | 3000 封/月 |
+| **配置位置** | Railway 环境变量 `RESEND_API_KEY` |
+
+### 邮件发送优先级
+1. Resend（首选）
+2. SMTP（备用）
+3. 控制台输出（降级）
+
+### 修改邮件配置
+```bash
+# Railway CLI
+railway variable set RESEND_API_KEY=re_xxx --service backend
+
+# SMTP 备用（可选）
+railway variable set SMTP_HOST=smtp.qq.com --service backend
+railway variable set SMTP_PORT=587 --service backend
+railway variable set SMTP_USER=your@qq.com --service backend
+railway variable set SMTP_PASS=your授权码 --service backend
+railway variable set SMTP_FROM=your@qq.com --service backend
+```
+
+---
+
 ## 🔑 关键配置值
 
 ### Railway 环境变量
@@ -262,6 +293,7 @@ railway variable set DEEPSEEK_V4_FLASH_API_KEY=sk-xxx --service backend
 | NODE_ENV | production |
 | AI_PROVIDER | deepseekv4flash |
 | DEEPSEEK_V4_FLASH_API_KEY | sk-fe58367779654d0084f7e5b59403a2b4 |
+| RESEND_API_KEY | re_GC8vJoG4_NjsP2HtnFF9TqLM7d844p5uL |
 
 ### 邀请码规则
 | 规则 | 说明 |
