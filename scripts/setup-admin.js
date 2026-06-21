@@ -17,10 +17,16 @@ const User = require('../src/models/User');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/eng-reader';
 
-// 管理员配置
-const ADMIN_EMAIL = 'llc370219@gmail.com';
-const ADMIN_PASSWORD = 'airmess6677';
-const ADMIN_NICKNAME = '管理员';
+// 管理员配置（密码从环境变量读取，切勿硬编码进仓库）
+// 用法: ADMIN_PASSWORD='你的强密码' node scripts/setup-admin.js
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'llc370219@gmail.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const ADMIN_NICKNAME = process.env.ADMIN_NICKNAME || '管理员';
+
+if (!ADMIN_PASSWORD) {
+  console.error('✗ 请通过环境变量提供管理员密码：ADMIN_PASSWORD=你的密码 node scripts/setup-admin.js');
+  process.exit(1);
+}
 
 // 需要删除的测试用户邮箱
 const TEST_EMAILS = [

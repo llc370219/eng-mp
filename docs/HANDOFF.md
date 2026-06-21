@@ -29,7 +29,7 @@
 | 项目 | 值 |
 |------|-----|
 | 邮箱 | llc370219@gmail.com |
-| 密码 | airmess6677 |
+| 密码 | （用 `ADMIN_PASSWORD` 环境变量设置；旧密码已泄露在 git 历史，务必改新密码） |
 | 角色 | admin |
 | 登录地址 | https://backend-production-4413.up.railway.app/admin/login |
 
@@ -453,7 +453,7 @@ MONGODB_URI="mongodb+srv://...<atlas>.../eng-reader" node scripts/import-dict.js
 - ✅ MongoDB Atlas 集群创建 + IP 白名单配置
 - ✅ Dockerfile 修复（添加 views/、public/、frontend/ 目录）
 - ✅ Git Remote 安全清理（移除嵌入 Token）
-- ✅ 管理员账号配置（llc370219@gmail.com / airmess6677）
+- ✅ 管理员账号配置（llc370219@gmail.com，密码用 ADMIN_PASSWORD 环境变量设置）
 - ✅ 清理测试用户（admin@test.com 等）
 - ✅ Lull·听简前端设计稿部署为首页
 - ✅ 前端登录/注册接入后端 API（/api/auth/*）

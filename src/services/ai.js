@@ -51,6 +51,16 @@ const PROVIDERS = {
     defaultModel: 'qwen-turbo',
     sdk: 'openai',
   },
+  // 火山方舟 · 豆包（OpenAI 兼容；seed 系列为推理模型，用 max_completion_tokens + reasoning_effort）
+  ark: {
+    name: '火山方舟 (豆包)',
+    baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+    // 账号实际可用的 seed-1.6 模型为 250615 版；flash 为快/省 token 变体。需先在方舟控制台「开通」该模型。
+    defaultModel: 'doubao-seed-1-6-flash-250615',
+    sdk: 'openai',
+    reasoning: true,            // 推理模型
+    reasoningEffort: 'minimal', // 默认最低推理力度，省 token（生成结构化文章够用）
+  },
 };
 
 // 客户端缓存：{ providerName: { client, apiKey } }
@@ -142,17 +152,26 @@ async function chat(systemPrompt, userPrompt, options = {}) {
     });
     return response.content[0].text;
   } else {
-    // OpenAI 兼容 API（DeepSeek, MiMo, Moonshot, 智谱, 千问等）
+    // OpenAI 兼容 API（DeepSeek, MiMo, Moonshot, 智谱, 千问, 火山方舟豆包 等）
     const client = getOpenAIClient(providerName, apiKey);
-    const response = await client.chat.completions.create({
+    // 每次都是全新的 system+user 单轮消息，不带任何历史 → 天然「单篇即清上下文」，不累积 token
+    const params = {
       model,
-      max_tokens: maxTokens,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
-    });
-    return response.choices[0].message.content;
+    };
+    if (provider.reasoning) {
+      // 推理模型（豆包 seed 等）：用 max_completion_tokens，并用 reasoning_effort 压低推理消耗
+      params.max_completion_tokens = maxTokens;
+      params.reasoning_effort = options.reasoningEffort || provider.reasoningEffort || 'minimal';
+    } else {
+      params.max_tokens = maxTokens;
+    }
+    const response = await client.chat.completions.create(params);
+    const choice = response.choices && response.choices[0];
+    return (choice && choice.message && choice.message.content) || '';
   }
 }
 
@@ -397,13 +416,16 @@ ${masteryDetail ? `## 生词本掌握情况\n${masteryDetail}\n\n使用策略：
 ${options.extraRequirements ? `## 额外要求\n${options.extraRequirements}` : ''}`;
 
   try {
-    const result = await chat(systemPrompt, userPrompt, { ...options, maxTokens: 8192 });
-    let jsonStr = result;
-    const jsonMatch = result.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch) jsonStr = jsonMatch[1];
-    jsonStr = jsonStr.trim();
+    // 给足输出额度避免 JSON 被截断（截断=整次调用白费）；推理模型走 max_completion_tokens
+    const result = await chat(systemPrompt, userPrompt, { ...options, maxTokens: options.maxTokens || 16384 });
+    let jsonStr = result || '';
+    const fence = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fence) jsonStr = fence[1];
+    // 兜底：截取第一个 { 到最后一个 }，容忍推理模型在 JSON 前后多写的文字
+    const s = jsonStr.indexOf('{'), e = jsonStr.lastIndexOf('}');
+    if (s >= 0 && e > s) jsonStr = jsonStr.slice(s, e + 1);
 
-    const parsed = JSON.parse(jsonStr);
+    const parsed = JSON.parse(jsonStr.trim());
 
     const wordCount = (parsed.content || '').split(/\s+/).filter(w => /[a-zA-Z]/.test(w)).length;
     const readingTimeMin = Math.max(1, Math.ceil(wordCount / 200));

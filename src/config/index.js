@@ -33,6 +33,7 @@ module.exports = {
       moonshot: process.env.MOONSHOT_API_KEY || '',
       zhipu: process.env.ZHIPU_API_KEY || '',
       qwen: process.env.QWEN_API_KEY || '',
+      ark: process.env.ARK_API_KEY || '',
     },
   },
 

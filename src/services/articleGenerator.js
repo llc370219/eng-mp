@@ -16,12 +16,18 @@ const config = require('../config');
 const aiService = require('./ai');
 const caiyun = require('./caiyun');
 
-function aiConfigured() {
-  return !!(config.ai.keys[config.ai.provider]);
+// 是否配好了「当前生效的」AI 提供商（DB 优先，与 chat() 用同一份配置，避免不一致）
+async function aiConfigured() {
+  try {
+    const cfg = await aiService.getAIConfig();
+    return !!(cfg.keys[cfg.provider]);
+  } catch {
+    return !!(config.ai.keys[config.ai.provider]);
+  }
 }
 
 async function generate(prompt, level = '高中', options = {}) {
-  if (aiConfigured()) {
+  if (await aiConfigured()) {
     const r = await aiService.generateArticle(prompt, level, options);
     if (!r.error) return { ...r, mode: 'ai' };
     // 真实生成失败（如额度/网络）→ 退回测试样例，保证可用
