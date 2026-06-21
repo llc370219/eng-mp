@@ -60,7 +60,8 @@ router.post('/login', async (req, res) => {
 // ===== 注册（验证码） =====
 router.get('/register', (req, res) => {
   const captcha = generateCaptcha();
-  res.render('register', { msg: null, page: 'register', user: null, captchaSvg: captcha.svg, captchaToken: captcha.token });
+  const inviteCode = req.query.invite || '';
+  res.render('register', { msg: null, page: 'register', user: null, captchaSvg: captcha.svg, captchaToken: captcha.token, inviteCode });
 });
 
 // 获取新验证码（AJAX）
