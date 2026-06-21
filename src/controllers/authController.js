@@ -56,11 +56,13 @@ const sendCode = [
       await VerificationCode.create({ email, code, type, expiresAt });
 
       // 发送邮件
-      const sent = await sendVerificationCode(email, code, type);
+      const result = await sendVerificationCode(email, code, type);
 
       res.json({
-        message: '验证码已发送',
-        ...(!sent ? { code, hint: '邮件发送失败，验证码直接返回' } : {}),
+        message: result.sent ? '验证码已发送到邮箱' : '验证码已生成',
+        code, // 始终返回，确保用户一定能拿到
+        sent: result.sent,
+        via: result.via,
       });
     } catch (err) {
       next(err);

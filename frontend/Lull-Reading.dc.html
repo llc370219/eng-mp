@@ -990,8 +990,12 @@ class Component extends DCLogic {
       if(data.error){
         this.setState({ authError: data.error });
       } else {
-        this.setState({ codeSent:true, codeCountdown:60, authError: data.code ? '验证码: ' + data.code : '验证码已发送' });
-        if(data.code) this.setState({ verCode: data.code });
+        // 验证码始终返回，自动填入输入框
+        this.setState({
+          codeSent:true, codeCountdown:60,
+          verCode: data.code || '',
+          authError: data.sent ? '验证码已发送到邮箱，请查收（如未收到请检查垃圾邮件）' : '验证码: ' + data.code
+        });
         this._codeTimer = setInterval(()=>{
           this.setState(s=>{
             if(s.codeCountdown<=1){ clearInterval(this._codeTimer); return { codeCountdown:0, authError:'' }; }

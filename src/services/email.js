@@ -4,7 +4,17 @@ const config = require('../config');
 let transporter = null;
 let resendClient = null;
 
-// ===== SMTP 客户端（首选） =====
+// ===== Resend 客户端（首选，HTTP API 不受端口封锁） =====
+function getResendClient() {
+  if (resendClient) return resendClient;
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  const { Resend } = require('resend');
+  resendClient = new Resend(key);
+  return resendClient;
+}
+
+// ===== SMTP 客户端（备用） =====
 function getTransporter() {
   if (transporter) return transporter;
   if (!config.email.host) return null;
@@ -17,22 +27,12 @@ function getTransporter() {
   return transporter;
 }
 
-// ===== Resend 客户端（备用） =====
-function getResendClient() {
-  if (resendClient) return resendClient;
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  const { Resend } = require('resend');
-  resendClient = new Resend(key);
-  return resendClient;
-}
-
 // 生成 6 位验证码
 function generateCode() {
   return Math.random().toString().slice(2, 8).padStart(6, '0');
 }
 
-// 发送验证码邮件
+// 发送验证码邮件，返回 { sent: boolean, code: string }
 async function sendVerificationCode(email, code, type) {
   const subject = type === 'register' ? '注册验证码' : '密码重置验证码';
   const html = `
@@ -45,25 +45,7 @@ async function sendVerificationCode(email, code, type) {
     </div>
   `;
 
-  // 方式 1：SMTP（首选，投递率高）
-  const transport = getTransporter();
-  if (transport) {
-    try {
-      await transport.sendMail({
-        from: config.email.from,
-        to: email,
-        subject,
-        html,
-      });
-      console.log(`📧 SMTP 验证码已发送: ${email}`);
-      return true;
-    } catch (err) {
-      console.error('SMTP 发送失败:', err.message);
-      // 降级尝试 Resend
-    }
-  }
-
-  // 方式 2：Resend（备用）
+  // 方式 1：Resend（HTTP API，不受云平台端口封锁）
   const resend = getResendClient();
   if (resend) {
     try {
@@ -74,18 +56,32 @@ async function sendVerificationCode(email, code, type) {
         html,
       });
       console.log(`📧 Resend 验证码已发送: ${email}`);
-      return true;
+      return { sent: true, via: 'resend' };
     } catch (err) {
       console.error('Resend 发送失败:', err.message);
     }
   }
 
-  // 方式 3：降级 — 输出到控制台
-  console.log(`\n========================================`);
-  console.log(`📧 验证码 [${type}]: ${email}`);
-  console.log(`🔑 验证码: ${code}`);
-  console.log(`========================================\n`);
-  return false; // 返回 false 表示未真正发出
+  // 方式 2：SMTP（备用）
+  const transport = getTransporter();
+  if (transport) {
+    try {
+      await transport.sendMail({
+        from: config.email.from,
+        to: email,
+        subject,
+        html,
+      });
+      console.log(`📧 SMTP 验证码已发送: ${email}`);
+      return { sent: true, via: 'smtp' };
+    } catch (err) {
+      console.error('SMTP 发送失败:', err.message);
+    }
+  }
+
+  // 方式 3：全部失败
+  console.log(`⚠️ 邮件发送失败，验证码: ${code} → ${email}`);
+  return { sent: false, via: 'none' };
 }
 
 module.exports = { generateCode, sendVerificationCode };
