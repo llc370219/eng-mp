@@ -6,6 +6,19 @@ const highlightedVocabSchema = new mongoose.Schema({
   position: { type: Number, default: 0 },
 }, { _id: false });
 
+// 提前生成的逐句翻译（阅读卡片用，避免实时调用 AI）
+const sentenceTranslationSchema = new mongoose.Schema({
+  en: { type: String, required: true },
+  zh: { type: String, default: '' },
+}, { _id: false });
+
+// 提前生成的逐段语法解析
+const grammarPointSchema = new mongoose.Schema({
+  title: { type: String, default: '' },
+  explanation: { type: String, default: '' },
+  example: { type: String, default: '' },
+}, { _id: false });
+
 const articleSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -32,6 +45,8 @@ const articleSchema = new mongoose.Schema({
   wordCount: { type: Number, default: 0 },
   readingTimeMin: { type: Number, default: 0 },
   highlightedVocab: [highlightedVocabSchema],
+  sentenceTranslations: [sentenceTranslationSchema],
+  grammarPoints: [grammarPointSchema],
   source: { type: String, default: '' },
   coverImage: { type: String, default: '' },
   isPublished: { type: Boolean, default: false },

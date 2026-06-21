@@ -23,3 +23,9 @@ dist/
 
 # 词典数据（从 ECDICT 提取，可重新生成，不入库以保持仓库精简）
 data/ecdict-subset.csv
+
+# 生成的文章包（article-maker skill 产物）
+article-packages/
+
+# Claude Code 本地设置（含本机权限记录，可能有 token）
+.claude/settings.local.json

@@ -38,6 +38,11 @@ module.exports = {
 
   dictApiUrl: process.env.DICT_API_URL || 'https://api.dictionaryapi.dev/api/v2/entries/en',
 
+  // 彩云小译 LingoCloud（词典 + 翻译）
+  caiyun: {
+    token: process.env.CAIYUN_TOKEN || '',
+  },
+
   email: {
     host: process.env.SMTP_HOST || '',
     port: parseInt(process.env.SMTP_PORT) || 587,

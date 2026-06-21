@@ -1,3 +1,4 @@
+const express = require('express');
 const { Router } = require('express');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
@@ -197,7 +198,72 @@ router.get('/articles', adminAuth, async (req, res) => {
     Article.find(filter).sort({ createdAt: -1 }).skip((page-1)*limit).limit(Number(limit)),
     Article.countDocuments(filter),
   ]);
-  render(res, 'articles', { articles, total, page: Number(page), limit: Number(limit), difficulty: difficulty || '' });
+  render(res, 'articles', { articles, total, page: Number(page), limit: Number(limit), difficulty: difficulty || '', importMsg: req.query.msg || '' });
+});
+
+// ===== 文章导入（上传 skill 生成的 zip / json，自动建文章+习题并发布推送） =====
+const VALID_DIFF = ['初中', '高中', 'CET4', 'CET6', '考研', '雅思'];
+const VALID_CAT = ['tech', 'life', 'news', 'literature', 'science', 'business'];
+function normDiff(d) {
+  if (d === 'CET-4') return 'CET4';
+  if (d === 'CET-6') return 'CET6';
+  return VALID_DIFF.includes(d) ? d : '高中';
+}
+async function createArticleFromObj(obj, publish) {
+  const content = obj.content || '';
+  const wordCount = obj.wordCount || content.split(/\s+/).filter(w => /[a-zA-Z]/.test(w)).length;
+  const art = await Article.create({
+    title: obj.title || 'Untitled',
+    content,
+    summaryZh: obj.summaryZh || '',
+    summaryEn: obj.summaryEn || '',
+    difficulty: normDiff(obj.difficulty),
+    category: VALID_CAT.includes(obj.category) ? obj.category : 'life',
+    tags: obj.tags || [],
+    wordCount,
+    readingTimeMin: obj.readingTimeMin || Math.max(1, Math.ceil(wordCount / 200)),
+    highlightedVocab: obj.highlightedVocab || [],
+    sentenceTranslations: obj.sentenceTranslations || [],
+    grammarPoints: obj.grammarPoints || [],
+    source: obj.source || 'import',
+    isPublished: publish,
+  });
+  if (Array.isArray(obj.questions) && obj.questions.length) {
+    await Exercise.create({ articleId: art._id, questions: obj.questions });
+  }
+  return art;
+}
+
+// 前端用 fetch 把文件以原始字节 POST 上来；这里用内置 express.raw 读成 Buffer（零依赖、稳定）
+router.post('/articles/import', adminAuth, express.raw({ type: '*/*', limit: '30mb' }), async (req, res) => {
+  const { unzip } = require('../utils/unzip');
+  try {
+    const buf = req.body;
+    if (!Buffer.isBuffer(buf) || !buf.length) return res.status(400).json({ error: '未收到文件内容' });
+    const name = (req.query.name || '').toLowerCase();
+
+    let articles;
+    if (name.endsWith('.zip') || buf.readUInt32LE(0) === 0x04034b50) {   // zip 魔数 PK\x03\x04
+      const entries = unzip(buf);
+      const key = Object.keys(entries).find(k => k.toLowerCase().endsWith('articles.json'))
+        || Object.keys(entries).find(k => k.toLowerCase().endsWith('.json'));
+      if (!key) throw new Error('压缩包内未找到 .json 文件');
+      articles = JSON.parse(entries[key].toString('utf8'));
+    } else {
+      articles = JSON.parse(buf.toString('utf8'));
+    }
+    if (!Array.isArray(articles)) articles = [articles];
+
+    const publish = req.query.publish !== 'false'; // 默认发布推送
+    let ok = 0, skipped = 0;
+    for (const obj of articles) {
+      if (obj && obj.title && obj.content) { await createArticleFromObj(obj, publish); ok++; }
+      else skipped++;
+    }
+    res.json({ message: `✅ 成功导入 ${ok} 篇${publish ? '（已发布推送）' : '（未发布）'}${skipped ? `，跳过 ${skipped} 条无效` : ''}`, imported: ok });
+  } catch (err) {
+    res.status(400).json({ error: '❌ 导入失败: ' + err.message });
+  }
 });
 
 router.post('/articles/:id/toggle', adminAuth, async (req, res) => {

@@ -428,12 +428,33 @@ ${options.extraRequirements ? `## 额外要求\n${options.extraRequirements}` : 
 }
 
 // 导出
+/**
+ * 为单词生成例句（含中文翻译），供词典卡片使用
+ */
+async function wordExamples(word, definition = '', count = 2, options = {}) {
+  const systemPrompt = `你是英语词典编辑。请为给定单词生成 ${count} 个地道、简短、贴近日常的英文例句，并配中文翻译。
+- 例句中必须实际使用该单词（可用其变形/时态）。
+- 难度适中，长度 8-16 词。
+只返回 JSON：{"examples":[{"en":"英文例句","zh":"中文翻译"}]}`;
+  const userPrompt = definition ? `单词：${word}\n释义：${definition}` : `单词：${word}`;
+  try {
+    const raw = await chat(systemPrompt, userPrompt, options);
+    const jsonStr = raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1);
+    const parsed = JSON.parse(jsonStr);
+    const list = Array.isArray(parsed.examples) ? parsed.examples : [];
+    return list.filter(e => e && e.en).slice(0, count).map(e => ({ en: String(e.en).trim(), zh: String(e.zh || '').trim() }));
+  } catch (err) {
+    return [];
+  }
+}
+
 module.exports = {
   chat,
   summarize,
   translate,
   generateQuiz,
   analyzeWord,
+  wordExamples,
   grammarExplain,
   generateArticle,
   getAIConfig,

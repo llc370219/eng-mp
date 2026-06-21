@@ -10,6 +10,8 @@ const { tryCheckIn, hasCheckedIn, getCheckInHistory, getStreak } = require('../s
 const aiService = require('../services/ai');
 const { lookupWord } = require('../services/dictionary');
 const ebbinghaus = require('../services/ebbinghaus');
+const caiyun = require('../services/caiyun');
+const articleGenerator = require('../services/articleGenerator');
 
 const router = Router();
 
@@ -126,22 +128,54 @@ router.get('/article/:id', async (req, res, next) => {
   }
 });
 
-// ===== 词典查询（本地 ECDICT 优先 → 在线兜底 → 自动缓存，统一返回中文释义） =====
+// ===== 词典查询（彩云小译为主：音标+中文释义；本地 ECDICT 补充考试标签+英文释义） =====
 router.get('/dict/:word', async (req, res, next) => {
   try {
-    const result = await lookupWord(req.params.word);
-    if (!result) return res.json({ error: '未找到释义' });
+    const word = req.params.word.toLowerCase().trim();
+    const Dictionary = require('../models/Dictionary');
+    const [cy, local] = await Promise.all([
+      caiyun.dict(word),
+      Dictionary.findOne({ word }).lean(),
+    ]);
+
+    // 彩云与本地都没有 → 退回原在线英文兜底
+    if (!cy && !local) {
+      const fb = await lookupWord(word);
+      if (!fb) return res.json({ error: '未找到释义' });
+      return res.json({ word: fb.word, phonetic: fb.phonetic || '', translation: fb.translation || '', definitionEn: fb.definitionEn || '', tag: fb.tag || '', synonym: [], source: fb.source || 'fallback' });
+    }
+
     res.json({
-      word: result.word,
-      phonetic: result.phonetic || '',
-      translation: result.translation || '',   // 中文释义（主）
-      definitionEn: result.definitionEn || '',  // 英文释义（次）
-      tag: result.tag || '',                    // 考试标签 CET4/CET6/考研/雅思…
-      examples: result.examples || [],
-      source: result.source || 'local',
+      word: (cy && cy.word) || (local && local.word) || word,
+      phonetic: (cy && cy.phonetic) || (local && local.phonetic) || '',
+      translation: cy ? cy.explanations.join('\n') : (local ? local.translation : ''),  // 中文释义（主，彩云优先）
+      definitionEn: (local && local.definitionEn) || '',                                 // 英文释义（ECDICT）
+      tag: (local && local.tag) || '',                                                   // 考试标签（ECDICT）
+      synonym: (cy && cy.synonym) || [],
+      source: cy ? 'caiyun' : 'local',
     });
   } catch (err) {
     res.json({ error: '查询失败: ' + err.message });
+  }
+});
+
+// ===== 单词例句（AI 生成 + 按词缓存到词典库，每词只生成一次） =====
+router.get('/dict/:word/examples', async (req, res, next) => {
+  try {
+    const Dictionary = require('../models/Dictionary');
+    const word = req.params.word.toLowerCase().trim();
+    const doc = await Dictionary.findOne({ word });
+    if (doc && Array.isArray(doc.exampleSentences) && doc.exampleSentences.length) {
+      return res.json({ examples: doc.exampleSentences, cached: true });
+    }
+    const examples = await aiService.wordExamples(word, doc ? (doc.translation || doc.definitionEn || '') : '');
+    if (examples.length && doc) {
+      doc.exampleSentences = examples;
+      await doc.save();
+    }
+    res.json({ examples });
+  } catch (err) {
+    res.json({ examples: [] });
   }
 });
 
@@ -402,7 +436,8 @@ router.post('/generate-article', async (req, res, next) => {
         : `生成约 ${finalWordCount} 字的文章，包含标题、正文、中文摘要。`,
     };
 
-    const result = await aiService.generateArticle(prompt, articleLevel, opts);
+    // 统一入口：有 AI Key 走真实生成，无 Key 走测试样例（彩云真实翻译），整条链路始终可用
+    const result = await articleGenerator.generate(prompt, articleLevel, opts);
     if (result.error) return res.status(500).json({ error: result.error });
 
     // 保存到私人文章库

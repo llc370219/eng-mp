@@ -13,6 +13,8 @@ const dictionarySchema = new mongoose.Schema({
   definitionEn: { type: String, default: '' },
   collins: { type: String, default: '' },
   examples: [String],
+  // AI 生成并缓存的例句（每个词生成一次，后续复用）
+  exampleSentences: [{ en: String, zh: String, _id: false }],
   tag: { type: String, default: '' },
   exchange: { type: String, default: '' },
 }, { timestamps: true });

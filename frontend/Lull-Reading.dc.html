@@ -385,32 +385,45 @@
         </div>
 
         <sc-if value="{{ dictResultShown }}" hint-placeholder-val="{{ false }}">
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:26px;margin-top:30px;align-items:start">
-          <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;overflow:hidden">
-            <div style="background:#2f7fd6;border-bottom:2.5px solid #1a1817;padding:24px 28px;color:#fffdf6;position:relative;overflow:hidden">
+        <div style="margin-top:30px">
+          <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:24px;box-shadow:7px 7px 0 #1a1817;overflow:hidden">
+            <!-- 蓝色棋盘格头部：单词 + 音标 + 考试标签 -->
+            <div style="background:#2f7fd6;border-bottom:2.5px solid #1a1817;padding:26px 30px;color:#fffdf6;position:relative;overflow:hidden">
               <div style="position:absolute;inset:0;background:conic-gradient(#00000018 0 25%,transparent 0 50%,#00000018 0 75%,transparent 0);background-size:40px 40px"></div>
-              <div style="position:relative;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap">
-                <span style="font-family:'Shrikhand',serif;font-size:46px;line-height:1">{{ dictWord }}</span>
-                <span style="font-family:'Newsreader',serif;font-style:italic;font-size:22px;opacity:.92">{{ dictPhonetic }}</span>
+              <div style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+                <div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap">
+                  <span style="font-family:'Shrikhand',serif;font-style:italic;font-size:48px;line-height:1">{{ dictWord }}</span>
+                  <span style="font-family:'Newsreader',serif;font-style:italic;font-size:23px;opacity:.92">{{ dictPhonetic }}</span>
+                </div>
+                <sc-if value="{{ dictHasTag }}" hint-placeholder-val="{{ true }}">
+                  <span style="background:#f3c44b;color:#1a1817;border:2.5px solid #1a1817;border-radius:999px;box-shadow:2px 2px 0 #1a1817;padding:7px 16px;font-family:'Space Grotesk';font-weight:700;font-size:14px;white-space:nowrap">{{ dictTagLabel }}</span>
+                </sc-if>
               </div>
             </div>
-            <div style="padding:24px 28px">
-              <div style="font-family:'Newsreader',serif;font-size:21px;font-weight:500;margin-bottom:16px;white-space:pre-line">{{ dictTranslation }}</div>
-              <sc-if value="{{ dictExamples.length > 0 }}" hint-placeholder-val="{{ false }}">
-                <div style="font-weight:700;font-size:12px;letter-spacing:1.5px;color:#7a7568;margin-bottom:10px">例句 EXAMPLES</div>
-                <div style="display:grid;gap:10px">
-                  <sc-for list="{{ dictExamples }}" as="ex" hint-placeholder-count="3">
-                    <div style="background:#f2ecda;border-left:4px solid #ec6a2b;border-radius:0 10px 10px 0;padding:12px 16px">
-                      <div style="font-family:'Newsreader',serif;font-size:16.5px">{{ ex }}</div>
+            <!-- 卡片正文 -->
+            <div style="padding:28px 32px">
+              <div style="font-family:'Space Grotesk','PingFang SC','Microsoft YaHei',sans-serif;font-weight:800;font-size:25px;line-height:1.5;color:#1a1817;white-space:pre-line">{{ dictTranslation }}</div>
+              <sc-if value="{{ dictHasEn }}" hint-placeholder-val="{{ true }}">
+                <div style="font-weight:700;font-size:12px;letter-spacing:2px;color:#a89f86;margin:22px 0 8px">英文释义</div>
+                <div style="font-family:'Newsreader',serif;font-size:19px;line-height:1.5;color:#3a352c">{{ dictDefEn }}</div>
+              </sc-if>
+              <sc-if value="{{ dictHasExamples }}" hint-placeholder-val="{{ true }}">
+                <div style="font-weight:700;font-size:12px;letter-spacing:2px;color:#a89f86;margin:24px 0 12px">例句 EXAMPLES</div>
+                <div style="display:grid;gap:12px">
+                  <sc-for list="{{ dictExampleCards }}" as="ex" hint-placeholder-count="2">
+                    <div style="background:#efe9d7;border-left:{{ ex.border }};border-radius:0 12px 12px 0;padding:14px 18px">
+                      <div style="font-family:'Newsreader',serif;font-size:18px;line-height:1.5"><sc-for list="{{ ex.tokens }}" as="t" hint-placeholder-count="10"><span style="color:{{ t.color }};font-weight:{{ t.weight }}">{{ t.t }}</span></sc-for></div>
+                      <div style="font-size:14.5px;color:#7a7568;margin-top:6px">{{ ex.zh }}</div>
                     </div>
                   </sc-for>
                 </div>
               </sc-if>
+              <sc-if value="{{ dictExamplesLoading }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:13px;color:#a89f86;margin-top:16px">✦ 正在生成例句…</div>
+              </sc-if>
+              <button onClick="{{ addSelWord }}" style="margin-top:24px;background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:14px;box-shadow:4px 4px 0 #1a1817;cursor:pointer;padding:13px 24px;font-family:'Space Grotesk';font-weight:700;font-size:15px">+ 加入生词本</button>
             </div>
           </div>
-          <aside style="display:flex;flex-direction:column;gap:16px">
-            <button onClick="{{ addSelWord }}" style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:5px 5px 0 #1a1817;cursor:pointer;padding:16px;font-family:'Space Grotesk';font-weight:700;font-size:16px">+ 加入生词本</button>
-          </aside>
         </div>
         </sc-if>
       </section>
@@ -873,6 +886,9 @@
                 <span style="font-weight:600;font-size:12px;color:#7a7568">{{ aiWordsLabel }} · {{ aiGenreLabel }}</span>
               </div>
               <h2 style="font-family:'Shrikhand',serif;font-style:italic;font-size:30px;line-height:1.05;margin:4px 0 14px;color:#1a1817">{{ aiGenTitle }}</h2>
+              <sc-if value="{{ aiGenIsMock }}" hint-placeholder-val="{{ true }}">
+                <div style="background:#fff3d6;border:2px solid #1a1817;border-radius:10px;padding:8px 12px;margin-bottom:12px;font-size:12.5px;font-weight:600;color:#7a5a1a">{{ aiGenModeNote }}</div>
+              </sc-if>
               <div style="background:#f2ecda;border:2px solid #1a1817;border-radius:14px;padding:18px 20px">
                 <sc-for list="{{ aiGenParas }}" as="p" hint-placeholder-count="2">
                   <p style="font-family:'Newsreader',serif;font-size:17px;line-height:1.85;color:#26241f;margin:0 0 12px;text-wrap:pretty">
@@ -1075,7 +1091,7 @@ class Component extends DCLogic {
     const WORD_DEFS = {};
     (a.highlightedVocab||[]).forEach(v=>{ if(v.word) WORD_DEFS[v.word.toLowerCase()] = { phon:v.phonetic||'', def:v.definition||'' }; });
     const rawQ = (detail.exercise && detail.exercise.questions) || a.questions || [];
-    const QUIZ = rawQ.filter(q=>(q.type==='multiple-choice'||q.type==='multiple_choice') && (q.options||[]).length)
+    const QUIZ = rawQ.filter(q=>(q.options||[]).length >= 2)   // 选择题 + 判断题（都带选项）
       .map(q=>({ text:q.text, opts:q.options, answer:q.answer }));
     const KEY_POINTS = {
       note: a.summaryZh || '本文重点词汇与语法如下，点击单词可查词，开启「整句翻译」后双击段落看中文。',
@@ -1083,19 +1099,6 @@ class Component extends DCLogic {
       sentences: gpoints.slice(0,3).map(g=>({ en:g.example||'', zh:g.explanation||'' })).filter(s=>s.en),
     };
     return { PARAS, WORD_DEFS, KEY_POINTS, QUIZ };
-  }
-  // 段落整句翻译（AI），结果缓存到 transCache
-  async ensureTranslation(text){
-    if(!text) return;
-    const token = localStorage.getItem('token');
-    if(!token) return;
-    if(this.state.transCache && this.state.transCache[text]) return;
-    try {
-      const headers = { 'Authorization':'Bearer '+token, 'Content-Type':'application/json' };
-      const data = await this.authFetch('/api/frontend/translate', { method:'POST', headers, body: JSON.stringify({ text }) }).then(r=>r.json());
-      const zh = (data && (data.translation || data.text || data.result)) || '';
-      if(zh) this.setState(s=>({ transCache: { ...s.transCache, [text]: zh } }));
-    } catch(err){ /* AI 未配置时静默降级 */ }
   }
   // 加载语法列表
   async loadGrammars(){
@@ -1383,6 +1386,7 @@ class Component extends DCLogic {
         aiGenContent: data.content || '',
         aiGenSummary: data.summaryZh || '',
         aiSavedId: data._id || null,
+        aiGenMode: data.mode || '',
       });
       // 刷新私享文章库，让新生成的文章出现在书架/统计里
       this.loadUserData();
@@ -1391,36 +1395,47 @@ class Component extends DCLogic {
     }
   }
 
-  // 词典查询（本地 ECDICT：中文释义为主，英文为辅，带考试标签）
+  // 词典查询（本地 ECDICT：中文释义 + 英文释义 + 考试标签 + AI 例句）
   async searchDict(){
     const query = (this.state.dictQuery || '').trim();
     if(!query) return;
-    this.setState({ dictShown:true, dictWord:query, dictTranslation:'查询中…', dictPhonetic:'', dictExamples:[] });
+    this.setState({ dictShown:true, dictWord:query, dictTranslation:'查询中…', dictPhonetic:'', dictDefEn:'', dictTag:'', dictExamples:[], dictExamplesLoading:false });
     try {
-      const token = localStorage.getItem('token');
-      const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-      const data = await this.authFetch('/api/frontend/dict/' + encodeURIComponent(query), { headers }).then(r => r.json());
+      const data = await this.authFetch('/api/frontend/dict/' + encodeURIComponent(query)).then(r => r.json());
       if(data.error){
-        this.setState({ dictTranslation: data.error, dictPhonetic:'', dictExamples:[] });
+        this.setState({ dictTranslation: data.error, dictPhonetic:'', dictDefEn:'', dictTag:'', dictExamples:[] });
       } else {
         const zh = data.translation || '';
         const en = data.definitionEn || '';
-        let text = zh || en || '未找到释义';
-        if(zh && en) text = zh + '\n\n— ' + en;        // 中文为主，英文释义附后
-        if(data.tag) text += '\n\n📑 ' + data.tag.split(/\s+/).filter(Boolean).join(' · ');
         const word = data.word || query;
         this.setState({
           dictWord: word,
           dictPhonetic: data.phonetic || '',
-          dictTranslation: text,
-          dictExamples: data.examples || [],
+          dictTranslation: zh || en || '未找到释义',
+          dictDefEn: zh ? en : '',           // 有中文时英文作「英文释义」附后
+          dictTag: data.tag || '',
+          dictExamples: [],
           // 让「加入生词本」按钮能直接收藏查到的词
           selWordKey: word,
           dictCache: { ...this.state.dictCache, [word]: { phon: data.phonetic || '', def: zh || en || '' } },
         });
+        this.loadDictExamples(word);          // 异步加载/生成例句
       }
     } catch(err) {
       this.setState({ dictTranslation: '查询失败' });
+    }
+  }
+
+  // 加载/生成单词例句（AI，按词缓存；只在仍看同一词时回填，防串台）
+  async loadDictExamples(word){
+    this.setState({ dictExamplesLoading:true });
+    try {
+      const data = await this.authFetch('/api/frontend/dict/' + encodeURIComponent(word) + '/examples').then(r=>r.json());
+      if(this.state.dictWord && this.state.dictWord.toLowerCase() === word.toLowerCase()){
+        this.setState({ dictExamples: data.examples || [], dictExamplesLoading:false });
+      }
+    } catch(err){
+      this.setState({ dictExamplesLoading:false });
     }
   }
 
@@ -1775,7 +1790,7 @@ class Component extends DCLogic {
     const isVocabWord = (clean)=> clean.length>=3 && vocabRoots.some(r=> clean===r || clean.startsWith(r));
     const ulineOn = 'border-bottom:2px solid rgba(90,96,130,.16);box-decoration-break:clone;-webkit-box-decoration-break:clone;padding-bottom:2px';
     const curParagraphs = curPARAS.map((para,pi)=>({
-      onDbl: st.sentenceTrans ? ()=>{ const enText = para.sentences.map(s=>s.en).join(' '); this.setState({ selParaIdx:pi, selWordKey:null, showKeyPoints:false, paraGrammarOpen:false }); this.ensureTranslation(enText); } : (()=>{}),
+      onDbl: st.sentenceTrans ? ()=>this.setState({ selParaIdx:pi, selWordKey:null, showKeyPoints:false, paraGrammarOpen:false }) : (()=>{}),
       sentences: para.sentences.map((s)=>({
         uline: st.segHint ? ulineOn : '',
         tokens: this.tokenize(s.en).map((tk)=>{
@@ -1791,9 +1806,9 @@ class Component extends DCLogic {
     const selWord = selDef ? { word:st.selWordKey, phon:selDef.phon, def:selDef.def } : {};
     const selWordAdded = st.selWordKey ? st.addedWords.includes(st.selWordKey) : false;
     const curPara = (st.selParaIdx!=null) ? curPARAS[st.selParaIdx] : null;
-    const curParaEn = curPara ? curPara.sentences.map(s=>s.en).join(' ') : '';
+    // 整句翻译全部用「提前生成」的存储译文，不再实时调用 AI
     const storedParaZh = curPara ? curPara.sentences.map(s=>s.zh).filter(Boolean).join('') : '';
-    const paraZh = storedParaZh || (curParaEn && st.transCache ? (st.transCache[curParaEn] || '') : '') || (curPara ? '（开启整句翻译后双击段落，AI 实时翻译）' : '');
+    const paraZh = storedParaZh || (curPara ? '（本段暂无译文）' : '');
     const paraGrammar = curPara ? curPara.grammar : '';
     const cardKeyPoints = st.showKeyPoints;
     const cardPara = !st.showKeyPoints && st.selParaIdx!=null;
@@ -1988,6 +2003,21 @@ class Component extends DCLogic {
       }),
     })) : [];
 
+    // ---- 词典卡片：考试标签 + 例句（目标词高亮，交替橙/蓝边）----
+    const TAG_MAP = { zk:'中考', gk:'高考', cet4:'CET4', cet6:'CET6', ky:'考研', toefl:'托福', ielts:'雅思', gre:'GRE' };
+    const dictTagLabel = (st.dictTag||'').split(/\s+/).filter(Boolean).slice(0,3).map(t=>TAG_MAP[t.toLowerCase()]||t.toUpperCase()).join(' · ');
+    const dictWordStem = (st.dictWord||'').toLowerCase().replace(/[^a-z]/g,'').replace(/e$/,'');
+    const dictExampleCards = (st.dictExamples||[]).map((ex,i)=>{
+      const color = i%2===0 ? ORANGE : BLUE;
+      const tokens = this.tokenize(ex.en||'').map(tk=>{
+        if(!tk.isWord) return { t:tk.raw, color:INK, weight:'400' };
+        const clean = tk.raw.toLowerCase().replace(/[^a-z]/g,'');
+        const hit = dictWordStem && clean.length>=3 && (clean===dictWordStem || clean.startsWith(dictWordStem));
+        return { t:tk.raw, color: hit?color:INK, weight: hit?'800':'400' };
+      });
+      return { tokens, zh: ex.zh||'', border: '5px solid '+color };
+    });
+
     return {
       // chrome
       showFlowers, showNav: screen!=='login',
@@ -2052,6 +2082,9 @@ class Component extends DCLogic {
       dictResultShown: st.dictShown, dictSearch:()=>this.searchDict(),
       onDictKey:(e)=>{ if(e && e.key==='Enter'){ if(e.preventDefault) e.preventDefault(); this.searchDict(); } },
       dictWord: st.dictWord || '', dictPhonetic: st.dictPhonetic || '', dictTranslation: st.dictTranslation || '', dictExamples: st.dictExamples || [],
+      dictTagLabel, dictHasTag: !!dictTagLabel,
+      dictDefEn: st.dictDefEn || '', dictHasEn: !!(st.dictDefEn),
+      dictExampleCards, dictHasExamples: dictExampleCards.length>0, dictExamplesLoading: !!st.dictExamplesLoading,
       onDictInput:(e)=>this.setState({dictQuery:e.target.value}),
       dictQuery: st.dictQuery || '',
       // vocab
@@ -2093,6 +2126,7 @@ class Component extends DCLogic {
       onAiPrompt:(e)=>this.setState({aiPrompt:e.target.value, aiGenerated:false}),
       runAi:()=>this.runAiGenerate(), aiRun:st.aiGenerated, aiNotRun:!st.aiGenerated && !st.aiGenerating, aiGenerating:st.aiGenerating,
       aiGenTitle, aiGenParas, aiGenSummary, saveAiArticle:()=>{ this.setState({feed:'private',page:1}); this.go('articles'); },
+      aiGenIsMock: st.aiGenMode==='mock', aiGenModeNote: '⚙️ 测试模式样例（彩云真实翻译）· 配置 AI Key 后将生成真实文章',
       // 自定义字数
       aiCustomWords:st.aiCustomWords,
       onAiCustomWords:(e)=>this.setState({aiCustomWords:e.target.value}),
