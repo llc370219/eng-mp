@@ -21,6 +21,12 @@ const PROVIDERS = {
     defaultModel: 'deepseek-chat',
     sdk: 'openai',
   },
+  deepseekv4flash: {
+    name: 'DeepSeek V4 Flash',
+    baseURL: 'https://api.deepseek.com/v1',
+    defaultModel: 'deepseek-v4-flash',
+    sdk: 'openai',
+  },
   mimo: {
     name: 'MiMo',
     baseURL: 'https://api.mimo.ai/v1',

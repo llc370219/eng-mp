@@ -19,7 +19,7 @@ module.exports = {
   },
 
   ai: {
-    provider: process.env.AI_PROVIDER || 'deepseek',
+    provider: process.env.AI_PROVIDER || 'deepseekv4flash',
     model: process.env.AI_MODEL || '',
     maxTokens: parseInt(process.env.AI_MAX_TOKENS) || 2048,
 
@@ -28,6 +28,7 @@ module.exports = {
       openai: process.env.OPENAI_API_KEY || '',
       claude: process.env.CLAUDE_API_KEY || '',
       deepseek: process.env.DEEPSEEK_API_KEY || '',
+      deepseekv4flash: process.env.DEEPSEEK_V4_FLASH_API_KEY || '',
       mimo: process.env.MIMO_API_KEY || '',
       moonshot: process.env.MOONSHOT_API_KEY || '',
       zhipu: process.env.ZHIPU_API_KEY || '',
