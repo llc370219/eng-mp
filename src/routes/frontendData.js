@@ -485,11 +485,44 @@ router.get('/stats', async (req, res, next) => {
 
 // ===== AI 生成文章（完整版，读取等级和生词本） =====
 router.post('/generate-article', async (req, res, next) => {
+  let countIncremented = false;
+  let user = null;
   try {
     const { prompt, level, category, wordCount, useVocab } = req.body;
     const userId = req.user._id;
 
     if (!prompt) return res.status(400).json({ error: '请提供文章主题' });
+
+    // 检查并限制每日 AI 生成次数
+    const User = require('../models/User');
+    user = await User.findById(userId);
+    if (user) {
+      const now = new Date();
+      const todayStr = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+      
+      let countToday = user.aiGeneratedCountToday || 0;
+      let lastDateStr = '';
+      if (user.lastAiGeneratedAt) {
+        const last = new Date(user.lastAiGeneratedAt);
+        lastDateStr = last.getFullYear() + '-' + (last.getMonth() + 1) + '-' + last.getDate();
+      }
+      
+      // 跨天重置已使用次数
+      if (todayStr !== lastDateStr) {
+        countToday = 0;
+      }
+      
+      const limit = user.aiLimit !== undefined ? user.aiLimit : 1; // 默认每天1次
+      if (countToday >= limit) {
+        return res.status(429).json({ error: `您今日的 AI 生成额度已用完（每日限制 ${limit} 次，已使用 ${countToday} 次），请明天再试或联系管理员提升额度。` });
+      }
+      
+      // 先更新使用记录
+      user.aiGeneratedCountToday = countToday + 1;
+      user.lastAiGeneratedAt = now;
+      await user.save();
+      countIncremented = true;
+    }
 
     const validLevels = ['初中', '高中', 'CET4', 'CET6', '考研', '雅思'];
     const articleLevel = validLevels.includes(level) ? level : '高中';
@@ -523,7 +556,15 @@ router.post('/generate-article', async (req, res, next) => {
 
     // 统一入口：有 AI Key 走真实生成，无 Key 走测试样例（彩云真实翻译），整条链路始终可用
     const result = await articleGenerator.generate(prompt, articleLevel, opts);
-    if (result.error) return res.status(500).json({ error: result.error });
+    if (result.error) {
+      // 真实生成失败，回滚使用计数
+      if (countIncremented && user) {
+        user.aiGeneratedCountToday = Math.max(0, user.aiGeneratedCountToday - 1);
+        await user.save();
+        countIncremented = false;
+      }
+      return res.status(500).json({ error: result.error });
+    }
 
     // 保存到私人文章库
     try {
@@ -553,6 +594,14 @@ router.post('/generate-article', async (req, res, next) => {
 
     res.json(result);
   } catch (err) {
+    if (countIncremented && user) {
+      try {
+        user.aiGeneratedCountToday = Math.max(0, user.aiGeneratedCountToday - 1);
+        await user.save();
+      } catch (rollbackErr) {
+        // ignore
+      }
+    }
     next(err);
   }
 });

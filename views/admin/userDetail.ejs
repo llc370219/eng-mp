@@ -14,17 +14,20 @@
   <tr><td style="font-weight:500">等级</td><td><span class="badge badge-diff"><%= user.level %></span></td></tr>
   <tr><td style="font-weight:500">目标</td><td><%= user.goal %></td></tr>
   <tr><td style="font-weight:500">角色</td><td><span class="badge badge-role"><%= user.role %></span></td></tr>
+  <tr><td style="font-weight:500">每日 AI 生成额度</td><td><%= user.aiLimit !== undefined ? user.aiLimit : 1 %> 次 (今日已使用: <%= user.aiGeneratedCountToday || 0 %> 次)</td></tr>
   <tr><td style="font-weight:500">注册时间</td><td><%= new Date(user.createdAt).toLocaleString() %></td></tr>
   <tr><td style="font-weight:500">最后登录</td><td><%= user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : '-' %></td></tr>
   <tr><td style="font-weight:500">邮箱验证</td><td><%= user.emailVerified ? '✅ 已验证' : '❌ 未验证' %></td></tr>
   </table>
-  <form method="POST" action="/admin/users/<%= user._id %>/role" style="margin-top:12px;display:flex;gap:8px;align-items:center">
+  <form method="POST" action="/admin/users/<%= user._id %>/role" style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <label style="font-size:13px;font-weight:500">修改角色:</label>
     <select name="role" style="padding:6px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px">
       <option value="user" <%= user.role==='user'?'selected':'' %>>user</option>
       <option value="editor" <%= user.role==='editor'?'selected':'' %>>editor</option>
       <option value="admin" <%= user.role==='admin'?'selected':'' %>>admin</option>
     </select>
+    <label style="font-size:13px;font-weight:500;margin-left:12px">AI 每日生成额度:</label>
+    <input type="number" name="aiLimit" value="<%= user.aiLimit !== undefined ? user.aiLimit : 1 %>" min="0" style="padding:6px;border:1px solid #D1D5DB;border-radius:6px;font-size:13px;width:70px" />
     <button type="submit" class="btn btn-primary btn-sm">更新</button>
   </form>
 </div>

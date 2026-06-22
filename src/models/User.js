@@ -46,6 +46,18 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  aiLimit: {
+    type: Number,
+    default: 1, // 每日默认 AI 生成次数限制为 1
+  },
+  aiGeneratedCountToday: {
+    type: Number,
+    default: 0, // 今日已生成文章次数
+  },
+  lastAiGeneratedAt: {
+    type: Date,
+    default: null, // 上次 AI 生成时间，用于跨天自动清零
+  },
   loginAttempts: {
     type: Number,
     default: 0,

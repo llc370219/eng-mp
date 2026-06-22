@@ -151,8 +151,12 @@ router.get('/users/:id', adminAuth, async (req, res) => {
 });
 
 router.post('/users/:id/role', adminAuth, async (req, res) => {
-  const { role } = req.body;
-  await User.findByIdAndUpdate(req.params.id, { role });
+  const { role, aiLimit } = req.body;
+  const updateData = { role };
+  if (aiLimit !== undefined) {
+    updateData.aiLimit = Number(aiLimit) || 0;
+  }
+  await User.findByIdAndUpdate(req.params.id, updateData);
   res.redirect('/admin/users/' + req.params.id);
 });
 

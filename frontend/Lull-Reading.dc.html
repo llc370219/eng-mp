@@ -888,8 +888,16 @@
               <div style="font-weight:700;font-size:13px;letter-spacing:1.5px;color:#7a7568">④ 写下你的灵感</div>
               <button onClick="{{ aiAuto }}" title="AI 随机推荐一个主题" style="background:#f3c44b;color:#1a1817;border:2.5px solid #1a1817;border-radius:999px;box-shadow:2px 2px 0 #1a1817;cursor:pointer;padding:5px 14px;font-family:'Space Grotesk';font-weight:700;font-size:12px">🎲 随机灵感</button>
             </div>
-            <textarea onInput="{{ onAiPrompt }}" placeholder="描述你想读的内容：主题、风格、长度，或一个你好奇的问题…
-例如：写一篇关于深海发光生物的科普短文，语气轻松，结尾留一个开放式问题。" style="width:100%;min-height:120px;padding:14px 16px;border:2.5px solid #1a1817;border-radius:14px;font-family:'Newsreader',serif;font-size:16px;background:#f2ecda;outline:none;resize:vertical;line-height:1.6">{{ aiPrompt }}</textarea>
+            <div style="background:#fff9e6;border:2px solid #1a1817;border-radius:13px;padding:10px 12px;margin-bottom:10px;box-shadow:2px 2px 0 #1a1817">
+              <div style="font-size:12px;font-weight:700;color:#d97706;display:flex;align-items:center;gap:6px">
+                <span>💡 黄金技巧:</span>
+              </div>
+              <div style="font-size:11.5px;color:#854d0e;margin-top:4px;font-weight:600;line-height:1.4">
+                你可以直接复制网页链接（URL）进来，AI 会自动提取网页内容并为您定制生成一篇匹配您英语等级的分级阅读文章！
+              </div>
+            </div>
+            <textarea value="{{ aiPrompt }}" onInput="{{ onAiPrompt }}" placeholder="描述你想读的内容（支持直接粘贴网页链接/URL，AI将自动提取并定制生成文章）…
+例如：写一篇关于深海发光生物的科普文章，或直接粘贴某篇英文报导的网页链接。" style="width:100%;min-height:120px;padding:14px 16px;border:2.5px solid #1a1817;border-radius:14px;font-family:'Newsreader',serif;font-size:16px;background:#f2ecda;outline:none;resize:vertical;line-height:1.6"></textarea>
             <button onClick="{{ runAi }}" style="margin-top:16px;width:100%;background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:14px;box-shadow:4px 4px 0 #1a1817;cursor:pointer;padding:14px;font-family:'Space Grotesk';font-weight:700;font-size:16px">✦ 鲜榨一篇 {{ aiLevel }} 文章</button>
           </div>
 
