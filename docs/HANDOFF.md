@@ -202,7 +202,6 @@ eng-mp/
 │   ├── seed.js               # 基础种子数据
 │   ├── seed-articles.js      # 文章种子数据
 │   ├── seed-grammar.js       # 语法种子数据
-│   ├── import-dict.js        # 导入词典
 │   └── generate-frontend-articles.js # 前端文章数据生成
 ├── docs/
 │   ├── HANDOFF.md            # 本文件
@@ -381,6 +380,12 @@ git push origin main     # 推送（部署前先推送）
 
 ## 📅 完整更新日志
 
+### 2026-06-22（AI 适配优化 + 移除非数据库词典方案）
+
+- ✅ **AI 智能推理参数自适应**：在 `src/services/ai.js` 中重构了逻辑，能够根据模型名称自动识别是否为推理模型（带有 `seed` 或 `r1` 等关键字）。自动切换使用 `max_completion_tokens` + `reasoning_effort` 或者是标准的 `max_tokens` 参数，彻底解决火山方舟直接调用普通模型（如 `doubao-lite-32k-240828`）时因 reasoning 参数而报错 404 的问题。
+- ✅ **彻底移除 ECDICT 数据库词典模块**：按照最新轻量化架构，完全删除了庞大的本地数据库词典方案。清除了 `Dictionary` 数据库模型、`scripts/import-dict.js` 导入脚本、`views/admin/dict.ejs` 词典管理界面、`src/services/dictionary.js` 服务等全部关联代码与路由。
+- ✅ **轻量化在线查词方案**：前端阅读卡片查词与词典查询接口统一直接调用 **彩云小译在线 Dict API**，同时兼顾音标、中文释义和中英双语例句的秒级渲染，省去了向 MongoDB seeding/import 词库的步骤，大幅降低了生产部署复杂度和数据库负荷。
+
 ### 2026-06-21（生词复习 — 艾宾浩斯遗忘曲线）
 
 - ✅ 新增 `src/services/ebbinghaus.js`：经典遗忘曲线节点 **5分钟 → 30分钟 → 12小时 → 1天 → 2天 → 4天 → 7天 → 15天 → 30天 →（掌握）60天**。
@@ -467,4 +472,4 @@ MONGODB_URI="mongodb+srv://...<atlas>.../eng-reader" node scripts/import-dict.js
 
 ---
 
-*本文档最后更新时间: 2026-06-21*
+*本文档最后更新时间: 2026-06-22*
