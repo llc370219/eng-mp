@@ -22,13 +22,19 @@
 </div>
 <div class="card">
   <h2>🤖 AI 设置</h2>
+  <div class="form-row"><label>开启 AI 鲜榨文章生成</label>
+    <select name="enableAIGeneration">
+      <option value="true" <%= settings.enableAIGeneration!==false?'selected':'' %>>开启</option>
+      <option value="false" <%= settings.enableAIGeneration===false?'selected':'' %>>关闭</option>
+    </select>
+  </div>
   <div class="form-row"><label>默认 AI 提供商</label>
     <select name="aiProvider" id="aiProviderSelect">
-      <% ['deepseek','mimo','openai','claude','moonshot','zhipu','qwen'].forEach(p => { %><option value="<%= p %>" <%= settings.aiProvider===p?'selected':'' %>><%= p %></option><% }) %>
+      <% ['deepseek','mimo','openai','claude','moonshot','zhipu','qwen','ark'].forEach(p => { %><option value="<%= p %>" <%= settings.aiProvider===p?'selected':'' %>><%= p %></option><% }) %>
     </select>
   </div>
   <div class="form-row"><label>AI 模型（留空使用提供商默认模型）</label>
-    <input type="text" name="aiModel" value="<%= settings.aiModel || '' %>" placeholder="例如 deepseek-chat、gpt-4o-mini">
+    <input type="text" name="aiModel" value="<%= settings.aiModel || '' %>" placeholder="例如 doubao-seed-1-6-flash-250615、deepseek-chat、gpt-4o-mini">
   </div>
   <div class="form-row"><label>最大 Token 数</label>
     <input type="number" name="aiMaxTokens" value="<%= settings.aiMaxTokens || 2048 %>" min="256" max="65536" step="256">
@@ -40,6 +46,7 @@
   <p style="font-size:12px;color:#6B7280;margin-bottom:16px">留空表示不修改已有配置。配置保存后立即生效，无需重启服务。</p>
   <%
     const providerList = [
+      { key: 'ark', name: '火山方舟 (豆包)', url: 'https://www.volcengine.com/' },
       { key: 'deepseek', name: 'DeepSeek', url: 'https://platform.deepseek.com' },
       { key: 'mimo', name: 'MiMo', url: 'https://mimo.ai' },
       { key: 'openai', name: 'OpenAI', url: 'https://platform.openai.com' },

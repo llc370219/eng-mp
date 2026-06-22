@@ -16,9 +16,13 @@ const config = require('../config');
 const aiService = require('./ai');
 const caiyun = require('./caiyun');
 
-// 是否配好了「当前生效的」AI 提供商（DB 优先，与 chat() 用同一份配置，避免不一致）
+// 是否配好了「当前生效的」AI 提供商且开启了生成功能（DB 优先，与 chat() 用同一份配置，避免不一致）
 async function aiConfigured() {
   try {
+    const SystemSetting = require('../models/SystemSetting');
+    const enabled = await SystemSetting.get('enableAIGeneration');
+    if (enabled === false) return false; // 后台关闭了 AI 生成
+
     const cfg = await aiService.getAIConfig();
     return !!(cfg.keys[cfg.provider]);
   } catch {

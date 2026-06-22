@@ -128,11 +128,45 @@ router.get('/article/:id', async (req, res, next) => {
   }
 });
 
+// ===== 删除私人文章 =====
+router.delete('/article/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+    const PersonalArticle = require('../models/PersonalArticle');
+    const result = await PersonalArticle.deleteOne({ _id: id, userId });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: '文章不存在或无权删除' });
+    }
+    res.json({ success: true, message: '删除成功' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ===== 词典查询（彩云小译为主：音标+中文释义；本地 ECDICT 补充考试标签+英文释义） =====
 router.get('/dict/:word', async (req, res, next) => {
   try {
     const word = req.params.word.toLowerCase().trim();
+    const isSearchTab = req.query.type === 'search';
     const Dictionary = require('../models/Dictionary');
+
+    if (!isSearchTab) {
+      // 2.2 版本：阅读单词卡不调用外部 API，仅使用本地 ECDICT 库
+      const local = await Dictionary.findOne({ word }).lean();
+      if (!local) return res.json({ error: '未在本地词表中找到该词释义' });
+      return res.json({
+        word: local.word,
+        phonetic: local.phonetic || '',
+        translation: local.translation || '',
+        definitionEn: local.definitionEn || '',
+        tag: local.tag || '',
+        synonym: [],
+        source: 'local'
+      });
+    }
+
+    // 独立搜索页：保持彩云小译优先 + 本地 ECDICT 补充的模式
     const [cy, local] = await Promise.all([
       caiyun.dict(word),
       Dictionary.findOne({ word }).lean(),
@@ -143,6 +177,28 @@ router.get('/dict/:word', async (req, res, next) => {
       const fb = await lookupWord(word);
       if (!fb) return res.json({ error: '未找到释义' });
       return res.json({ word: fb.word, phonetic: fb.phonetic || '', translation: fb.translation || '', definitionEn: fb.definitionEn || '', tag: fb.tag || '', synonym: [], source: fb.source || 'fallback' });
+    }
+
+    if (cy) {
+      try {
+        const updateData = { $set: {} };
+        if (cy.phonetic) updateData.$set.phonetic = cy.phonetic;
+        if (Array.isArray(cy.explanations) && cy.explanations.length) {
+          updateData.$set.translation = cy.explanations.join('\n');
+        }
+        if (Array.isArray(cy.examples) && cy.examples.length) {
+          updateData.$set.exampleSentences = cy.examples.slice(0, 2);
+        }
+        if (Object.keys(updateData.$set).length > 0) {
+          await Dictionary.updateOne(
+            { word },
+            updateData,
+            { upsert: true }
+          ).exec();
+        }
+      } catch (saveErr) {
+        // 静默失败
+      }
     }
 
     res.json({
@@ -159,21 +215,33 @@ router.get('/dict/:word', async (req, res, next) => {
   }
 });
 
-// ===== 单词例句（AI 生成 + 按词缓存到词典库，每词只生成一次） =====
+// ===== 单词例句（使用本地数据库缓存，不调用 API 实时生成） =====
 router.get('/dict/:word/examples', async (req, res, next) => {
   try {
     const Dictionary = require('../models/Dictionary');
     const word = req.params.word.toLowerCase().trim();
     const doc = await Dictionary.findOne({ word });
-    if (doc && Array.isArray(doc.exampleSentences) && doc.exampleSentences.length) {
-      return res.json({ examples: doc.exampleSentences, cached: true });
+    if (doc) {
+      if (Array.isArray(doc.exampleSentences) && doc.exampleSentences.length) {
+        return res.json({ examples: doc.exampleSentences, cached: true });
+      }
+      if (Array.isArray(doc.examples) && doc.examples.length) {
+        const parsed = doc.examples.map(ex => {
+          if (typeof ex === 'string') {
+            const parts = ex.split('#');
+            return {
+              en: parts[0].trim(),
+              zh: parts[1] ? parts[1].trim() : ''
+            };
+          }
+          return ex;
+        }).filter(ex => ex && ex.en);
+        if (parsed.length) {
+          return res.json({ examples: parsed, cached: true });
+        }
+      }
     }
-    const examples = await aiService.wordExamples(word, doc ? (doc.translation || doc.definitionEn || '') : '');
-    if (examples.length && doc) {
-      doc.exampleSentences = examples;
-      await doc.save();
-    }
-    res.json({ examples });
+    res.json({ examples: [] });
   } catch (err) {
     res.json({ examples: [] });
   }

@@ -303,6 +303,20 @@ async function grammarExplain(topic, options = {}) {
   }
 }
 
+function withTimeout(promise, ms, errorMsg = '请求超时') {
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(errorMsg)), ms);
+  });
+  return Promise.race([
+    promise.then(res => {
+      clearTimeout(timer);
+      return res;
+    }),
+    timeoutPromise
+  ]);
+}
+
 /**
  * AI 生成英语文章（增强版）
  * 根据用户生词本掌握程度智能选词，生成完整的文章及配套学习内容
@@ -416,16 +430,35 @@ ${masteryDetail ? `## 生词本掌握情况\n${masteryDetail}\n\n使用策略：
 ${options.extraRequirements ? `## 额外要求\n${options.extraRequirements}` : ''}`;
 
   try {
-    // 给足输出额度避免 JSON 被截断（截断=整次调用白费）；推理模型走 max_completion_tokens
-    const result = await chat(systemPrompt, userPrompt, { ...options, maxTokens: options.maxTokens || 16384 });
-    let jsonStr = result || '';
-    const fence = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (fence) jsonStr = fence[1];
-    // 兜底：截取第一个 { 到最后一个 }，容忍推理模型在 JSON 前后多写的文字
-    const s = jsonStr.indexOf('{'), e = jsonStr.lastIndexOf('}');
-    if (s >= 0 && e > s) jsonStr = jsonStr.slice(s, e + 1);
+    const maxRetries = 3;
+    let lastError = null;
+    let parsed = null;
 
-    const parsed = JSON.parse(jsonStr.trim());
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[AI Generation] Attempt ${attempt} of ${maxRetries}...`);
+        // 给足输出额度避免 JSON 被截断（截断=整次调用白费）；推理模型走 max_completion_tokens
+        const chatPromise = chat(systemPrompt, userPrompt, { ...options, maxTokens: options.maxTokens || 16384 });
+        const result = await withTimeout(chatPromise, 15000, `AI生文超时(第${attempt}次尝试超过15秒)`);
+
+        let jsonStr = result || '';
+        const fence = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (fence) jsonStr = fence[1];
+        // 兜底：截取第一个 { 到最后一个 }，容忍推理模型在 JSON 前后多写的文字
+        const s = jsonStr.indexOf('{'), e = jsonStr.lastIndexOf('}');
+        if (s >= 0 && e > s) jsonStr = jsonStr.slice(s, e + 1);
+
+        parsed = JSON.parse(jsonStr.trim());
+        break; // 成功解析，跳出重试循环
+      } catch (err) {
+        console.error(`[AI Generation] Attempt ${attempt} failed: ${err.message}`);
+        lastError = err;
+      }
+    }
+
+    if (!parsed) {
+      throw new Error(`AI生成文章在重试 ${maxRetries} 次后全部失败，最后一次错误: ${lastError ? lastError.message : '未知错误'}`);
+    }
 
     const wordCount = (parsed.content || '').split(/\s+/).filter(w => /[a-zA-Z]/.test(w)).length;
     const readingTimeMin = Math.max(1, Math.ceil(wordCount / 200));

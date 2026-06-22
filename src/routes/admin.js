@@ -254,13 +254,15 @@ router.post('/articles/import', adminAuth, express.raw({ type: '*/*', limit: '30
     }
     if (!Array.isArray(articles)) articles = [articles];
 
-    const publish = req.query.publish !== 'false'; // 默认发布推送
+    // 两步走：默认导入为「草稿（未发布）」，需在列表里人工点「发布」确认后才推送
+    const publish = req.query.publish === 'true';
     let ok = 0, skipped = 0;
     for (const obj of articles) {
       if (obj && obj.title && obj.content) { await createArticleFromObj(obj, publish); ok++; }
       else skipped++;
     }
-    res.json({ message: `✅ 成功导入 ${ok} 篇${publish ? '（已发布推送）' : '（未发布）'}${skipped ? `，跳过 ${skipped} 条无效` : ''}`, imported: ok });
+    const tail = publish ? '（已直接发布）' : '（已存为草稿，请在下方逐篇确认后点「发布」推送）';
+    res.json({ message: `✅ 成功导入 ${ok} 篇${tail}${skipped ? `，跳过 ${skipped} 条无效` : ''}`, imported: ok, published: publish });
   } catch (err) {
     res.status(400).json({ error: '❌ 导入失败: ' + err.message });
   }

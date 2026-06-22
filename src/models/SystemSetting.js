@@ -18,6 +18,7 @@ const DEFAULTS = {
   siteName: { value: '英语阅读学习', description: '站点名称' },
   allowRegistration: { value: true, description: '是否开放注册' },
   requireInviteCode: { value: true, description: '是否需要邀请码' },
+  enableAIGeneration: { value: true, description: '是否启用用户端 AI 鲜榨文章' },
   defaultUserLevel: { value: '初中', description: '默认用户等级' },
   aiProvider: { value: 'deepseek', description: '默认AI提供商' },
   aiModel: { value: '', description: 'AI模型（留空使用提供商默认）' },
@@ -29,6 +30,7 @@ const DEFAULTS = {
   aiApiKey_moonshot: { value: '', description: 'Moonshot API Key' },
   aiApiKey_zhipu: { value: '', description: '智谱 API Key' },
   aiApiKey_qwen: { value: '', description: '通义千问 API Key' },
+  aiApiKey_ark: { value: '', description: '火山方舟 API Key' },
   dailyCheckInMin: { value: 5, description: '打卡最低学习分钟' },
   maintenanceMode: { value: false, description: '维护模式' },
 };
