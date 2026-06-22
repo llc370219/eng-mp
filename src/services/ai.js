@@ -55,11 +55,10 @@ const PROVIDERS = {
   ark: {
     name: '火山方舟 (豆包)',
     baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
-    // 账号实际可用的 seed-1.6 模型为 250615 版；flash 为快/省 token 变体。需先在方舟控制台「开通」该模型。
-    defaultModel: 'doubao-seed-1-6-flash-250615',
+    // 默认使用快捷接入模型，用户如有 endpoint ID 可自行在后台配置
+    defaultModel: 'doubao-lite-32k-240828',
     sdk: 'openai',
-    reasoning: true,            // 推理模型
-    reasoningEffort: 'minimal', // 默认最低推理力度，省 token（生成结构化文章够用）
+    reasoningEffort: 'medium',  // 使用中等推理力度 (仅当模型名含 seed 时生效)
   },
 };
 
@@ -162,10 +161,15 @@ async function chat(systemPrompt, userPrompt, options = {}) {
         { role: 'user', content: userPrompt },
       ],
     };
-    if (provider.reasoning) {
-      // 推理模型（豆包 seed 等）：用 max_completion_tokens，并用 reasoning_effort 压低推理消耗
+    // 自动识别是否为推理模型（带有 seed 或 r1 的模型往往是推理模型）
+    const isReasoningModel = provider.reasoning || model.includes('seed') || model.includes('r1');
+    
+    if (isReasoningModel) {
+      // 推理模型：用 max_completion_tokens，并用 reasoning_effort
       params.max_completion_tokens = maxTokens;
-      params.reasoning_effort = options.reasoningEffort || provider.reasoningEffort || 'minimal';
+      // 只有提供商默认配置了 reasoningEffort，或者传入了 options 才传该参数
+      const effort = options.reasoningEffort || provider.reasoningEffort;
+      if (effort) params.reasoning_effort = effort;
     } else {
       params.max_tokens = maxTokens;
     }
