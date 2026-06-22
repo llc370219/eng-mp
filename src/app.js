@@ -19,7 +19,7 @@ const personalArticleRoutes = require('./routes/personalArticles');
 const vocabRoutes = require('./routes/vocab');
 const userRoutes = require('./routes/user');
 const exerciseRoutes = require('./routes/exercises');
-const dictRoutes = null; // Removed
+const dictRoutes = require('./routes/dictionary');
 const grammarRoutes = require('./routes/grammar');
 const aiRoutes = require('./routes/ai');
 const studyRoutes = require('./routes/study');
@@ -85,6 +85,7 @@ app.use('/api/personal-articles', personalArticleRoutes);
 app.use('/api/vocab', vocabRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api', exerciseRoutes);
+app.use('/api/dict', dictRoutes);
 app.use('/api/grammar', grammarRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/study', studyRoutes);

@@ -8,6 +8,7 @@ const Exercise = require('../models/Exercise');
 const Grammar = require('../models/Grammar');
 const { tryCheckIn, hasCheckedIn, getCheckInHistory, getStreak } = require('../services/checkin');
 const aiService = require('../services/ai');
+const { lookupWord } = require('../services/dictionary');
 const ebbinghaus = require('../services/ebbinghaus');
 const caiyun = require('../services/caiyun');
 const articleGenerator = require('../services/articleGenerator');
@@ -143,35 +144,119 @@ router.delete('/article/:id', async (req, res, next) => {
   }
 });
 
-// ===== 词典查询（完全基于彩云小译在线接口，无本地数据库依赖） =====
+// ===== 词典查询（在线彩云 API 优先查库并缓存冷启动，无需本地导入 ECDICT 词库） =====
 router.get('/dict/:word', async (req, res, next) => {
   try {
     const word = req.params.word.toLowerCase().trim();
-    const cy = await caiyun.dict(word);
-    if (!cy) return res.json({ error: '未找到释义' });
+    const Dictionary = require('../models/Dictionary');
+
+    // 1. 尝试查本地缓存库
+    let local = await Dictionary.findOne({ word }).lean();
+
+    if (!local) {
+      // 2. 本地缓存库无记录，则调用彩云小译在线查询并写入缓存
+      const cy = await caiyun.dict(word);
+      if (cy) {
+        try {
+          const translation = Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '';
+          local = await Dictionary.findOneAndUpdate(
+            { word },
+            {
+              $set: {
+                word,
+                phonetic: cy.phonetic || '',
+                translation,
+                exampleSentences: cy.examples || []
+              }
+            },
+            { upsert: true, new: true }
+          ).lean();
+        } catch (saveErr) {
+          // 如果写入数据库失败，手动构建临时对象返回，保证可用
+          local = {
+            word,
+            phonetic: cy.phonetic || '',
+            translation: Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '',
+            exampleSentences: cy.examples || []
+          };
+        }
+      }
+    }
+
+    if (!local) return res.json({ error: '未找到释义' });
+
+    let examples = [];
+    if (Array.isArray(local.exampleSentences) && local.exampleSentences.length) {
+      examples = local.exampleSentences;
+    } else if (Array.isArray(local.examples) && local.examples.length) {
+      examples = local.examples.map(ex => {
+        if (typeof ex === 'string') {
+          const parts = ex.split('#');
+          return { en: parts[0].trim(), zh: parts[1] ? parts[1].trim() : '' };
+        }
+        return ex;
+      }).filter(ex => ex && ex.en);
+    }
 
     res.json({
-      word: cy.word,
-      phonetic: cy.phonetic || '',
-      translation: Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '',
-      definitionEn: '',
-      tag: '',
-      synonym: cy.synonym || [],
-      examples: (cy.examples || []).slice(0, 2),
-      source: 'caiyun'
+      word: local.word,
+      phonetic: local.phonetic || '',
+      translation: local.translation || '',
+      definitionEn: local.definitionEn || '',
+      tag: local.tag || '',
+      synonym: [],
+      examples: examples.slice(0, 2),
+      source: local.createdAt ? 'cache' : 'caiyun'
     });
   } catch (err) {
     res.json({ error: '查询失败: ' + err.message });
   }
 });
 
-// ===== 单词例句（调用彩云小译获取在线例句） =====
+// ===== 单词例句（优先查缓存，若无则在线获取并缓存） =====
 router.get('/dict/:word/examples', async (req, res, next) => {
   try {
     const word = req.params.word.toLowerCase().trim();
-    const cy = await caiyun.dict(word);
-    if (cy && Array.isArray(cy.examples)) {
-      return res.json({ examples: cy.examples, cached: false });
+    const Dictionary = require('../models/Dictionary');
+    let doc = await Dictionary.findOne({ word });
+
+    if (!doc) {
+      const cy = await caiyun.dict(word);
+      if (cy) {
+        try {
+          const translation = Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '';
+          doc = await Dictionary.findOneAndUpdate(
+            { word },
+            {
+              $set: {
+                word,
+                phonetic: cy.phonetic || '',
+                translation,
+                exampleSentences: cy.examples || []
+              }
+            },
+            { upsert: true, new: true }
+          );
+        } catch {}
+      }
+    }
+
+    if (doc) {
+      if (Array.isArray(doc.exampleSentences) && doc.exampleSentences.length) {
+        return res.json({ examples: doc.exampleSentences, cached: true });
+      }
+      if (Array.isArray(doc.examples) && doc.examples.length) {
+        const parsed = doc.examples.map(ex => {
+          if (typeof ex === 'string') {
+            const parts = ex.split('#');
+            return { en: parts[0].trim(), zh: parts[1] ? parts[1].trim() : '' };
+          }
+          return ex;
+        }).filter(ex => ex && ex.en);
+        if (parsed.length) {
+          return res.json({ examples: parsed, cached: true });
+        }
+      }
     }
     res.json({ examples: [] });
   } catch (err) {
