@@ -11,8 +11,8 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const mongoose = require('mongoose');
-const Dictionary = require('../src/models/Dictionary');
 const Article = require('../src/models/Article');
+const Dictionary = null; // Removed
 const Exercise = require('../src/models/Exercise');
 const Grammar = require('../src/models/Grammar');
 const { analyzeDifficulty } = require('../src/services/difficulty-analyzer');
@@ -20,7 +20,7 @@ const { analyzeDifficulty } = require('../src/services/difficulty-analyzer');
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/eng-reader';
 
 // ===== 词典种子数据 =====
-const DICT_DATA = [
+const DICT_DATA = []; /*
   {
     word: 'ubiquitous',
     phonetic: '/juːˈbɪkwɪtəs/',
@@ -352,20 +352,12 @@ const GRAMMAR_DATA = [
       { type: 'fill-blank', text: 'If I ___ (be) you, I would apologize.', answer: 'were', explanation: '虚拟语气中，所有人称都用 were' },
       { type: 'multiple-choice', text: 'If he ___ earlier, he wouldn\'t have missed the train.', options: ['left', 'had left', 'has left', 'leaves'], answer: 'had left', explanation: '与过去事实相反，用 had + 过去分词' },
       { type: 'fill-blank', text: 'I wish I ___ (know) the answer.', answer: 'knew', explanation: 'wish + 过去式，表示与现在事实相反' },
-    ],
-  },
-];
+*/
 
 // ===== 导入函数 =====
 
 async function seedDict() {
-  const count = await Dictionary.countDocuments();
-  if (count > 0) {
-    console.log(`词典已有 ${count} 条数据，跳过`);
-    return;
-  }
-  await Dictionary.insertMany(DICT_DATA);
-  console.log(`词典: 写入 ${DICT_DATA.length} 条`);
+  console.log('词典: 已弃用本地导入，跳过');
 }
 
 async function seedArticles() {

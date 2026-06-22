@@ -8,7 +8,6 @@ const Exercise = require('../models/Exercise');
 const Grammar = require('../models/Grammar');
 const { tryCheckIn, hasCheckedIn, getCheckInHistory, getStreak } = require('../services/checkin');
 const aiService = require('../services/ai');
-const { lookupWord } = require('../services/dictionary');
 const ebbinghaus = require('../services/ebbinghaus');
 const caiyun = require('../services/caiyun');
 const articleGenerator = require('../services/articleGenerator');
@@ -144,152 +143,35 @@ router.delete('/article/:id', async (req, res, next) => {
   }
 });
 
-// ===== 词典查询（彩云小译为主：音标+中文释义；本地 ECDICT 补充考试标签+英文释义） =====
+// ===== 词典查询（完全基于彩云小译在线接口，无本地数据库依赖） =====
 router.get('/dict/:word', async (req, res, next) => {
   try {
     const word = req.params.word.toLowerCase().trim();
-    const isSearchTab = req.query.type === 'search';
-    const Dictionary = require('../models/Dictionary');
-
-    if (!isSearchTab) {
-      // 2.2 版本：阅读单词卡以本地 ECDICT 库为主，若找不到，则调用彩云小译并缓存，防止本地库未导入时返回「未找到释义」
-      let local = await Dictionary.findOne({ word }).lean();
-      
-      if (!local) {
-        // 尝试从彩云小译在线查询并自动缓存
-        const cy = await caiyun.dict(word);
-        if (cy) {
-          try {
-            const translation = Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '';
-            const newDoc = await Dictionary.findOneAndUpdate(
-              { word },
-              {
-                $set: {
-                  word,
-                  phonetic: cy.phonetic || '',
-                  translation,
-                  exampleSentences: cy.examples || []
-                }
-              },
-              { upsert: true, new: true }
-            ).lean();
-            local = newDoc;
-          } catch (saveErr) {
-            // 如果保存失败，手动构建临时对象返回，保证接口可用
-            local = {
-              word,
-              phonetic: cy.phonetic || '',
-              translation: Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '',
-              exampleSentences: cy.examples || []
-            };
-          }
-        }
-      }
-
-      if (!local) return res.json({ error: '未在本地词表中找到该词释义' });
-      
-      let examples = [];
-      if (Array.isArray(local.exampleSentences) && local.exampleSentences.length) {
-        examples = local.exampleSentences;
-      } else if (Array.isArray(local.examples) && local.examples.length) {
-        examples = local.examples.map(ex => {
-          if (typeof ex === 'string') {
-            const parts = ex.split('#');
-            return {
-              en: parts[0].trim(),
-              zh: parts[1] ? parts[1].trim() : ''
-            };
-          }
-          return ex;
-        }).filter(ex => ex && ex.en);
-      }
-
-      return res.json({
-        word: local.word,
-        phonetic: local.phonetic || '',
-        translation: local.translation || '',
-        definitionEn: local.definitionEn || '',
-        tag: local.tag || '',
-        synonym: [],
-        examples: examples.slice(0, 2),
-        source: 'local'
-      });
-    }
-
-    // 独立搜索页：保持彩云小译优先 + 本地 ECDICT 补充的模式
-    const [cy, local] = await Promise.all([
-      caiyun.dict(word),
-      Dictionary.findOne({ word }).lean(),
-    ]);
-
-    // 彩云与本地都没有 → 退回原在线英文兜底
-    if (!cy && !local) {
-      const fb = await lookupWord(word);
-      if (!fb) return res.json({ error: '未找到释义' });
-      return res.json({ word: fb.word, phonetic: fb.phonetic || '', translation: fb.translation || '', definitionEn: fb.definitionEn || '', tag: fb.tag || '', synonym: [], source: fb.source || 'fallback' });
-    }
-
-    if (cy) {
-      try {
-        const updateData = { $set: {} };
-        if (cy.phonetic) updateData.$set.phonetic = cy.phonetic;
-        if (Array.isArray(cy.explanations) && cy.explanations.length) {
-          updateData.$set.translation = cy.explanations.join('\n');
-        }
-        if (Array.isArray(cy.examples) && cy.examples.length) {
-          updateData.$set.exampleSentences = cy.examples.slice(0, 2);
-        }
-        if (Object.keys(updateData.$set).length > 0) {
-          await Dictionary.updateOne(
-            { word },
-            updateData,
-            { upsert: true }
-          ).exec();
-        }
-      } catch (saveErr) {
-        // 静默失败
-      }
-    }
+    const cy = await caiyun.dict(word);
+    if (!cy) return res.json({ error: '未找到释义' });
 
     res.json({
-      word: (cy && cy.word) || (local && local.word) || word,
-      phonetic: (cy && cy.phonetic) || (local && local.phonetic) || '',
-      translation: cy ? cy.explanations.join('\n') : (local ? local.translation : ''),  // 中文释义（主，彩云优先）
-      definitionEn: (local && local.definitionEn) || '',                                 // 英文释义（ECDICT）
-      tag: (local && local.tag) || '',                                                   // 考试标签（ECDICT）
-      synonym: (cy && cy.synonym) || [],
-      source: cy ? 'caiyun' : 'local',
+      word: cy.word,
+      phonetic: cy.phonetic || '',
+      translation: Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '',
+      definitionEn: '',
+      tag: '',
+      synonym: cy.synonym || [],
+      examples: (cy.examples || []).slice(0, 2),
+      source: 'caiyun'
     });
   } catch (err) {
     res.json({ error: '查询失败: ' + err.message });
   }
 });
 
-// ===== 单词例句（使用本地数据库缓存，不调用 API 实时生成） =====
+// ===== 单词例句（调用彩云小译获取在线例句） =====
 router.get('/dict/:word/examples', async (req, res, next) => {
   try {
-    const Dictionary = require('../models/Dictionary');
     const word = req.params.word.toLowerCase().trim();
-    const doc = await Dictionary.findOne({ word });
-    if (doc) {
-      if (Array.isArray(doc.exampleSentences) && doc.exampleSentences.length) {
-        return res.json({ examples: doc.exampleSentences, cached: true });
-      }
-      if (Array.isArray(doc.examples) && doc.examples.length) {
-        const parsed = doc.examples.map(ex => {
-          if (typeof ex === 'string') {
-            const parts = ex.split('#');
-            return {
-              en: parts[0].trim(),
-              zh: parts[1] ? parts[1].trim() : ''
-            };
-          }
-          return ex;
-        }).filter(ex => ex && ex.en);
-        if (parsed.length) {
-          return res.json({ examples: parsed, cached: true });
-        }
-      }
+    const cy = await caiyun.dict(word);
+    if (cy && Array.isArray(cy.examples)) {
+      return res.json({ examples: cy.examples, cached: false });
     }
     res.json({ examples: [] });
   } catch (err) {

@@ -7,7 +7,6 @@ const { tryCheckIn, hasCheckedIn, getCheckInHistory, getStreak } = require('../s
 const Exercise = require('../models/Exercise');
 const Vocab = require('../models/Vocab');
 const VocabProgress = require('../models/VocabProgress');
-const Dictionary = require('../models/Dictionary');
 const Grammar = require('../models/Grammar');
 const ReadingProgress = require('../models/ReadingProgress');
 const StudySession = require('../models/StudySession');
@@ -254,25 +253,24 @@ router.post('/article/:id/ai', requireAuth, async (req, res) => {
   render(res, 'article', { article, exercise, results: null, score: null, aiResult });
 });
 
-// ===== 词典 =====
 router.get('/dict', requireAuth, async (req, res) => {
   const { word, sentence } = req.query;
   let result = null, sentenceResult = null;
   if (word) {
-    result = await Dictionary.findOne({ word: word.toLowerCase() });
-    if (!result) {
-      try {
-        const r = await fetch(`${config.dictApiUrl}/${encodeURIComponent(word)}`);
-        if (r.ok) {
-          const data = await r.json();
-          if (Array.isArray(data) && data.length) {
-            const entry = data[0];
-            const defs = [], exs = [];
-            for (const m of entry.meanings || []) for (const d of m.definitions || []) { defs.push(`(${m.partOfSpeech}) ${d.definition}`); if (d.example) exs.push(d.example); }
-            result = { word: entry.word, phonetic: entry.phonetics?.find(p => p.text)?.text || '', translation: '', definitionEn: defs.slice(0, 5).join('\n'), examples: exs.slice(0, 3), collins: '', tag: '', exchange: '', source: 'external' };
-          }
-        }
-      } catch {}
+    const caiyun = require('../services/caiyun');
+    const cy = await caiyun.dict(word);
+    if (cy) {
+      result = {
+        word: cy.word,
+        phonetic: cy.phonetic || '',
+        translation: Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '',
+        definitionEn: '',
+        examples: (cy.examples || []).map(e => e.en + (e.zh ? ` #${e.zh}` : '')),
+        collins: '',
+        tag: '',
+        exchange: '',
+        source: 'caiyun'
+      };
     }
   }
   if (sentence) {

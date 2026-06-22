@@ -7,7 +7,7 @@ const User = require('../models/User');
 const Article = require('../models/Article');
 const Exercise = require('../models/Exercise');
 const Grammar = require('../models/Grammar');
-const Dictionary = require('../models/Dictionary');
+const Dictionary = null; // Removed
 const InviteCode = require('../models/InviteCode');
 const CheckIn = require('../models/CheckIn');
 const AILog = require('../models/AILog');
@@ -72,19 +72,19 @@ router.get('/', adminAuth, async (req, res) => {
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
 
   const [
-    totalUsers, todayUsers, totalArticles, totalGrammar, totalDict,
+    totalUsers, todayUsers, totalArticles, totalGrammar,
     todayActive, todayReads, todayExercises, todayAI
   ] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ createdAt: { $gte: today } }),
     Article.countDocuments({ isPublished: true }),
     Grammar.countDocuments(),
-    Dictionary.countDocuments(),
     StudySession.distinct('userId', { createdAt: { $gte: today } }).then(ids => ids.length),
     ReadingProgress.countDocuments({ createdAt: { $gte: today } }),
     ReadingProgress.countDocuments({ exerciseScore: { $ne: null }, updatedAt: { $gte: today } }),
     AILog.countDocuments({ createdAt: { $gte: today } }),
   ]);
+  const totalDict = 0; // Removed local dict db
 
   // 用户等级分布
   const levelDist = await User.aggregate([
@@ -291,16 +291,9 @@ router.post('/grammar/:id/delete', adminAuth, async (req, res) => {
   res.redirect('/admin/grammar');
 });
 
-// ===== 词典管理 =====
-router.get('/dict', adminAuth, async (req, res) => {
-  const { page = 1, limit = 20, search } = req.query;
-  const filter = {};
-  if (search) filter.word = { $regex: search };
-  const [dicts, total] = await Promise.all([
-    Dictionary.find(filter).sort({ word: 1 }).skip((page-1)*limit).limit(Number(limit)),
-    Dictionary.countDocuments(filter),
-  ]);
-  render(res, 'dict', { dicts, total, page: Number(page), limit: Number(limit), search: search || '' });
+// ===== 词典管理 (已弃用，跳转回控制台) =====
+router.get('/dict', adminAuth, (req, res) => {
+  res.redirect('/admin');
 });
 
 // ===== 打卡记录 =====
