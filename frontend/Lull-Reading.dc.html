@@ -351,7 +351,20 @@
                       <button onClick="{{ closeCard }}" style="background:#1a1817;color:#fffdf6;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-weight:700">×</button>
                     </div>
                     <div style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;opacity:.9;margin-top:2px">{{ selWord.phon }}</div>
-                    <div style="font-size:17px;font-weight:600;margin-top:10px">{{ selWord.def }}</div>
+                    <div style="font-size:17px;font-weight:600;margin-top:10px;line-height:1.4">{{ selWord.def }}</div>
+                    
+                    <sc-if value="{{ selWord.hasExamples }}" hint-placeholder-val="{{ true }}">
+                      <div style="font-weight:700;font-size:11px;letter-spacing:1.5px;color:#fffdf6;opacity:.8;margin:18px 0 10px">例句 EXAMPLES</div>
+                      <div style="display:grid;gap:10px">
+                        <sc-for list="{{ selWord.examples }}" as="ex" hint-placeholder-count="1">
+                          <div style="background:#fffdf6;color:#1a1817;border-left:{{ ex.border }};border-radius:0 8px 8px 0;padding:10px 14px">
+                            <div style="font-family:'Newsreader',serif;font-size:16px;line-height:1.4"><sc-for list="{{ ex.tokens }}" as="t" hint-placeholder-count="10"><span style="color:{{ t.color }};font-weight:{{ t.weight }}">{{ t.t }}</span></sc-for></div>
+                            <div style="font-size:13px;color:#5a5449;margin-top:3px">{{ ex.zh }}</div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+
                     <sc-if value="{{ selWordNotAdded }}" hint-placeholder-val="{{ true }}">
                       <button onClick="{{ addSelWord }}" style="margin-top:16px;width:100%;background:#f3c44b;color:#1a1817;border:2.5px solid #1a1817;border-radius:12px;cursor:pointer;padding:10px;font-family:'Space Grotesk';font-weight:700;font-size:14px">+ 加入生词本</button>
                     </sc-if>
@@ -1077,13 +1090,15 @@ class Component extends DCLogic {
     try {
       const headers = { 'Authorization':'Bearer '+token };
       const data = await this.authFetch('/api/frontend/dict/'+encodeURIComponent(word), { headers }).then(r=>r.json());
-      let def='', phon='';
+      let def='', phon='', tag='', examples=[];
       if(data && !data.error){
         phon = data.phonetic || '';
         def = data.translation || data.definitionEn || '';   // 中文释义优先
+        tag = data.tag || '';
+        examples = data.examples || [];
         if(data.tag) def += '  📑' + data.tag.split(/\s+/).filter(Boolean).join(' ');
       }
-      this.setState(s=>({ dictCache: { ...s.dictCache, [word]: { phon, def: def || '未找到释义' } } }));
+      this.setState(s=>({ dictCache: { ...s.dictCache, [word]: { phon, def: def || '未找到释义', tag, examples } } }));
     } catch(err){ /* 离线/词典不可达时静默降级 */ }
   }
   // 把后端文章详情转成阅读视图需要的 PARAS / WORD_DEFS / KEY_POINTS / QUIZ
@@ -1832,8 +1847,29 @@ class Component extends DCLogic {
       })),
     }));
     const dictHit = (st.selWordKey && st.dictCache) ? st.dictCache[st.selWordKey] : null;
-    const selDef = st.selWordKey ? (curWORD_DEFS[st.selWordKey] || dictHit || { phon:'', def:'查询中… · 点击「加入生词本」收藏' }) : null;
-    const selWord = selDef ? { word:st.selWordKey, phon:selDef.phon, def:selDef.def } : {};
+    const selDef = st.selWordKey ? (curWORD_DEFS[st.selWordKey] || dictHit || { phon:'', def:'查询中… · 点击「加入生词本」收藏', tag:'', examples:[] }) : null;
+    
+    // Process examples if they exist on the selected word
+    const selWordStem = (st.selWordKey||'').toLowerCase().replace(/[^a-z]/g,'').replace(/e$/,'');
+    const selExampleCards = ((selDef && selDef.examples) || []).map((ex,i)=>{
+      const color = i%2===0 ? ORANGE : BLUE;
+      const tokens = this.tokenize(ex.en||'').map(tk=>{
+        if(!tk.isWord) return { t:tk.raw, color:INK, weight:'400' };
+        const clean = tk.raw.toLowerCase().replace(/[^a-z]/g,'');
+        const hit = selWordStem && clean.length>=3 && (clean===selWordStem || clean.startsWith(selWordStem));
+        return { t:tk.raw, color: hit?color:INK, weight: hit?'800':'400' };
+      });
+      return { tokens, zh: ex.zh||'', border: '4px solid '+color };
+    });
+
+    const selWord = selDef ? { 
+      word: st.selWordKey, 
+      phon: selDef.phon, 
+      def: selDef.def, 
+      tag: selDef.tag || '',
+      examples: selExampleCards,
+      hasExamples: selExampleCards.length > 0
+    } : {};
     const selWordAdded = st.selWordKey ? st.addedWords.includes(st.selWordKey) : false;
     const curPara = (st.selParaIdx!=null) ? curPARAS[st.selParaIdx] : null;
     // 整句翻译全部用「提前生成」的存储译文，不再实时调用 AI

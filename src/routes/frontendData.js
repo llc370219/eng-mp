@@ -155,6 +155,23 @@ router.get('/dict/:word', async (req, res, next) => {
       // 2.2 版本：阅读单词卡不调用外部 API，仅使用本地 ECDICT 库
       const local = await Dictionary.findOne({ word }).lean();
       if (!local) return res.json({ error: '未在本地词表中找到该词释义' });
+      
+      let examples = [];
+      if (Array.isArray(local.exampleSentences) && local.exampleSentences.length) {
+        examples = local.exampleSentences;
+      } else if (Array.isArray(local.examples) && local.examples.length) {
+        examples = local.examples.map(ex => {
+          if (typeof ex === 'string') {
+            const parts = ex.split('#');
+            return {
+              en: parts[0].trim(),
+              zh: parts[1] ? parts[1].trim() : ''
+            };
+          }
+          return ex;
+        }).filter(ex => ex && ex.en);
+      }
+
       return res.json({
         word: local.word,
         phonetic: local.phonetic || '',
@@ -162,6 +179,7 @@ router.get('/dict/:word', async (req, res, next) => {
         definitionEn: local.definitionEn || '',
         tag: local.tag || '',
         synonym: [],
+        examples: examples.slice(0, 2),
         source: 'local'
       });
     }
