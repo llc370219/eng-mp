@@ -380,11 +380,13 @@ git push origin main     # 推送（部署前先推送）
 
 ## 📅 完整更新日志
 
-### 2026-06-22（AI 适配优化 + 移除非数据库词典方案）
+### 2026-06-22（AI 适配优化 + ECDICT 模块移除与轻量化缓存词典）
 
 - ✅ **AI 智能推理参数自适应**：在 `src/services/ai.js` 中重构了逻辑，能够根据模型名称自动识别是否为推理模型（带有 `seed` 或 `r1` 等关键字）。自动切换使用 `max_completion_tokens` + `reasoning_effort` 或者是标准的 `max_tokens` 参数，彻底解决火山方舟直接调用普通模型（如 `doubao-lite-32k-240828`）时因 reasoning 参数而报错 404 的问题。
-- ✅ **彻底移除 ECDICT 数据库词典模块**：按照最新轻量化架构，完全删除了庞大的本地数据库词典方案。清除了 `Dictionary` 数据库模型、`scripts/import-dict.js` 导入脚本、`views/admin/dict.ejs` 词典管理界面、`src/services/dictionary.js` 服务等全部关联代码与路由。
-- ✅ **轻量化在线查词方案**：前端阅读卡片查词与词典查询接口统一直接调用 **彩云小译在线 Dict API**，同时兼顾音标、中文释义和中英双语例句的秒级渲染，省去了向 MongoDB seeding/import 词库的步骤，大幅降低了生产部署复杂度和数据库负荷。
+- ✅ **移除了庞大的 ECDICT 本地词表及导入脚本**：删除了体积高达数十兆、导入耗时且占用 Atlas 存储空间的 ECDICT 数据文件、CSV 转换逻辑以及 `scripts/import-dict.js` 脚本。
+- ✅ **轻量级查词缓存方案（Cache-on-Miss）**：保留并重构了 `Dictionary` 数据库模型及配套的 `/api/dict` 与 `/api/frontend/dict` 查词逻辑。
+  - **工作机制**：查词时优先从本地数据库 `Dictionary` 缓存读取；若缓存未命中，则自动请求**彩云小译在线 Dict API** 获取释义、音标与例句，并将其保存到 `Dictionary` 缓存库中，实现后续相同单词的本地秒级冷启动。
+  - **收益**：既实现了 100% 动态查词与自动词库沉淀，又彻底摆脱了初始数据库 seeding 导入负荷，将生产部署数据库占用压低至接近 0MB 起步。
 
 ### 2026-06-21（生词复习 — 艾宾浩斯遗忘曲线）
 
