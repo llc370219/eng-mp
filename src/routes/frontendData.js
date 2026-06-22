@@ -152,8 +152,40 @@ router.get('/dict/:word', async (req, res, next) => {
     const Dictionary = require('../models/Dictionary');
 
     if (!isSearchTab) {
-      // 2.2 版本：阅读单词卡不调用外部 API，仅使用本地 ECDICT 库
-      const local = await Dictionary.findOne({ word }).lean();
+      // 2.2 版本：阅读单词卡以本地 ECDICT 库为主，若找不到，则调用彩云小译并缓存，防止本地库未导入时返回「未找到释义」
+      let local = await Dictionary.findOne({ word }).lean();
+      
+      if (!local) {
+        // 尝试从彩云小译在线查询并自动缓存
+        const cy = await caiyun.dict(word);
+        if (cy) {
+          try {
+            const translation = Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '';
+            const newDoc = await Dictionary.findOneAndUpdate(
+              { word },
+              {
+                $set: {
+                  word,
+                  phonetic: cy.phonetic || '',
+                  translation,
+                  exampleSentences: cy.examples || []
+                }
+              },
+              { upsert: true, new: true }
+            ).lean();
+            local = newDoc;
+          } catch (saveErr) {
+            // 如果保存失败，手动构建临时对象返回，保证接口可用
+            local = {
+              word,
+              phonetic: cy.phonetic || '',
+              translation: Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '',
+              exampleSentences: cy.examples || []
+            };
+          }
+        }
+      }
+
       if (!local) return res.json({ error: '未在本地词表中找到该词释义' });
       
       let examples = [];
