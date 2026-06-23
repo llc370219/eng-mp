@@ -62,6 +62,7 @@
   .tg-sent-hint.tg-sent-interactive:hover {
     background-color: rgba(236, 106, 43, 0.08);
     border-color: rgba(236, 106, 43, 0.35);
+    border-bottom-style: dashed;
   }
 </style>
 </helmet>
@@ -281,7 +282,7 @@
               <sc-for list="{{ curParagraphs }}" as="p" hint-placeholder-count="3">
                 <p class="tg-para" style="font-family:'Newsreader',serif;font-size:19.5px;line-height:2.05;color:#26241f;margin:0 0 14px;text-wrap:pretty;border-radius:8px;padding:5px 7px">
                   <sc-for list="{{ p.sentences }}" as="s" hint-placeholder-count="2">
-                    <span style="{{ s.style }}" class="{{ s.class }}" onDoubleClick="{{ s.onDbl }}">
+                    <span style="{{ s.style }}" class="{{ s.cls }}" onDoubleClick="{{ s.onDbl }}">
                       <sc-for list="{{ s.tokens }}" as="g" hint-placeholder-count="6">
                         <sc-if value="{{ g.vocab }}" hint-placeholder-val="{{ false }}"><span class="tg-word" onClick="{{ g.onClick }}" style="color:#ec6a2b;font-weight:600;border-bottom:2.5px solid #ec6a2b">{{ g.t }}</span></sc-if>
                         <sc-if value="{{ g.normal }}" hint-placeholder-val="{{ true }}"><span class="tg-word" onClick="{{ g.onClick }}">{{ g.t }}</span></sc-if>
@@ -1592,10 +1593,12 @@ class Component extends DCLogic {
       await this.authFetch('/api/frontend/vocab/' + encodeURIComponent(word), { method: 'DELETE', headers });
       
       // 立即更新本地缓存以实现秒级响应
-      this.VOCAB = this.VOCAB.filter(v => v.word !== word);
+      this.VOCAB = this.VOCAB.filter(v => v.word.toLowerCase() !== word.toLowerCase());
       const st = this.state;
-      if (st.addedWords.includes(word)) {
-        this.setState({ addedWords: st.addedWords.filter(w => w !== word) });
+      const lowerWord = word.toLowerCase();
+      const hasAdded = st.addedWords.some(w => w.toLowerCase() === lowerWord);
+      if (hasAdded) {
+        this.setState({ addedWords: st.addedWords.filter(w => w.toLowerCase() !== lowerWord) });
       } else {
         this.setState({});
       }
@@ -1895,7 +1898,7 @@ class Component extends DCLogic {
     const curParagraphs = curPARAS.map((para,pi)=>({
       sentences: para.sentences.map((s,si)=>({
         style: (st.sentenceTrans || st.segHint) ? 'cursor:pointer; display:inline;' : 'display:inline;',
-        class: (st.sentenceTrans || st.segHint)
+        cls: (st.sentenceTrans || st.segHint)
           ? `tg-sent tg-sent-interactive ${ st.sentenceTrans ? 'tg-sent-trans' : 'tg-sent-hint' }`
           : 'tg-sent',
         onDbl: (e)=>{
