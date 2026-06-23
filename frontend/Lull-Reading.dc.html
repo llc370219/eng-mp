@@ -44,6 +44,25 @@
   .tg-word:hover { background: #fbe2b0; }
   .tg-para { transition: background .15s; }
   .tg-para:hover { background: #faf4e4; }
+  .tg-sent {
+    display: inline;
+    border-bottom: 2px solid transparent;
+    padding-bottom: 2px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .tg-sent-interactive {
+    cursor: pointer;
+  }
+  .tg-sent-trans.tg-sent-interactive:hover {
+    background-color: rgba(47, 127, 214, 0.08);
+    border-color: rgba(47, 127, 214, 0.35);
+  }
+  .tg-sent-hint.tg-sent-interactive:hover {
+    background-color: rgba(236, 106, 43, 0.08);
+    border-color: rgba(236, 106, 43, 0.35);
+  }
 </style>
 </helmet>
 <div style="min-height:100vh;background:#f2ecda;font-family:'Space Grotesk',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;color:#1a1817;position:relative;overflow-x:clip">
@@ -262,7 +281,7 @@
               <sc-for list="{{ curParagraphs }}" as="p" hint-placeholder-count="3">
                 <p class="tg-para" style="font-family:'Newsreader',serif;font-size:19.5px;line-height:2.05;color:#26241f;margin:0 0 14px;text-wrap:pretty;border-radius:8px;padding:5px 7px">
                   <sc-for list="{{ p.sentences }}" as="s" hint-placeholder-count="2">
-                    <span style="{{ s.style }}" onDoubleClick="{{ s.onDbl }}">
+                    <span style="{{ s.style }}" class="{{ s.class }}" onDoubleClick="{{ s.onDbl }}">
                       <sc-for list="{{ s.tokens }}" as="g" hint-placeholder-count="6">
                         <sc-if value="{{ g.vocab }}" hint-placeholder-val="{{ false }}"><span class="tg-word" onClick="{{ g.onClick }}" style="color:#ec6a2b;font-weight:600;border-bottom:2.5px solid #ec6a2b">{{ g.t }}</span></sc-if>
                         <sc-if value="{{ g.normal }}" hint-placeholder-val="{{ true }}"><span class="tg-word" onClick="{{ g.onClick }}">{{ g.t }}</span></sc-if>
@@ -492,7 +511,7 @@
                 <span style="font-family:'Newsreader',serif;font-size:24px;font-weight:600">{{ v.word }}</span>
                 <div style="display:flex;align-items:center;gap:6px">
                   <span style="background:{{ v.mColor }};color:#fff;font-weight:700;font-size:11px;padding:3px 9px;border-radius:999px;border:2px solid #1a1817">{{ v.mLabel }}</span>
-                  <button onClick="{{ v.onDelete }}" title="从生词本中删除" style="background:#fffdf6;color:#e34e98;border:2px solid #1a1817;width:22px;height:22px;border-radius:50%;cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+                  <span onClick="{{ v.onDelete }}" title="从生词本中删除" style="background:#fffdf6;color:#e34e98;border:2px solid #1a1817;width:22px;height:22px;border-radius:50%;cursor:pointer;font-weight:700;font-size:12px;display:inline-flex;align-items:center;justify-content:center;padding:0;user-select:none;text-align:center">×</span>
                 </div>
               </div>
               <div style="font-family:'Newsreader',serif;font-style:italic;font-size:14px;color:#7a7568;margin-top:1px">{{ v.phon }}</div>
@@ -1563,13 +1582,25 @@ class Component extends DCLogic {
   }
 
   // 删除生词
-  async removeWordFromVocab(word){
+  async removeWordFromVocab(word, e){
+    if(e && e.stopPropagation) e.stopPropagation();
+    if(!window.confirm(`确定要从生词本中删除 "${word}" 吗？`)) return;
     const token = localStorage.getItem('token');
     if(!token) return;
     try {
       const headers = { 'Authorization': 'Bearer ' + token };
       await this.authFetch('/api/frontend/vocab/' + encodeURIComponent(word), { method: 'DELETE', headers });
-      // 重新加载生词本
+      
+      // 立即更新本地缓存以实现秒级响应
+      this.VOCAB = this.VOCAB.filter(v => v.word !== word);
+      const st = this.state;
+      if (st.addedWords.includes(word)) {
+        this.setState({ addedWords: st.addedWords.filter(w => w !== word) });
+      } else {
+        this.setState({});
+      }
+      
+      // 异步重新加载同步最新数据
       this.loadUserData();
     } catch(err) {
       console.error('删除生词失败:', err);
@@ -1863,9 +1894,10 @@ class Component extends DCLogic {
     const ulineOn = 'border-bottom:2px solid rgba(90,96,130,.16);box-decoration-break:clone;-webkit-box-decoration-break:clone;padding-bottom:2px';
     const curParagraphs = curPARAS.map((para,pi)=>({
       sentences: para.sentences.map((s,si)=>({
-        style: (st.sentenceTrans || st.segHint)
-          ? `cursor:pointer; display:inline; ${ (st.segHint && s.grammar) ? 'border-bottom:2px dashed #2f7fd6;box-decoration-break:clone;-webkit-box-decoration-break:clone;padding-bottom:2px;' : '' }`
-          : 'display:inline',
+        style: (st.sentenceTrans || st.segHint) ? 'cursor:pointer; display:inline;' : 'display:inline;',
+        class: (st.sentenceTrans || st.segHint)
+          ? `tg-sent tg-sent-interactive ${ st.sentenceTrans ? 'tg-sent-trans' : 'tg-sent-hint' }`
+          : 'tg-sent',
         onDbl: (e)=>{
           if(e && e.stopPropagation) e.stopPropagation();
           if(st.sentenceTrans || st.segHint){
@@ -1943,7 +1975,11 @@ class Component extends DCLogic {
     const vfDef=[['all','全部'],['learning','学习中'],['review','复习'],['mastered','已掌握']];
     const vocabTabs = vfDef.map(([k,l])=>({ label:l+' '+vfCounts[k], active:st.vocabFilter===k, bg: st.vocabFilter===k?INK:'#fffdf6', fg: st.vocabFilter===k?'#fffdf6':INK, onClick:()=>this.setState({vocabFilter:k}) }));
     const filteredVocabAll = this.VOCAB.filter(v=>st.vocabFilter==='all'||v.mastery===st.vocabFilter).map(v=>({
-      ...v, mColor:masteryColor[v.mastery], mLabel:masteryLabel[v.mastery], dueLabel: v.due?'待复习':(v.nextReviewLabel||'已安排'),
+      ...v,
+      mColor:masteryColor[v.mastery],
+      mLabel:masteryLabel[v.mastery],
+      dueLabel: v.due?'待复习':(v.nextReviewLabel||'已安排'),
+      onDelete: (e) => this.removeWordFromVocab(v.word, e),
     }));
     const VOCAB_PAGE_SIZE = 12;
     const filteredVocab = st.vocabShowAll ? filteredVocabAll : filteredVocabAll.slice(0, VOCAB_PAGE_SIZE);
