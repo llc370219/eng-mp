@@ -1,6 +1,6 @@
 {
   "name": "eng-mp",
-  "version": "1.0.0",
+  "version": "2.9.1",
   "description": "英语阅读学习网站后端 API",
   "main": "src/app.js",
   "scripts": {
