@@ -63,6 +63,185 @@
     background-color: rgba(236, 106, 43, 0.08);
     border-color: rgba(236, 106, 43, 0.35);
   }
+
+  /* ============ v3.0.0 手机端响应式适配 ============ */
+  @media (max-width: 768px) {
+    /* 1. 主容器缩减边距 */
+    .tg-main {
+      padding: 0 14px 60px !important;
+    }
+
+    /* 2. 导航顶栏流式双行排版 */
+    .tg-header-container {
+      display: grid !important;
+      grid-template-columns: auto 1fr auto auto !important;
+      padding: 10px 14px !important;
+      gap: 12px 6px !important;
+    }
+    .tg-logo-btn {
+      grid-column: 1;
+    }
+    .tg-ai-btn {
+      grid-column: 3;
+      margin-left: 0 !important;
+      padding: 6px 12px !important;
+      font-size: 13px !important;
+    }
+    .tg-settings-btn {
+      grid-column: 4;
+      width: 36px !important;
+      height: 36px !important;
+    }
+    .tg-nav {
+      grid-column: 1 / span 4;
+      margin-left: 0 !important;
+      display: flex !important;
+      overflow-x: auto !important;
+      white-space: nowrap !important;
+      flex-wrap: nowrap !important;
+      padding-bottom: 6px !important;
+      -webkit-overflow-scrolling: touch;
+      gap: 4px !important;
+    }
+    .tg-nav button {
+      padding: 6px 10px !important;
+      font-size: 14.5px !important;
+      flex: none;
+    }
+
+    /* 3. 登录/注册卡片垂直平铺 */
+    .tg-login-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .tg-login-poster {
+      min-height: 220px !important;
+      padding: 26px 22px !important;
+      border-right: none !important;
+      border-bottom: 3px solid #1a1817 !important;
+    }
+    .tg-login-poster h1 {
+      font-size: 42px !important;
+    }
+
+    /* 4. 书架今日打卡与标题重排 */
+    .tg-shelf-header {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 14px !important;
+    }
+    .tg-streak-card {
+      width: 100% !important;
+      min-width: 0 !important;
+      text-align: center;
+    }
+
+    /* 5. 阅读界面重构：上下堆叠 */
+    .tg-read-layout {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 20px !important;
+    }
+    .tg-read-layout article {
+      max-height: none !important;
+      overflow-y: visible !important;
+      padding-right: 0 !important;
+    }
+    .tg-read-layout .tg-aside-empty {
+      display: none !important;
+    }
+    .tg-read-layout .tg-aside-stack {
+      position: static !important;
+      max-height: none !important;
+      overflow-y: visible !important;
+      padding-right: 0 !important;
+      width: 100% !important;
+    }
+    .tg-read-layout .tg-aside-float {
+      position: fixed !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100% !important;
+      z-index: 50 !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 10px 16px 20px !important;
+      max-height: 50vh !important;
+      overflow-y: auto !important;
+    }
+    .tg-layout-with-aside article {
+      padding-bottom: 260px !important; /* 为底部悬浮卡片留出滚动空间 */
+    }
+    .tg-panel-pos-selector {
+      display: none !important; /* 手机端隐藏面板位置选择器 */
+    }
+    .tg-article-card {
+      padding: 20px 16px !important;
+      border-radius: 14px !important;
+    }
+    .tg-article-card p {
+      font-size: 18px !important;
+      line-height: 1.95 !important;
+      padding: 4px 2px !important;
+    }
+
+    /* 6. 词典搜索结果排版 */
+    .tg-dict-grid {
+      grid-template-columns: 1fr !important;
+      gap: 16px !important;
+    }
+
+    /* 7. 语法详情页排版 */
+    .tg-grammar-detail-grid {
+      grid-template-columns: 1fr !important;
+      gap: 20px !important;
+    }
+    .tg-grammar-detail-grid aside {
+      position: static !important;
+    }
+
+    /* 8. 打卡日历排版 */
+    .tg-checkin-grid {
+      grid-template-columns: 1fr !important;
+      gap: 20px !important;
+    }
+
+    /* 9. 统计与雷达图排版 */
+    .tg-stats-grid {
+      grid-template-columns: 1fr !important;
+      gap: 20px !important;
+    }
+    .tg-radar-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .tg-radar-stage {
+      border-right: none !important;
+      border-bottom: 2.5px solid #1a1817 !important;
+      min-height: 280px !important;
+      padding: 16px !important;
+    }
+
+    /* 10. AI 鲜榨工坊生成排版 */
+    .tg-ai-grid {
+      grid-template-columns: 1fr !important;
+      gap: 20px !important;
+    }
+  }
+
+  /* 针对超小屏的生词统计微调 */
+  @media (max-width: 480px) {
+    .tg-vocab-stats-grid {
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 8px !important;
+    }
+    .tg-vocab-stat-card {
+      padding: 10px 8px !important;
+    }
+    .tg-vocab-stat-card div:first-child {
+      font-size: 26px !important;
+    }
+  }
 </style>
 </helmet>
 <div style="min-height:100vh;background:#f2ecda;font-family:'Space Grotesk',-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;color:#1a1817;position:relative;overflow-x:clip">
@@ -86,8 +265,8 @@
   <!-- ===== top nav ===== -->
   <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
   <header style="position:sticky;top:0;z-index:30;background:#f2ecda;border-bottom:3px solid #1a1817">
-    <div style="max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-      <button onClick="{{ goHome }}" style="display:flex;align-items:center;gap:10px;background:none;border:none;cursor:pointer;padding:0">
+    <div class="tg-header-container" style="max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <button class="tg-logo-btn" onClick="{{ goHome }}" style="display:flex;align-items:center;gap:10px;background:none;border:none;cursor:pointer;padding:0">
         <span style="display:inline-block;animation:floaty 5s ease-in-out infinite">
           <dc-import name="Flower" petal="#ec6a2b" center="#f2ecda" size="40" hint-size="40px,40px"></dc-import>
         </span>
@@ -97,7 +276,7 @@
           <span style="font-family:'Newsreader','Songti SC','Noto Serif SC',serif;font-size:18px;font-weight:500;color:#3c382f;letter-spacing:3px">听简</span>
         </span>
       </button>
-      <nav style="display:flex;gap:4px;flex-wrap:wrap;margin-left:6px">
+      <nav class="tg-nav" style="display:flex;gap:4px;flex-wrap:wrap;margin-left:6px">
         <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="7">
           <button onClick="{{ item.onClick }}" style="position:relative;background:none;border:none;cursor:pointer;padding:8px 12px;font-family:'Space Grotesk';font-weight:600;font-size:15px;color:#1a1817;border-radius:10px">
             {{ item.cn }}
@@ -107,21 +286,21 @@
           </button>
         </sc-for>
       </nav>
-      <button onClick="{{ goAi }}" title="根据提示 + 你的等级 + 生词本，AI 为你生成专属文章" style="margin-left:auto;display:flex;align-items:center;gap:7px;background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:999px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:8px 16px;font-family:'Space Grotesk';font-weight:700;font-size:14px">✦ 鲜榨工坊</button>
-      <button onClick="{{ goSettings }}" title="设置" style="width:42px;height:42px;border-radius:50%;background:#e34e98;color:#fff;border:2.5px solid #1a1817;box-shadow:3px 3px 0 #1a1817;cursor:pointer;font-weight:700;font-size:16px">桔</button>
+      <button class="tg-ai-btn" onClick="{{ goAi }}" title="根据提示 + 你的等级 + 生词本，AI 为你生成专属文章" style="margin-left:auto;display:flex;align-items:center;gap:7px;background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:999px;box-shadow:3px 3px 0 #1a1817;cursor:pointer;padding:8px 16px;font-family:'Space Grotesk';font-weight:700;font-size:14px">✦ 鲜榨工坊</button>
+      <button class="tg-settings-btn" onClick="{{ goSettings }}" title="设置" style="width:42px;height:42px;border-radius:50%;background:#e34e98;color:#fff;border:2.5px solid #1a1817;box-shadow:3px 3px 0 #1a1817;cursor:pointer;font-weight:700;font-size:16px">桔</button>
     </div>
   </header>
   </sc-if>
 
-  <main style="position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 24px 90px">
+  <main class="tg-main" style="position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 24px 90px">
 
     <!-- ============ LOGIN / REGISTER ============ -->
     <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
       <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 0">
         <div style="display:grid;grid-template-columns:1fr;gap:0;max-width:880px;width:100%;background:#fffdf6;border:3px solid #1a1817;border-radius:26px;box-shadow:9px 9px 0 #1a1817;overflow:hidden">
-          <div style="display:grid;grid-template-columns:1.05fr .95fr">
+          <div class="tg-login-grid" style="display:grid;grid-template-columns:1.05fr .95fr">
             <!-- poster side -->
-            <div style="background:#e34e98;border-right:3px solid #1a1817;padding:38px 34px;position:relative;overflow:hidden;min-height:520px;display:flex;flex-direction:column;justify-content:space-between">
+            <div class="tg-login-poster" style="background:#e34e98;border-right:3px solid #1a1817;padding:38px 34px;position:relative;overflow:hidden;min-height:520px;display:flex;flex-direction:column;justify-content:space-between">
               <div style="position:absolute;inset:0;background:conic-gradient(#00000022 0 25%,transparent 0 50%,#00000022 0 75%,transparent 0);background-size:60px 60px;opacity:.5"></div>
               <div style="position:relative">
                 <div style="font-family:'Space Grotesk';font-weight:700;font-size:13px;letter-spacing:3px;color:#1a1817;background:#f3c44b;display:inline-block;padding:4px 12px;border:2px solid #1a1817;border-radius:999px">GRADED ENGLISH READING</div>
@@ -175,12 +354,12 @@
     <!-- ============ ARTICLES (HOME) ============ -->
     <sc-if value="{{ isArticles }}" hint-placeholder-val="{{ true }}">
       <section style="padding:40px 0 26px">
-        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap">
+        <div class="tg-shelf-header" style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap">
           <div>
             <div style="font-weight:700;font-size:13px;letter-spacing:3px;color:#ec6a2b">今日阅读 · DAILY READS</div>
             <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(40px,7vw,72px);line-height:.95;margin:8px 0 0;color:#1a1817">Fresh<br><span style="color:#e34e98;text-shadow:3px 3px 0 #1a1817">Squeezed</span> Stories</h1>
           </div>
-          <div style="background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:16px 20px;min-width:200px">
+          <div class="tg-streak-card" style="background:#2f7fd6;color:#fff;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:16px 20px;min-width:200px">
             <div style="font-size:13px;font-weight:600;opacity:.85">连续阅读 STREAK</div>
             <div style="font-family:'Shrikhand',serif;font-size:40px;line-height:1;margin-top:4px">{{ streak }} 天 🔥</div>
           </div>
@@ -264,7 +443,7 @@
           <button onClick="{{ toggleSegHint }}" style="display:flex;align-items:center;gap:7px;background:{{ segBg }};color:{{ segFg }};border:2px solid #1a1817;border-radius:999px;cursor:pointer;padding:7px 14px;font-family:'Space Grotesk';font-weight:700;font-size:13px">分句提示 · {{ segState }}</button>
           <button onClick="{{ toggleQuiz }}" style="display:flex;align-items:center;gap:7px;background:{{ quizBtnBg }};color:{{ quizBtnFg }};border:2px solid #1a1817;border-radius:999px;cursor:pointer;padding:7px 14px;font-family:'Space Grotesk';font-weight:700;font-size:13px">读后小测 · {{ quizState }}</button>
           <button onClick="{{ showKeyPointsCard }}" style="display:flex;align-items:center;gap:7px;background:{{ kpBg }};color:{{ kpFg }};border:2px solid #1a1817;border-radius:999px;cursor:pointer;padding:7px 14px;font-family:'Space Grotesk';font-weight:700;font-size:13px">重难点解析</button>
-          <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          <div class="tg-panel-pos-selector" style="margin-left:auto;display:flex;align-items:center;gap:6px">
             <span style="font-weight:700;font-size:12px;color:#7a7568">面板位置</span>
             <div style="display:flex;border:2px solid #1a1817;border-radius:999px;overflow:hidden">
               <button onClick="{{ panelRight }}" style="border:none;cursor:pointer;padding:7px 13px;font-family:'Space Grotesk';font-weight:700;font-size:12.5px;background:{{ posRightBg }};color:{{ posRightFg }}">右侧</button>
@@ -274,10 +453,10 @@
         </div>
 
         <!-- layout -->
-        <div style="{{ readLayoutStyle }}">
+        <div class="{{ readLayoutClass }}" style="{{ readLayoutStyle }}">
           <!-- reading column -->
           <article style="{{ articleColStyle }}" class="tg-scroll">
-            <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:30px 34px">
+            <div class="tg-article-card" style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:30px 34px">
               <sc-for list="{{ curParagraphs }}" as="p" hint-placeholder-count="3">
                 <p class="tg-para" style="font-family:'Newsreader',serif;font-size:19.5px;line-height:2.05;color:#26241f;margin:0 0 14px;text-wrap:pretty;border-radius:8px;padding:5px 7px">
                   <sc-for list="{{ p.sentences }}" as="s" hint-placeholder-count="2">
@@ -295,7 +474,7 @@
           </article>
 
           <!-- side panel -->
-          <aside style="{{ panelWrapStyle }}" class="tg-scroll">
+          <aside style="{{ panelWrapStyle }}" class="tg-scroll {{ asideClass }}">
             <!-- QUIZ MODE -->
             <sc-if value="{{ quizOn }}" hint-placeholder-val="{{ false }}">
               <div style="width:100%;background:#f3c44b;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:24px 26px">
@@ -421,7 +600,7 @@
         </div>
 
         <sc-if value="{{ dictResultShown }}" hint-placeholder-val="{{ false }}">
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:26px;margin-top:30px;align-items:start">
+        <div class="tg-dict-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:26px;margin-top:30px;align-items:start">
           <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:24px;box-shadow:7px 7px 0 #1a1817;overflow:hidden">
             <!-- 蓝色棋盘格头部：单词 + 音标 + 考试标签 -->
             <div style="background:#2f7fd6;border-bottom:2.5px solid #1a1817;padding:26px 30px;color:#fffdf6;position:relative;overflow:hidden">
@@ -483,16 +662,16 @@
           <button onClick="{{ goReview }}" style="background:#ec6a2b;color:#fff;border:2.5px solid #1a1817;border-radius:16px;box-shadow:5px 5px 0 #1a1817;cursor:pointer;padding:15px 24px;font-family:'Space Grotesk';font-weight:700;font-size:16px">开始复习 {{ vDue }} 个 →</button>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px;max-width:560px">
-          <div style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:4px 4px 0 #1a1817;padding:16px 18px">
+        <div class="tg-vocab-stats-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px;max-width:560px">
+          <div class="tg-vocab-stat-card" style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:4px 4px 0 #1a1817;padding:16px 18px">
             <div style="font-family:'Shrikhand',serif;font-size:34px;line-height:1">{{ vTotal }}</div>
             <div style="font-size:12.5px;font-weight:600;opacity:.9;margin-top:2px">总词量</div>
           </div>
-          <div style="background:#1f9d5c;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:4px 4px 0 #1a1817;padding:16px 18px">
+          <div class="tg-vocab-stat-card" style="background:#1f9d5c;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:4px 4px 0 #1a1817;padding:16px 18px">
             <div style="font-family:'Shrikhand',serif;font-size:34px;line-height:1">{{ vMastered }}</div>
             <div style="font-size:12.5px;font-weight:600;opacity:.9;margin-top:2px">已掌握</div>
           </div>
-          <div style="background:#2f7fd6;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:4px 4px 0 #1a1817;padding:16px 18px">
+          <div class="tg-vocab-stat-card" style="background:#2f7fd6;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:4px 4px 0 #1a1817;padding:16px 18px">
             <div style="font-family:'Shrikhand',serif;font-size:34px;line-height:1">{{ vDue }}</div>
             <div style="font-size:12.5px;font-weight:600;opacity:.9;margin-top:2px">待复习</div>
           </div>
@@ -607,7 +786,7 @@
     <sc-if value="{{ isGrammarDetail }}" hint-placeholder-val="{{ false }}">
       <section style="padding:30px 0">
         <button onClick="{{ goGrammar }}" style="background:none;border:none;cursor:pointer;font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#7a7568;padding:0;margin-bottom:14px">← 语法库</button>
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:30px;align-items:start">
+        <div class="tg-grammar-detail-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:30px;align-items:start">
           <div>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
               <span style="background:#1a1817;color:#fffdf6;font-weight:700;font-size:12px;padding:3px 11px;border-radius:999px">{{ curGrammar.level }}</span>
@@ -673,7 +852,7 @@
       <section style="padding:40px 0">
         <div style="font-weight:700;font-size:13px;letter-spacing:3px;color:#e34e98">每日打卡 · STREAK</div>
         <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(38px,6vw,64px);line-height:.95;margin:8px 0 24px;color:#1a1817">Keep the <span style="color:#e34e98;text-shadow:3px 3px 0 #1a1817">Fire</span></h1>
-        <div style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:28px;align-items:start">
+        <div class="tg-checkin-grid" style="display:grid;grid-template-columns:300px minmax(0,1fr);gap:28px;align-items:start">
           <div style="background:#ec6a2b;color:#fffdf6;border:3px solid #1a1817;border-radius:22px;box-shadow:7px 7px 0 #1a1817;padding:30px 26px;text-align:center;position:relative;overflow:hidden">
             <div style="position:absolute;inset:0;background:conic-gradient(#00000016 0 25%,transparent 0 50%,#00000016 0 75%,transparent 0);background-size:44px 44px"></div>
             <div style="position:relative">
@@ -745,7 +924,7 @@
           </sc-for>
         </div>
 
-        <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:22px;margin-top:22px">
+        <div class="tg-stats-grid" style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:22px;margin-top:22px">
           <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;padding:26px 28px">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:16px">
               <div>
@@ -786,9 +965,9 @@
 
         <!-- 能力雷达 / Skill Radar -->
         <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:22px;box-shadow:6px 6px 0 #1a1817;margin-top:22px;overflow:hidden;position:relative">
-          <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:0;align-items:stretch">
+          <div class="tg-radar-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:0;align-items:stretch">
             <!-- radar stage -->
-            <div style="position:relative;background:radial-gradient(120% 100% at 50% 42%, #fbeecb 0%, #fffdf6 72%);border-right:2.5px solid #1a1817;display:flex;align-items:center;justify-content:center;padding:26px;min-height:360px">
+            <div class="tg-radar-stage" style="position:relative;background:radial-gradient(120% 100% at 50% 42%, #fbeecb 0%, #fffdf6 72%);border-right:2.5px solid #1a1817;display:flex;align-items:center;justify-content:center;padding:26px;min-height:360px">
               <div style="position:absolute;inset:0;background:conic-gradient(#00000010 0 25%,transparent 0 50%,#00000010 0 75%,transparent 0);background-size:46px 46px;opacity:.5"></div>
               <svg viewBox="0 0 380 300" style="position:relative;width:100%;max-width:420px">
                 <sc-for list="{{ radarRings }}" as="r" hint-placeholder-count="4">
@@ -866,7 +1045,7 @@
         <h1 style="font-family:'Shrikhand',serif;font-style:italic;font-size:clamp(38px,6vw,64px);line-height:.95;margin:8px 0 6px;color:#1a1817">Fresh <span style="color:#ec6a2b;text-shadow:3px 3px 0 #1a1817">Press</span> ✦</h1>
         <p style="font-size:15px;color:#5c5749;line-height:1.6;margin:0 0 24px;max-width:640px">AI 会根据你提供的内容，结合你选择的<strong style="color:#1a1817">等级</strong>与<strong style="color:#1a1817">生词本</strong>，为你鲜榨一篇可点读的专属文章——生词会自动织入正文并高亮。</p>
 
-        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start">
+        <div class="tg-ai-grid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start">
           <!-- input panel -->
           <div style="background:#fffdf6;border:2.5px solid #1a1817;border-radius:20px;box-shadow:6px 6px 0 #1a1817;padding:24px 26px">
             <div style="font-weight:700;font-size:13px;letter-spacing:1.5px;color:#7a7568;margin-bottom:10px">① 选择难度等级</div>
@@ -1953,6 +2132,13 @@ class Component extends DCLogic {
     const articleColStyle = (isRight && st.quizOn) ? 'max-height:calc(100vh - 150px);overflow-y:auto;padding-right:8px' : '';
     const panelWrapStyle = !isRight ? '' : (st.quizOn ? 'max-height:calc(100vh - 150px);overflow-y:auto;padding-right:4px;display:flex;align-items:flex-start' : 'position:sticky;top:90px;align-self:start;max-height:calc(100vh - 110px);overflow-y:auto');
 
+    // mobile card floating layout
+    const isAsideFloating = !st.quizOn && !cardEmpty;
+    const asideClass = st.quizOn
+      ? 'tg-read-aside tg-aside-stack'
+      : (cardEmpty ? 'tg-read-aside tg-aside-empty' : 'tg-read-aside tg-aside-float');
+    const readLayoutClass = 'tg-read-layout ' + (isAsideFloating ? 'tg-layout-with-aside' : 'tg-layout-normal');
+
     // ---- quiz (per-article) ----
     const quizQuestions = curQUIZ.map((q,qi)=>({
       n:qi+1, text:q.text,
@@ -2204,7 +2390,7 @@ class Component extends DCLogic {
       panelRight:()=>this.setState({panelPos:'right'}), panelBottom:()=>this.setState({panelPos:'bottom'}),
       posRightBg: isRight?INK:'#fffdf6', posRightFg: isRight?'#fffdf6':INK,
       posBottomBg: !isRight?INK:'#fffdf6', posBottomFg: !isRight?'#fffdf6':INK,
-      readLayoutStyle, articleColStyle, panelWrapStyle,
+      readLayoutStyle, articleColStyle, panelWrapStyle, asideClass, readLayoutClass,
       cardMode:!st.quizOn, cardKeyPoints, cardPara, cardWord, cardEmpty,
       selWord, selWordAdded, selWordNotAdded:!selWordAdded,
       closeCard:()=>this.setState({selWordKey:null, selParaIdx:null, selSentIdx:null, showKeyPoints:false, paraGrammarOpen:false}),
