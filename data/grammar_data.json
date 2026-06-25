@@ -1,0 +1,317 @@
+[
+  {
+    "title": "十大词性 (Ten Parts of Speech)",
+    "level": "初中",
+    "category": "other",
+    "explanation": "让我们先来认识一下句子和句子成分的关系。\n主谓宾句型中：`I hit you.`\n* **I** -> 主语\n* **hit** -> 谓语\n* **you** -> 宾语\n\n每一个句子成分的词性是什么呢？英语中有**十大词性**，可以拆分为三大类：\n\n### 1. 非重点类词性\n* **代词 (pronoun / pron.)**: 代替名词的词。如 `I`, `you`, `he`, `she`, `it`。\n* **数词 (numeral / num.)**: 表示数量或顺序的词。如 `one`, `two`, `first`。\n* **感叹词 (interjection / int.)**: 表示说话时感情的词。如 `oh`, `ah`, `wow`。\n\n### 2. 重点实词类词性 (能单独作句子成分)\n* **名词 (noun / n.)**: 表示具体或抽象事物、人物的名称。如 `book`, `love`, `Zhanhuwei`。\n* **动词 (verb / v.)**: 表示动作或状态的词。如 `hit`, `be`, `run`。\n* **形容词 (adjective / adj.)**: 修饰、限定名词的词。如 `beautiful`, `stupid`, `handsome`。\n* **副词 (adverb / adv.)**: 修饰形容词、动词、其他副词或整个句子，通常交代时间、地点、原因、程度等非核心信息。如 `very`, `quickly`, `tenderly`。\n\n### 3. 三大虚词类词性 (不能单独作句子成分，需与实词配合)\n* **冠词 (article / art.)**: 放在名词前，起限定作用。如 `a`, `an`, `the`。\n* **介词 (preposition / prep.)**: 放在名词/代词前，表示它与其他词之间的关系。如 `in`, `on`, `at`。\n* **连词 (conjunction / conj.)**: 连接词与词、短语与短语或句子与句子的词。如 `and`, `but`, `because`。\n\n---\n\n**词性与句子成分的对应关系表：**\n* 主语 / 宾语 -> 名词、代词\n* 谓语 -> 动词\n* 定语 -> 形容词\n* 状语 -> 副词、介词短语",
+    "examples": [
+      {
+        "sentence": "I hit you.",
+        "translation": "我打你。",
+        "highlight": "hit"
+      },
+      {
+        "sentence": "The girl is reading a book.",
+        "translation": "那个女孩正在看书。",
+        "highlight": "book"
+      }
+    ],
+    "exercises": [
+      {
+        "type": "multiple-choice",
+        "text": "In the sentence 'She is a very beautiful girl.', what part of speech is 'beautiful'?",
+        "options": [
+          "Noun",
+          "Verb",
+          "Adjective",
+          "Adverb"
+        ],
+        "answer": "Adjective",
+        "explanation": "beautiful 修饰名词 girl，表示“漂亮的”，是形容词。"
+      },
+      {
+        "type": "multiple-choice",
+        "text": "Which of the following parts of speech is a function word (虚词) and cannot be used as a sentence subject on its own?",
+        "options": [
+          "Noun",
+          "Pronoun",
+          "Preposition",
+          "Verb"
+        ],
+        "answer": "Preposition",
+        "explanation": "介词（Preposition）是虚词，不能单独作句子成分，必须与名词或代词构成介词短语。"
+      }
+    ],
+    "relatedGrammar": []
+  },
+  {
+    "title": "形容词与名词的关系：前置与后置定语",
+    "level": "高中",
+    "category": "other",
+    "explanation": "在名词短语中，用形容词修饰一个名词，通常结构为：**「限定词 + 形容词 + 名词」**。\n例如：*a stupid dog* (一只蠢蠢的狗), *the handsome man* (那个帅气的男人), *my cute girlfriend* (我可爱的女朋友)。\n\n### 1. 多个形容词修饰名词的顺序 (前置定语)\n当多个形容词修饰同一个名词时，遵循大原则：**「观点形容词 + 描绘（事实）形容词」**。\n* **观点形容词**：表示对事物的看法（如 *beautiful*, *ugly*, *stupid*）。\n* **描绘/事实形容词**：表示事物本身的特征（如新旧、颜色、材质等）。\n\n越接近事物本质的形容词，离名词越近。具体排列顺序口诀（OPSHACOM）：\n**限定词（冠词/物主代词） + 观点 + 大小 + 形状 + 新旧 + 颜色 + 来源/国籍 + 材料 + 用途/类别 + 名词**\n* *my old black Italian leather glove* (我旧的黑色的意大利皮手套)\n* *a well-known German medical school* (一所著名的德国医学院)\n* *the beautiful big old red Chinese wooden table* (这张漂亮的大且旧的红色中国木桌)\n\n### 2. 形容词后置定语的规则\n在以下几种情况下，形容词修饰名词/代词时必须放在其后：\n1. **修饰复合不定代词**：修饰由 *some-, any-, no-, every-* 与 *-body, -thing, -one* 构成的合成词时。\n   - *something important* (重要的事情)\n   - *nobody special* (没有什么特别的人)\n2. **特定的 `a-` 开头的形容词**：如 *alone, afraid, asleep, alike, alive* 等作定语时通常后置或只作表语。\n3. **修饰词带较长后继修饰语时**：当形容词本身带有介词短语、不定式等补足成分时，为了句子平衡，必须后置。\n   - *The coat similar to yours...* (和你的相似的外套...)\n   - *Girls brave enough to pursue their dreams...* (足够勇敢去追求梦想的女孩们...)\n\n### 3. 特殊含义变化\n有些形容词放在名词前和名词后含义不同：\n* *the present members* (现在的成员) vs *the members present* (到场的成员)",
+    "examples": [
+      {
+        "sentence": "The coat similar to yours is a birthday gift from my boyfriend.",
+        "translation": "那件跟你的外套相似的外套是我男票送我的生日礼物。",
+        "highlight": "similar to yours"
+      },
+      {
+        "sentence": "Girls brave enough to pursue their dreams deserve to be loved.",
+        "translation": "敢于追求梦想的女孩值得被爱。",
+        "highlight": "brave enough to pursue their dreams"
+      }
+    ],
+    "exercises": [
+      {
+        "type": "multiple-choice",
+        "text": "Choose the correct phrase: He bought _______.",
+        "options": [
+          "a beautiful small round wooden table",
+          "a wooden round small beautiful table",
+          "a beautiful round wooden small table",
+          "a small round beautiful wooden table"
+        ],
+        "answer": "a beautiful small round wooden table",
+        "explanation": "按照形容词排列顺序：观点（beautiful）+ 大小（small）+ 形状（round）+ 材料（wooden）+ 名词（table）。"
+      },
+      {
+        "type": "multiple-choice",
+        "text": "There is _______ in today's newspaper.",
+        "options": [
+          "nothing interesting",
+          "interesting nothing",
+          "anything interesting",
+          "interesting anything"
+        ],
+        "answer": "nothing interesting",
+        "explanation": "修饰复合不定代词（nothing）的形容词（interesting）需要置于代词之后。"
+      }
+    ],
+    "relatedGrammar": []
+  },
+  {
+    "title": "副词的分类与位置规范",
+    "level": "高中",
+    "category": "other",
+    "explanation": "副词在句子中主要起修饰作用。在中文里通常对应“……地”。\n根据构词法，副词主要分为两类：\n1. **派生副词**：由形容词加 `-ly` 构成（如 *recently*, *politely*, *carefully*）。\n2. **扁平副词**：不带 `-ly` 的副词，有些与形容词同形（如 *late*, *fast*, *hard*）。\n\n### 1. 副词的修饰范围与位置\n副词可以修饰形容词、副词、动词，甚至是整个句子。它的位置规律如下：\n\n#### A. 修饰形容词\n副词修饰形容词时，一般放在形容词**前面**。\n* 例：*a very beautiful girl* (非常漂亮的女孩)\n* **特例**：副词 `enough` 必须**后置**，即“形容词/副词 + `enough`”。\n  - 例：*warm enough* (足够暖和)\n\n#### B. 修饰其他副词\n副词修饰其他副词时，修饰性的副词放在**前面**。\n* 例：*runs very fast* (跑得非常快)\n\n#### C. 修饰动词\n动词是句子的核心，副词修饰动词的位置有两种主要情况：\n1. **常规后置**：通常副词放在动词之后作状语（如 *He runs quickly*）。如果有宾语，副词要放在宾语后面。\n   - 例：*He kissed the girl tenderly.* (他温柔地吻了那个女孩。)\n2. **前置修饰**（避免歧义或起强调作用）：\n   - **避免歧义**：如果后置会导致修饰关系不明确，则前置。\n     - *He tenderly living kissed the girl* -> 明确 tenderly 修饰 kissed。\n   - **强调语气**：表示限制、程度或强烈态度的副词通常放在动词前。\n     - 常见词：*only, merely, also, especially, even, particularly, utterly, almost, surely* 等。",
+    "examples": [
+      {
+        "sentence": "The water is warm enough for us to swim.",
+        "translation": "这水对我们来说足够暖和可以游泳。",
+        "highlight": "warm enough"
+      },
+      {
+        "sentence": "He especially wanted to visit the old town.",
+        "translation": "他特别想去游览那个古镇。",
+        "highlight": "especially"
+      }
+    ],
+    "exercises": [
+      {
+        "type": "multiple-choice",
+        "text": "Which of the following is correct?",
+        "options": [
+          "The boy is enough tall to reach the shelf.",
+          "The boy is tall enough to reach the shelf.",
+          "The boy is tallly enough to reach the shelf.",
+          "The boy is enough tallly to reach the shelf."
+        ],
+        "answer": "The boy is tall enough to reach the shelf.",
+        "explanation": "enough 修饰形容词 tall 时必须后置，即 tall enough。"
+      },
+      {
+        "type": "multiple-choice",
+        "text": "In the sentence 'He quickly answered the difficult question.', where is the adverb and what does it modify?",
+        "options": [
+          "quickly; modifies the verb answered",
+          "quickly; modifies the noun question",
+          "difficult; modifies the verb answered",
+          "difficult; modifies the noun question"
+        ],
+        "answer": "quickly; modifies the verb answered",
+        "explanation": "quickly 是副词，在动词 answered 前面修饰它；difficult 是形容词，修饰名词 question。"
+      }
+    ],
+    "relatedGrammar": []
+  },
+  {
+    "title": "比较级的用法与“去同存异”原则",
+    "level": "高中",
+    "category": "other",
+    "explanation": "英语中，当我们想把两个对象进行比较时，需要将句中的形容词或副词变为**比较级**，并通过介词 `than` 连接比较对象。\n\n### 1. 比较句型构造三步曲\n1. **基础句**：写出一个含有形容词或副词的陈述句。\n   - *He is strong.*\n2. **变级**：将形容词/副词变成比较级（单音节词词尾加 `-er`，多音节词前加 `more`）。\n   - *He is stronger.*\n3. **加对象**：用 `than` 引出比较的对象。\n   - *He is stronger than me.*\n\n### 2. 比较的“去同存异”原则 (Parallelism)\n比较时，必须确保**比较的对象属于同一类事物**。为了避免语言冗余，需使用代词或省略相同部分。\n\n#### A. 从属/所属关系间的比较\n不能将“包大人的文章”与“斩护卫本人”做比较，而必须是“包大人的文章”与“斩护卫的文章”比较。\n* 错误：*The article of Bao is better than Zhan.*\n* 正确：*The article of Bao is better than **that** of Zhan.* (用 `that` 代替前面出现的单数名词 `article`)\n\n#### B. 自己和不同时间的自己比较\n和过去的自己比较时，后面的状态动词（如 `was`/`did`）不能省去。\n* 例：*He is much happier than he **was**.*\n\n#### C. 消除句子比较的歧义\n* 歧义句：*Zhan loves you more than Bao.* (既可以理解为“展护卫爱你多于爱包大人”，也可以理解为“展护卫爱你多于包大人爱你”)\n* 消除歧义：\n  - 如果是主语对比：*Zhan loves you more than Bao **does**.*\n  - 如果是宾语对比：*Zhan loves you more than **he loves** Bao.*\n\n### 3. 无比较级的绝对形容词\n有些单词本身的词义里已经包含了“最”、“极其”或不可分割的绝对状态，因此**不能有比较级和最高级**。\n* 常见词：*perfect* (完美的), *superb* (极好的), *excellent* (杰出的), *sublime* (庄严的/极佳的), *unique* (独特的), *dead* (死的)。",
+    "examples": [
+      {
+        "sentence": "The climate of South China is much warmer than that of North China.",
+        "translation": "中国南方的气候比中国北方的气候要暖和得多。",
+        "highlight": "than that of North China"
+      },
+      {
+        "sentence": "Zhan loves you more than Bao does.",
+        "translation": "展护卫比包大人更爱你。",
+        "highlight": "than Bao does"
+      }
+    ],
+    "exercises": [
+      {
+        "type": "multiple-choice",
+        "text": "The ears of a rabbit are longer than _______ of a fox.",
+        "options": [
+          "that",
+          "those",
+          "it",
+          "them"
+        ],
+        "answer": "those",
+        "explanation": "比较对象是 ears（复数名词），为了避免重复，应用 those 指代复数名词。"
+      },
+      {
+        "type": "multiple-choice",
+        "text": "Choose the grammatically correct sentence.",
+        "options": [
+          "This is the most perfect artwork I have ever seen.",
+          "This artwork is more perfect than that one.",
+          "This is the perfectest artwork I have ever seen.",
+          "This artwork is closer to perfection than that one."
+        ],
+        "answer": "This artwork is closer to perfection than that one.",
+        "explanation": "perfect 是绝对形容词，没有比较级或最高级形式（不能说 more perfect 或 most perfect），表示接近完美的含义可以使用 closer to perfection。"
+      }
+    ],
+    "relatedGrammar": []
+  },
+  {
+    "title": "英语五大基本句型",
+    "level": "初中",
+    "category": "other",
+    "explanation": "所有的复杂句（如各种从句、省略句）都是在简单句的基础上进行“添油加醋”或“偷工减料”而成的。\n英语中最原始的形态就是**5种简单句的基本句型**。句型的结构主要是由**谓语动词的类别**决定的。\n\n### 1. 主谓 (Subject + Verb / S+V)\n谓语动词是**不及物动词 (Intransitive Verb)**，动作本身意思完整，不需要带宾语。\n* 例：*He died.* (他去世了。)\n* 例：*The sun rises.* (太阳升起。)\n\n### 2. 主谓宾 (Subject + Verb + Object / S+V+O)\n谓语动词是**单宾及物动词 (Transitive Verb)**，动作必须有作用的直接对象，这个对象就是宾语。\n* 例：*He killed the enemy.* (他杀死了敌人。)\n\n### 3. 主系表 / 主谓补 (Subject + Link Verb + Predicative / S+V+P)\n谓语动词是**系动词 (Link Verb)**，本身无具体动作，用于把主语与对其解释说明的表语（补语）联系起来。\n* 常见系动词：*be* 动词, 感官动词 (*look, sound, smell, taste, feel*), 状态变化动词 (*become, turn*).\n* 例：*She is beautiful.* (她很漂亮。)\n* 例：*The plan sounds great.* (这个计划听起来很棒。)\n\n### 4. 主谓双宾 (Subject + Verb + Indirect Object + Direct Object / S+V+IO+DO)\n谓语动词是**双宾及物动词**，动作不仅需要一个“物”（直接宾语），还需要一个“人”作为动作的接收者（间接宾语）。\n* 常见动词：*give, lend, buy, show, pass*.\n* 例：*He lent me a book.* (他借给我一本书。`me` 为间宾，`a book` 为直宾)\n\n### 5. 主谓宾宾补 (Subject + Verb + Object + Object Complement / S+V+O+OC)\n谓语动词是**复合及物动词**，有了主谓宾之后句意仍不完整，需要带上一个宾语补足语（宾补）来对宾语的状态或动作进行补充说明。\n* 常见动词：*make, find, keep, elect, call*.\n* 例：*They made me happy.* (他们使我快乐。`me` 为宾语，`happy` 为宾补)",
+    "examples": [
+      {
+        "sentence": "My grandfather wrote me a long letter.",
+        "translation": "我祖父给我写了一封长信。",
+        "highlight": "wrote me a long letter"
+      },
+      {
+        "sentence": "The news made us very excited.",
+        "translation": "这个消息使我们非常激动。",
+        "highlight": "made us very excited"
+      }
+    ],
+    "exercises": [
+      {
+        "type": "multiple-choice",
+        "text": "What is the sentence pattern of: 'She kept the room clean.'?",
+        "options": [
+          "Subject + Verb + Object (S+V+O)",
+          "Subject + Verb + Indirect Object + Direct Object (S+V+IO+DO)",
+          "Subject + Verb + Object + Object Complement (S+V+O+OC)",
+          "Subject + Link Verb + Predicative (S+V+P)"
+        ],
+        "answer": "Subject + Verb + Object + Object Complement (S+V+O+OC)",
+        "explanation": "the room 是宾语，clean 是修饰宾语的形容词，充当宾语补足语，表示房间的状态是干净的。"
+      },
+      {
+        "type": "multiple-choice",
+        "text": "In the sentence 'The teacher gave each student a new pencil.', 'each student' is the _______.",
+        "options": [
+          "Direct Object",
+          "Indirect Object",
+          "Object Complement",
+          "Subject"
+        ],
+        "answer": "Indirect Object",
+        "explanation": "gave 后面接双宾语，动作的接受者人 each student 是间接宾语，具体的物 a new pencil 是直接宾语。"
+      }
+    ],
+    "relatedGrammar": []
+  },
+  {
+    "title": "介词 in/on/at 表示空间位置的用法",
+    "level": "初中",
+    "category": "other",
+    "explanation": "介词用于表示名词（或代词）与句中其他词之间的空间、时间或逻辑关系。\n要搞明白介词，不能仅靠死记硬背固定搭配，而是要理解其内在的**空间概念模型**。以下是表示位置的 `in` / `on` / `at` 的核心逻辑：\n\n### 1. in — 强调“在……内部”(3D 空间概念)\n`in` 表示事物被包围或包含在一个三维空间、容器或明确界限的区域内部。\n* *in the room* (在房间里) — 斩护卫相对于房间是在里面。\n* *in the mouth* (在嘴里) — 鸡腿在嘴巴的内部。\n* *in the photo* (在照片里) — 虽然照片是平面的，但是人和照片场景是融为一体的。\n\n### 2. on — 强调“在平面上”(2D 表面概念)\n`on` 表示事物位于某个二维平面、线或物体的表面上，通常存在物理上的接触。\n* *on the desk* (在桌子上)\n* *on the second floor* (在三楼/第二层地板上)\n* *on the road* (在马路上) — 在路面上行走。\n\n### 3. at — 强调“点”的概念(1D 坐标概念)\n`at` 把位置看作地图上的一个具体“点”，或者是一个特定的交汇位置、参考地址，不强调内部空间或表面接触。\n* *at the bus stop* (在公交车站) — 把公交车站当作路线上的一个坐标点。\n* *at university* (在大学里) — 强调身份或身处该机构（斩护卫是大学里的一员）。",
+    "examples": [
+      {
+        "sentence": "There is a fly on the ceiling.",
+        "translation": "天花板上有一只苍蝇。",
+        "highlight": "on the ceiling"
+      },
+      {
+        "sentence": "We will meet you at the entrance of the theater.",
+        "translation": "我们将在剧院门口和你碰头。",
+        "highlight": "at the entrance"
+      }
+    ],
+    "exercises": [
+      {
+        "type": "multiple-choice",
+        "text": "He is sitting _______ the armchair, while his cat is lying _______ the floor.",
+        "options": [
+          "in; on",
+          "on; in",
+          "at; on",
+          "in; at"
+        ],
+        "answer": "in; on",
+        "explanation": "扶手椅（armchair）是包裹式的三维空间，用 in；地板（floor）是平面，用 on。"
+      },
+      {
+        "type": "multiple-choice",
+        "text": "I will wait for you _______ the supermarket at the corner.",
+        "options": [
+          "in",
+          "on",
+          "at",
+          "above"
+        ],
+        "answer": "at",
+        "explanation": "超市在这里被当作相约会合的一个特定“点”（坐标），因此用 at 最贴切。"
+      }
+    ],
+    "relatedGrammar": []
+  },
+  {
+    "title": "八大句子成分详解",
+    "level": "初中",
+    "category": "other",
+    "explanation": "句子成分是组成句子的各个部分。英语句子中共有**八大成分**：\n\n### 1. 主语 (Subject)\n主语是句子的核心主角，是动作的发出者或陈述的主体。\n* 例：**Zhanhuwei** hugged the girl. (主语是 `Zhanhuwei`)\n\n### 2. 谓语 (Predicate)\n谓语是主角（主语）发出的动作或状态，由动词充当。\n* 例：Zhanhuwei **hugged** the girl. (谓语是 `hugged`)\n\n### 3. 宾语 (Object)\n宾语是动作的作用对象，通常由名词或代词充当。\n* 例：Zhanhuwei hugged **the girl**. (宾语是 `the girl`)\n\n### 4. 定语 (Attribute)\n定语是用于修饰或限定名词/代词的成分。形容词、名词、介词短语等都可以作定语。\n* 例：The **handsome** man hugged the **beautiful** girl. (定语是 `handsome` 和 `beautiful`)\n\n### 5. 状语 (Adverbial)\n状语说明动作发生的背景，如时间、地点、原因、结果、条件、方式、程度等。\n* 例：Zhanhuwei hugged the girl **in the park yesterday**. (地点状语 `in the park`，时间状语 `yesterday`)\n\n### 6. 补语 (Complement)\n补语是对主语或宾语进行的补充说明，使句子含义完整。分为**主语补足语**和**宾语补足语**。\n* 例：He was left **alone**. (表状态，主补)\n* 例：They call him **the leader**. (宾补)\n\n### 7. 表语 (Predicative)\n表语放在系动词后面，说明主语的身份、特征或状态。从本质上说，表语也是一种主语补足语。\n* 例：He is **handsome**. (表语是 `handsome`)\n* 例：The other man is **rich**. (表语是 `rich`)\n\n### 8. 同位语 (Appositive)\n同位语是紧跟在名词或代词后面，对它进行解释或说明的另一个名词性成分，两者指指代同一个事物。\n* 例：Mr. Wang, **our English teacher**, is very kind. (同位语是 `our English teacher`)",
+    "examples": [
+      {
+        "sentence": "My uncle, a famous doctor, will visit us tomorrow.",
+        "translation": "我的叔叔，一位著名的医生，明天将来拜访我们。",
+        "highlight": "a famous doctor"
+      },
+      {
+        "sentence": "She placed the glass carefully on the table.",
+        "translation": "她小心翼翼地把玻璃杯放在桌子上。",
+        "highlight": "carefully on the table"
+      }
+    ],
+    "exercises": [
+      {
+        "type": "multiple-choice",
+        "text": "In the sentence 'They elected him captain of the team.', what sentence element is 'captain'?",
+        "options": [
+          "Direct Object",
+          "Indirect Object",
+          "Object Complement (宾语补足语)",
+          "Appositive (同位语)"
+        ],
+        "answer": "Object Complement (宾语补足语)",
+        "explanation": "captain 补充说明宾语 him 的职务，属于宾语补足语。"
+      },
+      {
+        "type": "multiple-choice",
+        "text": "Identify the appositive (同位语) in this sentence: 'Beijing, the capital of China, is a historic city.'",
+        "options": [
+          "Beijing",
+          "the capital of China",
+          "historic city",
+          "is a historic city"
+        ],
+        "answer": "the capital of China",
+        "explanation": "the capital of China 紧跟 Beijing 之后，解释说明 Beijing，因此是同位语。"
+      }
+    ],
+    "relatedGrammar": []
+  }
+]
