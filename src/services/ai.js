@@ -443,7 +443,7 @@ ${options.extraRequirements ? `## 额外要求\n${options.extraRequirements}` : 
         console.log(`[AI Generation] Attempt ${attempt} of ${maxRetries}...`);
         // 给足输出额度避免 JSON 被截断（截断=整次调用白费）；推理模型走 max_completion_tokens
         const chatPromise = chat(systemPrompt, userPrompt, { ...options, maxTokens: options.maxTokens || 16384 });
-        const result = await withTimeout(chatPromise, 15000, `AI生文超时(第${attempt}次尝试超过15秒)`);
+        const result = await withTimeout(chatPromise, 60000, `AI生文超时(第${attempt}次尝试超过60秒)`);
 
         let jsonStr = result || '';
         const fence = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
