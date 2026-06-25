@@ -34,8 +34,8 @@ async function generate(prompt, level = '高中', options = {}) {
   if (await aiConfigured()) {
     const r = await aiService.generateArticle(prompt, level, options);
     if (!r.error) return { ...r, mode: 'ai' };
-    // 真实生成失败（如额度/网络）→ 退回测试样例，保证可用
-    return { ...(await mockArticle(prompt, level, options)), mode: 'mock', aiError: r.error };
+    // 真实生成失败，直接返回错误，以便前端显示
+    return r;
   }
   return { ...(await mockArticle(prompt, level, options)), mode: 'mock' };
 }

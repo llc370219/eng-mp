@@ -56,7 +56,7 @@ const PROVIDERS = {
     name: '火山方舟 (豆包)',
     baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
     // 默认使用快捷接入模型，用户如有 endpoint ID 可自行在后台配置
-    defaultModel: 'doubao-lite-32k-240828',
+    defaultModel: 'doubao-seed-1-6-flash-250615',
     sdk: 'openai',
     reasoningEffort: 'medium',  // 使用中等推理力度 (仅当模型名含 seed 时生效)
   },
