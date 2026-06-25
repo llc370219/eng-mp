@@ -569,7 +569,7 @@
                       <button onClick="{{ addSelWord }}" style="margin-top:16px;width:100%;background:#f3c44b;color:#1a1817;border:2.5px solid #1a1817;border-radius:12px;cursor:pointer;padding:10px;font-family:'Space Grotesk';font-weight:700;font-size:14px">+ 加入生词本</button>
                     </sc-if>
                     <sc-if value="{{ selWordAdded }}" hint-placeholder-val="{{ false }}">
-                      <div style="margin-top:16px;width:100%;background:#1f9d5c;color:#fffdf6;border:2.5px solid #1a1817;border-radius:12px;padding:10px;text-align:center;font-family:'Space Grotesk';font-weight:700;font-size:14px">✓ 已在生词本 · 将在文中常亮</div>
+                      <button onClick="{{ removeSelWord }}" style="margin-top:16px;width:100%;background:#1f9d5c;color:#fffdf6;border:2.5px solid #1a1817;border-radius:12px;cursor:pointer;padding:10px;font-family:'Space Grotesk';font-weight:700;font-size:14px">✓ 已在生词本 (点击取消)</button>
                     </sc-if>
                   </div>
                 </sc-if>
@@ -644,7 +644,7 @@
               <button onClick="{{ addDictWord }}" style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;box-shadow:5px 5px 0 #1a1817;cursor:pointer;padding:16px;font-family:'Space Grotesk';font-weight:700;font-size:16px;width:100%">+ 加入生词本</button>
             </sc-if>
             <sc-if value="{{ dictWordAdded }}" hint-placeholder-val="{{ false }}">
-              <div style="background:#1f9d5c;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;padding:16px;text-align:center;font-family:'Space Grotesk';font-weight:700;font-size:16px">✓ 已在生词本</div>
+              <button onClick="{{ removeDictWord }}" style="background:#1f9d5c;color:#fffdf6;border:2.5px solid #1a1817;border-radius:16px;cursor:pointer;padding:16px;font-family:'Space Grotesk';font-weight:700;font-size:16px;width:100%">✓ 已在生词本 (点击取消)</button>
             </sc-if>
           </aside>
         </div>
@@ -2403,6 +2403,11 @@ class Component extends DCLogic {
           this.addWordToVocab(st.selWordKey, def, phon);
         }
       },
+      removeSelWord:()=>{
+        if(st.selWordKey){
+          this.removeWordFromVocab(st.selWordKey);
+        }
+      },
       paraNo: st.selParaIdx!=null? st.selParaIdx+1 : '',
       sentNo: st.selSentIdx!=null? st.selSentIdx+1 : '',
       sentZh,
@@ -2418,6 +2423,11 @@ class Component extends DCLogic {
         if(st.dictWord && !st.addedWords.includes(st.dictWord)){
           this.setState({ addedWords:[...st.addedWords, st.dictWord] });
           this.addWordToVocab(st.dictWord, st.dictTranslation, st.dictPhonetic);
+        }
+      },
+      removeDictWord:()=>{
+        if(st.dictWord){
+          this.removeWordFromVocab(st.dictWord);
         }
       },
       dictResultShown: st.dictShown, dictSearch:()=>this.searchDict(),
