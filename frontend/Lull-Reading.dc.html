@@ -1287,20 +1287,21 @@ class Component extends DCLogic {
     const parts = text.match(/[A-Za-z]+(?:['’\-][A-Za-z]+)*[).,;:!?"”'’]*|[^A-Za-z]+/g) || [];
     return parts.map(p => ({ raw:p, isWord:/[A-Za-z]/.test(p) }));
   }
-  selectWord(clean){
+  selectWord(clean, sentence){
     this.setState({ selWordKey:clean, selParaIdx:null, selSentIdx:null, showKeyPoints:false });
     // 真实词典查询（若静态释义里没有且未缓存过）
     if(clean && !(this.state.dictCache && this.state.dictCache[clean])){
-      this.lookupWord(clean);
+      this.lookupWord(clean, sentence);
     }
   }
-  // 单词点击 → 第三方词典查询，结果缓存到 dictCache
-  async lookupWord(word){
+  // 单词点击 → 大模型词典查询，结果缓存到 dictCache；传入所在整句做语境消歧，释义更准
+  async lookupWord(word, sentence){
     const token = localStorage.getItem('token');
     if(!token) return;
     try {
       const headers = { 'Authorization':'Bearer '+token };
-      const data = await this.authFetch('/api/frontend/dict/'+encodeURIComponent(word), { headers }).then(r=>r.json());
+      const qs = sentence ? ('?context=' + encodeURIComponent(String(sentence).slice(0, 300))) : '';
+      const data = await this.authFetch('/api/frontend/dict/'+encodeURIComponent(word)+qs, { headers }).then(r=>r.json());
       let def='', phon='', tag='', examples=[];
       if(data && !data.error){
         phon = data.phonetic || '';
@@ -2090,7 +2091,7 @@ class Component extends DCLogic {
           if(!tk.isWord) return { t:tk.raw, plain:true, vocab:false, normal:false };
           const clean = tk.raw.toLowerCase().replace(/[^a-z]/g,'');
           const vocab = isVocabWord(clean);
-          return { t:tk.raw, plain:false, vocab, normal:!vocab, onClick:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.selectWord(clean); } };
+          return { t:tk.raw, plain:false, vocab, normal:!vocab, onClick:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.selectWord(clean, s.en); } };
         }),
       })),
     }));

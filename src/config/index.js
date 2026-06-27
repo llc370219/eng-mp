@@ -39,9 +39,14 @@ module.exports = {
 
   dictApiUrl: process.env.DICT_API_URL || 'https://api.dictionaryapi.dev/api/v2/entries/en',
 
-  // 彩云小译 LingoCloud（词典 + 翻译）
+  // 彩云小译 LingoCloud（词典 + 翻译）— v3.1.0 起词典改用硅基流动大模型，彩云仅保留为翻译兜底
   caiyun: {
     token: process.env.CAIYUN_TOKEN || '',
+  },
+
+  // 硅基流动 SiliconFlow（大模型词典）— 模型 tencent/Hunyuan-MT-7B
+  siliconflow: {
+    apiKey: process.env.SILICONFLOW_API_KEY || '',
   },
 
   email: {

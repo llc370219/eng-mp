@@ -10,7 +10,7 @@ const { tryCheckIn, hasCheckedIn, getCheckInHistory, getStreak } = require('../s
 const aiService = require('../services/ai');
 const { lookupWord } = require('../services/dictionary');
 const ebbinghaus = require('../services/ebbinghaus');
-const caiyun = require('../services/caiyun');
+const siliconflow = require('../services/siliconflow');
 const articleGenerator = require('../services/articleGenerator');
 
 const router = Router();
@@ -144,47 +144,38 @@ router.delete('/article/:id', async (req, res, next) => {
   }
 });
 
-// ===== 词典查询（在线彩云 API 优先查库并缓存冷启动，无需本地导入 ECDICT 词库） =====
+// ===== 词典查询（v3.1.0：硅基流动大模型 Hunyuan-MT-7B 查词，优先查库缓存冷启动） =====
+// 逻辑沿用「先查缓存 → 未命中调用大模型 → 写库 → 返回」；可选 ?context=<整句> 做语境消歧，提升释义准确度。
 router.get('/dict/:word', async (req, res, next) => {
   try {
     const word = req.params.word.toLowerCase().trim();
+    const context = (req.query.context || '').toString().trim();
     const Dictionary = require('../models/Dictionary');
 
-    // 1. 尝试查本地缓存库
+    // 1. 尝试查本地缓存库（仅缓存与上下文无关的基础词条）
     let local = await Dictionary.findOne({ word }).lean();
 
     if (!local) {
-      // 2. 本地缓存库无记录，则调用彩云小译在线查询并写入缓存
-      const cy = await caiyun.dict(word);
-      if (cy) {
+      // 2. 本地缓存库无记录，则调用硅基流动大模型查询并写入缓存
+      const llm = await siliconflow.dict(word); // 基础词条入库，不带上下文，避免缓存被语境义污染
+      if (llm) {
+        const translation = Array.isArray(llm.explanations) ? llm.explanations.join('\n') : '';
         try {
-          const translation = Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '';
           local = await Dictionary.findOneAndUpdate(
             { word },
-            {
-              $set: {
-                word,
-                phonetic: cy.phonetic || '',
-                translation,
-                exampleSentences: cy.examples || []
-              }
-            },
+            { $set: { word, phonetic: llm.phonetic || '', translation, exampleSentences: llm.examples || [] } },
             { upsert: true, new: true }
           ).lean();
         } catch (saveErr) {
-          // 如果写入数据库失败，手动构建临时对象返回，保证可用
-          local = {
-            word,
-            phonetic: cy.phonetic || '',
-            translation: Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '',
-            exampleSentences: cy.examples || []
-          };
+          // 写库失败则构建临时对象返回，保证可用
+          local = { word, phonetic: llm.phonetic || '', translation, exampleSentences: llm.examples || [] };
         }
       }
     }
 
     if (!local) return res.json({ error: '未找到释义' });
 
+    let translation = local.translation || '';
     let examples = [];
     if (Array.isArray(local.exampleSentences) && local.exampleSentences.length) {
       examples = local.exampleSentences;
@@ -198,66 +189,76 @@ router.get('/dict/:word', async (req, res, next) => {
       }).filter(ex => ex && ex.en);
     }
 
+    // 3. 语境增强（不入缓存）：把本句中的语境义置顶，并用「原句+译文」作为例句
+    if (context) {
+      const ctx = await siliconflow.contextualSense(word, context);
+      if (ctx) {
+        if (ctx.meaning) translation = `【本句中】${ctx.meaning}\n${translation}`.trim();
+        if (ctx.example && ctx.example.en) examples = [ctx.example, ...examples];
+      }
+    }
+
     res.json({
       word: local.word,
       phonetic: local.phonetic || '',
-      translation: local.translation || '',
+      translation,
       definitionEn: local.definitionEn || '',
       tag: local.tag || '',
       synonym: [],
       examples: examples.slice(0, 2),
-      source: local.createdAt ? 'cache' : 'caiyun'
+      source: context ? 'llm-context' : (local.createdAt ? 'cache' : 'llm')
     });
   } catch (err) {
     res.json({ error: '查询失败: ' + err.message });
   }
 });
 
-// ===== 单词例句（优先查缓存，若无则在线获取并缓存） =====
+// ===== 单词例句（优先查缓存；无则用硅基流动查词条 + 大模型生成例句并缓存） =====
 router.get('/dict/:word/examples', async (req, res, next) => {
   try {
     const word = req.params.word.toLowerCase().trim();
     const Dictionary = require('../models/Dictionary');
     let doc = await Dictionary.findOne({ word });
 
+    // 词条不存在时，先用硅基流动查出音标+释义入库（与查词主链路一致）
     if (!doc) {
-      const cy = await caiyun.dict(word);
-      if (cy) {
+      const llm = await siliconflow.dict(word);
+      if (llm) {
+        const translation = Array.isArray(llm.explanations) ? llm.explanations.join('\n') : '';
         try {
-          const translation = Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '';
           doc = await Dictionary.findOneAndUpdate(
             { word },
-            {
-              $set: {
-                word,
-                phonetic: cy.phonetic || '',
-                translation,
-                exampleSentences: cy.examples || []
-              }
-            },
+            { $set: { word, phonetic: llm.phonetic || '', translation, exampleSentences: llm.examples || [] } },
             { upsert: true, new: true }
           );
         } catch {}
       }
     }
 
-    if (doc) {
-      if (Array.isArray(doc.exampleSentences) && doc.exampleSentences.length) {
-        return res.json({ examples: doc.exampleSentences, cached: true });
-      }
-      if (Array.isArray(doc.examples) && doc.examples.length) {
-        const parsed = doc.examples.map(ex => {
-          if (typeof ex === 'string') {
-            const parts = ex.split('#');
-            return { en: parts[0].trim(), zh: parts[1] ? parts[1].trim() : '' };
-          }
-          return ex;
-        }).filter(ex => ex && ex.en);
-        if (parsed.length) {
-          return res.json({ examples: parsed, cached: true });
-        }
-      }
+    // 命中缓存例句直接返回
+    if (doc && Array.isArray(doc.exampleSentences) && doc.exampleSentences.length) {
+      return res.json({ examples: doc.exampleSentences, cached: true });
     }
+    if (doc && Array.isArray(doc.examples) && doc.examples.length) {
+      const parsed = doc.examples.map(ex => {
+        if (typeof ex === 'string') {
+          const parts = ex.split('#');
+          return { en: parts[0].trim(), zh: parts[1] ? parts[1].trim() : '' };
+        }
+        return ex;
+      }).filter(ex => ex && ex.en);
+      if (parsed.length) return res.json({ examples: parsed, cached: true });
+    }
+
+    // 无缓存例句 → 用硅基流动大模型造句并逐句翻译，回写缓存
+    const generated = await siliconflow.generateExamples(word, 2);
+    if (generated && generated.length) {
+      if (doc) {
+        try { doc.exampleSentences = generated; await doc.save(); } catch {}
+      }
+      return res.json({ examples: generated, cached: false });
+    }
+
     res.json({ examples: [] });
   } catch (err) {
     res.json({ examples: [] });

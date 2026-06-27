@@ -37,7 +37,7 @@ router.use(async (req, res, next) => {
 // ===== 登录 =====
 router.get('/login', (req, res) => {
   // 重定向到 Lull 前端设计稿
-  res.redirect('/Lull-Reading.dc.html?v=3.0.5');
+  res.redirect('/Lull-Reading.dc.html?v=3.1.0');
 });
 
 router.post('/login', async (req, res) => {
@@ -63,7 +63,7 @@ router.post('/login', async (req, res) => {
 router.get('/register', (req, res) => {
   const invite = req.query.invite || '';
   // 重定向到 Lull 前端设计稿
-  res.redirect(`/Lull-Reading.dc.html?v=3.0.5${invite ? '&invite=' + invite : ''}`);
+  res.redirect(`/Lull-Reading.dc.html?v=3.1.0${invite ? '&invite=' + invite : ''}`);
 });
 
 // 获取新验证码（AJAX）
@@ -257,19 +257,19 @@ router.get('/dict', requireAuth, async (req, res) => {
   const { word, sentence } = req.query;
   let result = null, sentenceResult = null;
   if (word) {
-    const caiyun = require('../services/caiyun');
-    const cy = await caiyun.dict(word);
-    if (cy) {
+    const siliconflow = require('../services/siliconflow');
+    const llm = await siliconflow.dict(word, sentence);
+    if (llm) {
       result = {
-        word: cy.word,
-        phonetic: cy.phonetic || '',
-        translation: Array.isArray(cy.explanations) ? cy.explanations.join('\n') : '',
+        word: llm.word,
+        phonetic: llm.phonetic || '',
+        translation: Array.isArray(llm.explanations) ? llm.explanations.join('\n') : '',
         definitionEn: '',
-        examples: (cy.examples || []).map(e => e.en + (e.zh ? ` #${e.zh}` : '')),
+        examples: (llm.examples || []).map(e => e.en + (e.zh ? ` #${e.zh}` : '')),
         collins: '',
         tag: '',
         exchange: '',
-        source: 'caiyun'
+        source: 'llm'
       };
     }
   }

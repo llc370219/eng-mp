@@ -67,7 +67,7 @@ app.use((req, res, next) => {
 });
 
 // 首页跳转新前端（放在静态文件之前，避免 public/index.html 抢先）
-app.get('/', (req, res) => res.redirect('/Lull-Reading.dc.html?v=3.0.5'));
+app.get('/', (req, res) => res.redirect('/Lull-Reading.dc.html?v=3.1.0'));
 
 // ===== 静态文件 =====
 app.use(express.static(path.join(__dirname, '../frontend')));
