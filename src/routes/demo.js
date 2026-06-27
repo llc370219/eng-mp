@@ -37,7 +37,7 @@ router.use(async (req, res, next) => {
 // ===== 登录 =====
 router.get('/login', (req, res) => {
   // 重定向到 Lull 前端设计稿
-  res.redirect('/Lull-Reading.dc.html?v=3.1.0');
+  res.redirect('/Lull-Reading.dc.html?v=3.1.1');
 });
 
 router.post('/login', async (req, res) => {
@@ -63,7 +63,7 @@ router.post('/login', async (req, res) => {
 router.get('/register', (req, res) => {
   const invite = req.query.invite || '';
   // 重定向到 Lull 前端设计稿
-  res.redirect(`/Lull-Reading.dc.html?v=3.1.0${invite ? '&invite=' + invite : ''}`);
+  res.redirect(`/Lull-Reading.dc.html?v=3.1.1${invite ? '&invite=' + invite : ''}`);
 });
 
 // 获取新验证码（AJAX）

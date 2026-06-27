@@ -442,6 +442,7 @@
             <span class="tg-tipbox" style="position:absolute;top:calc(100% + 8px);left:0;z-index:40;background:#1a1817;color:#fffdf6;font-family:'Space Grotesk';font-weight:600;font-size:12px;white-space:nowrap;padding:7px 12px;border-radius:9px;box-shadow:3px 3px 0 rgba(0,0,0,.25)">双击句子即可查看翻译与提示<span style="position:absolute;left:18px;top:-5px;width:9px;height:9px;background:#1a1817;transform:rotate(45deg)"></span></span>
           </span>
           <button onClick="{{ toggleSegHint }}" style="display:flex;align-items:center;gap:7px;background:{{ segBg }};color:{{ segFg }};border:2px solid #1a1817;border-radius:999px;cursor:pointer;padding:7px 14px;font-family:'Space Grotesk';font-weight:700;font-size:13px">分句提示 · {{ segState }}</button>
+          <button onClick="{{ toggleDualCard }}" style="display:flex;align-items:center;gap:7px;background:{{ dualBg }};color:{{ dualFg }};border:2px solid #1a1817;border-radius:999px;cursor:pointer;padding:7px 14px;font-family:'Space Grotesk';font-weight:700;font-size:13px">句词同显 · {{ dualState }}</button>
           <button onClick="{{ toggleQuiz }}" style="display:flex;align-items:center;gap:7px;background:{{ quizBtnBg }};color:{{ quizBtnFg }};border:2px solid #1a1817;border-radius:999px;cursor:pointer;padding:7px 14px;font-family:'Space Grotesk';font-weight:700;font-size:13px">读后小测 · {{ quizState }}</button>
           <button onClick="{{ showKeyPointsCard }}" style="display:flex;align-items:center;gap:7px;background:{{ kpBg }};color:{{ kpFg }};border:2px solid #1a1817;border-radius:999px;cursor:pointer;padding:7px 14px;font-family:'Space Grotesk';font-weight:700;font-size:13px">重难点解析</button>
           <div class="tg-panel-pos-selector" style="margin-left:auto;display:flex;align-items:center;gap:6px">
@@ -505,7 +506,7 @@
 
             <!-- CARD MODE -->
             <sc-if value="{{ cardMode }}" hint-placeholder-val="{{ true }}">
-              <div style="width:100%">
+              <div style="width:100%;display:flex;flex-direction:column;gap:16px">
                 <!-- key points -->
                 <sc-if value="{{ cardKeyPoints }}" hint-placeholder-val="{{ false }}">
                   <div style="background:#1a1817;color:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #ec6a2b;padding:22px 24px;animation:popin .25s ease">
@@ -533,7 +534,7 @@
                   <div style="background:#2f7fd6;color:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:20px 22px;animation:popin .25s ease">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
                       <div style="font-family:'Space Grotesk';font-weight:700;font-size:13px;letter-spacing:1.5px;opacity:.9">句子翻译 · 第 {{ paraNo }} 段第 {{ sentNo }} 句</div>
-                      <button onClick="{{ closeCard }}" style="background:#1a1817;color:#fffdf6;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-weight:700;flex:none">×</button>
+                      <button onClick="{{ closeSent }}" style="background:#1a1817;color:#fffdf6;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-weight:700;flex:none">×</button>
                     </div>
                     <div style="font-family:'Newsreader',serif;font-size:17px;line-height:1.75;color:#fffdf6">{{ sentZh }}</div>
                     
@@ -548,7 +549,7 @@
                   <div style="background:#e34e98;color:#fffdf6;border:2.5px solid #1a1817;border-radius:18px;box-shadow:5px 5px 0 #1a1817;padding:20px;animation:popin .25s ease">
                     <div style="display:flex;justify-content:space-between;align-items:flex-start">
                       <div style="font-family:'Shrikhand',serif;font-size:30px;line-height:1">{{ selWord.word }}</div>
-                      <button onClick="{{ closeCard }}" style="background:#1a1817;color:#fffdf6;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-weight:700">×</button>
+                      <button onClick="{{ closeWord }}" style="background:#1a1817;color:#fffdf6;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-weight:700">×</button>
                     </div>
                     <div style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;opacity:.9;margin-top:2px">{{ selWord.phon }}</div>
                     <div style="font-size:17px;font-weight:600;margin-top:10px;line-height:1.4">{{ selWord.def }}</div>
@@ -581,6 +582,7 @@
                     </div>
                     <div style="font-size:13.5px;line-height:1.7">点击正文中<strong style="color:#1a1817">任意单词</strong>，即可在此查看释义</div>
                     <div style="font-size:12.5px;line-height:1.6;margin-top:8px;color:#a89f86">开启「整句翻译」或「分句提示」后，<strong style="color:#2f7fd6">双击句子</strong>可查看翻译与语法提示</div>
+                    <div style="font-size:12.5px;line-height:1.6;margin-top:6px;color:#a89f86">再开启「<strong style="color:#9b59b6">句词同显</strong>」，句子卡与单词卡可上下并存</div>
                   </div>
                 </sc-if>
               </div>
@@ -1213,7 +1215,7 @@ class Component extends DCLogic {
     screen: 'login', authMode: 'login',
     diff: '', cat: '', feed: 'push', page: 1,
     articleId: 1, sentenceTrans: false,
-    segHint: false, quizOn: false, panelPos: 'right',
+    segHint: false, quizOn: false, panelPos: 'right', dualCard: false,
     selWordKey: null, selParaIdx: null, selSentIdx: null, showKeyPoints: false, paraGrammarOpen: false,
     addedWords: [],
     quizPick: {}, quizSubmitted: false,
@@ -1288,7 +1290,10 @@ class Component extends DCLogic {
     return parts.map(p => ({ raw:p, isWord:/[A-Za-z]/.test(p) }));
   }
   selectWord(clean, sentence){
-    this.setState({ selWordKey:clean, selParaIdx:null, selSentIdx:null, showKeyPoints:false });
+    // 句词同显开启时，点词不清掉已选句子（句子卡与单词卡可并存）
+    this.setState(this.state.dualCard
+      ? { selWordKey:clean, showKeyPoints:false }
+      : { selWordKey:clean, selParaIdx:null, selSentIdx:null, showKeyPoints:false });
     // 真实词典查询（若静态释义里没有且未缓存过）
     if(clean && !(this.state.dictCache && this.state.dictCache[clean])){
       this.lookupWord(clean, sentence);
@@ -2084,7 +2089,10 @@ class Component extends DCLogic {
         onDbl: (e)=>{
           if(e && e.stopPropagation) e.stopPropagation();
           if(st.sentenceTrans || st.segHint){
-            this.setState({ selParaIdx:pi, selSentIdx:si, selWordKey:null, showKeyPoints:false });
+            // 句词同显开启时，选句不清掉已选单词
+            this.setState(st.dualCard
+              ? { selParaIdx:pi, selSentIdx:si, showKeyPoints:false }
+              : { selParaIdx:pi, selSentIdx:si, selWordKey:null, showKeyPoints:false });
           }
         },
         tokens: this.tokenize(s.en).map((tk)=>{
@@ -2126,7 +2134,8 @@ class Component extends DCLogic {
     const sentGrammar = curSent ? (curSent.grammar || (curPara.grammar ? '（本句暂无针对性解析，整段语法解析供参考）\n' + curPara.grammar : '')) : '';
     const cardKeyPoints = st.showKeyPoints;
     const cardPara = !st.showKeyPoints && st.selParaIdx!=null && st.selSentIdx!=null;
-    const cardWord = !st.showKeyPoints && st.selParaIdx==null && !!st.selWordKey;
+    // 句词同显开启时，有句子也允许单词卡同时显示（DOM 顺序天然让句子卡在上、单词卡在下）
+    const cardWord = !st.showKeyPoints && !!st.selWordKey && (st.dualCard || st.selParaIdx==null);
     const cardEmpty = !cardKeyPoints && !cardPara && !cardWord;
     // reading layout styles
     const isRight = st.panelPos==='right';
@@ -2385,6 +2394,8 @@ class Component extends DCLogic {
       stState: st.sentenceTrans?'ON':'OFF', stBg: st.sentenceTrans?BLUE:'#fffdf6', stFg: st.sentenceTrans?'#fff':INK,
       toggleSegHint:()=>this.setState({segHint:!st.segHint}),
       segState: st.segHint?'ON':'OFF', segBg: st.segHint?'#1f9d5c':'#fffdf6', segFg: st.segHint?'#fff':INK,
+      toggleDualCard:()=>this.setState({dualCard:!st.dualCard}),
+      dualState: st.dualCard?'ON':'OFF', dualBg: st.dualCard?'#9b59b6':'#fffdf6', dualFg: st.dualCard?'#fff':INK,
       toggleQuiz:()=>this.setState({quizOn:!st.quizOn}), quizOn:st.quizOn,
       quizState: st.quizOn?'ON':'OFF', quizBtnBg: st.quizOn?PINK:'#fffdf6', quizBtnFg: st.quizOn?'#fff':INK,
       showKeyPointsCard:()=>this.setState({showKeyPoints:true, selWordKey:null, selParaIdx:null, selSentIdx:null, quizOn:false}),
@@ -2396,6 +2407,8 @@ class Component extends DCLogic {
       cardMode:!st.quizOn, cardKeyPoints, cardPara, cardWord, cardEmpty,
       selWord, selWordAdded, selWordNotAdded:!selWordAdded,
       closeCard:()=>this.setState({selWordKey:null, selParaIdx:null, selSentIdx:null, showKeyPoints:false, paraGrammarOpen:false}),
+      closeSent:()=>this.setState({selParaIdx:null, selSentIdx:null, paraGrammarOpen:false}),
+      closeWord:()=>this.setState({selWordKey:null}),
       addSelWord:()=>{
         if(st.selWordKey && !st.addedWords.includes(st.selWordKey)){
           this.setState({ addedWords:[...st.addedWords, st.selWordKey] });
