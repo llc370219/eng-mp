@@ -286,7 +286,7 @@ railway variable set SMTP_FROM=your@qq.com --service backend
 ### Railway 环境变量
 | 变量名 | 值 |
 |--------|-----|
-| MONGODB_URI | mongodb+srv://llc370219:***@cluster0.cs8zgzm.mongodb.net/eng-reader |
+| MONGODB_URI | mongodb+srv://<username>:<password>@<your-cluster>.mongodb.net/eng-reader |
 | JWT_SECRET | 3f39e6d4cf1a5705147cafadf57208f4d91c0be1af466545587b989dd15941f2 |
 | JWT_REFRESH_SECRET | 3518c3a31079f4fba9fbb0576090b30248112aa2736cfd9c955cb8bb3e29ca30 |
 | NODE_ENV | production |
